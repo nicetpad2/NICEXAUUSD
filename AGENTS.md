@@ -41,7 +41,8 @@
 | **Wave_Marker_Unit**       | Wave Tagging      | Auto-labels Elliott Waves, price structures                           |
 | **Insight_Visualizer**     | Visualization     | Builds equity curves, SHAP summaries, fold heatmaps                   |
 **สร้างและอัพเดต Unit test ทุกครั้ง ให้เทสทุกส่วนในโค๊ดให้สมบูรณ์ หากเทสไม่ผ่านให้แก้ไข
-ทดสอบ Unit test ทุกครั้งหากเทสไม่ผ่านให้แก้ไข
+***ทดสอบ Unit test ทุกครั้งหากเทสไม่ผ่านให้แก้ไข
+*** รัน  Unit test ทุกครั้งหลัง ก่อน PR 
 ---
 อัพเดต AGENTS.md. และ changelog.md. ทุกครั้งหลังอัพเดตแพท ให้ทันปัจจุบัน
 \n### 2025-05-26
