@@ -1,4 +1,6 @@
 # Changelog
+## 2025-06-16
+- รวมฟังก์ชันจาก `m.ainmain.py` เข้ากับ `main.py`
 ## 2025-06-15
 - เพิ่มระบบ Kill Switch, Recovery Lot และ Dynamic SL/TP ใน backtester
 ## 2025-06-14
