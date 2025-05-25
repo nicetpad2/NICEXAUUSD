@@ -3,6 +3,10 @@
 - ปรับ backtester ให้บันทึกเวลาแบบ datetime และเพิ่มระบบ SL, Breakeven, TP1/TP2
 - เพิ่มการทดสอบ backtest_hit_sl_expected
 
+## 2025-06-12
+- ปรับ test suite ให้ไม่มีคำเตือน 12 รายการจาก sklearn
+- แก้ `run_parallel_wfv` ให้ใช้ multiprocessing start method แบบ `spawn`
+
 
 ## 2025-05-31
 - เพิ่มฟังก์ชัน `run_fast_wfv` และปรับเมนู Backtest จาก Signal ให้บันทึกผลโดยฟังก์ชันนี้

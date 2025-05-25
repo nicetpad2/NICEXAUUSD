@@ -5,7 +5,7 @@ from nicegold_v5.backtester import run_backtest
 def test_backtest_hit_sl_expected():
     """ทดสอบว่าไม้โดน SL และออกด้วยเหตุผล SL"""
     df = pd.DataFrame({
-        "timestamp": pd.date_range(start="2025-01-01", periods=5, freq="T"),
+        "timestamp": pd.date_range(start="2025-01-01", periods=5, freq="min"),
         "open": [100, 100.5, 100.8, 101.0, 101.2],
         "high": [100, 100.6, 100.9, 101.1, 101.3],
         "low": [99.5, 99.8, 100.0, 100.2, 100.4],

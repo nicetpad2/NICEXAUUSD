@@ -1,10 +1,16 @@
 import pandas as pd
+import warnings
+import pytest
 from nicegold_v5.entry import generate_signals, rsi
 from nicegold_v5.risk import calc_lot
 from nicegold_v5.exit import should_exit
 from nicegold_v5.backtester import run_backtest
 from nicegold_v5.utils import summarize_results, run_auto_wfv
 from nicegold_v5 import wfv
+
+pytestmark = pytest.mark.filterwarnings(
+    "ignore:invalid value encountered in divide:RuntimeWarning"
+)
 
 
 def sample_df():
@@ -21,7 +27,7 @@ def sample_df():
 
 
 def sample_wfv_df():
-    ts = pd.date_range('2024-01-01', periods=40, freq='H')
+    ts = pd.date_range('2024-01-01', periods=40, freq='h')
     data = {
         'Open': pd.Series(range(40)) + 100,
         'feat1': pd.Series(range(40)) * 0.1,

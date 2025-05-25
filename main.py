@@ -18,7 +18,7 @@ from nicegold_v5.wfv import (
 # Keep backward-compatible name
 run_walkforward_backtest = raw_run
 
-from multiprocessing import Pool, cpu_count
+from multiprocessing import cpu_count, get_context
 from sklearn.model_selection import TimeSeriesSplit
 import numpy as np
 from nicegold_v5.utils import run_auto_wfv
@@ -69,7 +69,8 @@ def run_parallel_wfv(df: pd.DataFrame, features: list, label_col: str, n_folds: 
     tscv = TimeSeriesSplit(n_splits=n_folds)
     args_list = [(df.iloc[test_idx], features, label_col, i) for i, (_, test_idx) in enumerate(tscv.split(df))]
 
-    with Pool(processes=min(cpu_count(), n_folds)) as pool:
+    ctx = get_context("spawn")
+    with ctx.Pool(processes=min(cpu_count(), n_folds)) as pool:
         trades_list = list(tqdm(pool.imap(_run_fold, args_list), total=n_folds))
 
     all_df = pd.concat(trades_list, ignore_index=True)
