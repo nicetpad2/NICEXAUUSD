@@ -104,3 +104,6 @@
 
 ### 2025-06-15
 - เพิ่มฟังก์ชัน Kill Switch, Recovery Lot และ Dynamic SL/TP ใน backtester
+
+### 2025-06-16
+- รวมฟังก์ชันจาก `m.ainmain.py` เข้ากับ `main.py` เพื่อใช้งาน Advanced Risk Management
