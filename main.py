@@ -203,12 +203,36 @@ def welcome():
         df = load_csv_safe(M1_PATH)
 
         from nicegold_v5.entry import generate_signals
+        from nicegold_v5.backtester import run_backtest
+        from nicegold_v5.utils import (
+            print_qa_summary,
+            create_summary_dict,
+            export_chatgpt_ready_logs,
+        )
+        import time
+
         df = generate_signals(df)
 
-        from nicegold_v5.backtester import run_backtest
+        start_time = pd.to_datetime(df["timestamp"].iloc[0])
+        end_time = pd.to_datetime(df["timestamp"].iloc[-1])
+        start = time.time()
         trades, equity = run_backtest(df)
+        end = time.time()
 
-        print(f"✅ เสร็จแล้ว: Trades = {len(trades)} | Profit = {trades['pnl'].sum():.2f}")
+        # 1️⃣ แสดงสรุป QA ใน Console
+        metrics = print_qa_summary(trades, equity)
+
+        # 2️⃣ สร้าง Summary Dict สำหรับ export
+        summary_dict = create_summary_dict(
+            trades, equity,
+            file_name="XAUUSD_M1.csv",
+            start_time=start_time,
+            end_time=end_time,
+            duration_sec=end - start
+        )
+
+        # 3️⃣ Export CSV Logs (ChatGPT/Excel-ready)
+        export_chatgpt_ready_logs(trades, equity, summary_dict, outdir=TRADE_DIR)
 
     elif choice == 5:
         show_progress_bar("👋 กำลังออกจากระบบ", steps=2)

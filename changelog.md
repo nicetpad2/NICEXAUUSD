@@ -50,3 +50,6 @@
 - เพิ่ม `print_qa_summary`, `export_chatgpt_ready_logs`, `create_summary_dict`
 - เพิ่ม unit test สำหรับฟังก์ชันเหล่านี้
 
+## 2025-06-08
+- เมนู Backtest จาก Signal แสดง QA summary และ export ไฟล์ CSV log
+
