@@ -9,4 +9,9 @@ from .utils import (
     export_chatgpt_ready_logs,
     create_summary_dict,
 )
-from .wfv import run_walkforward_backtest, session_performance, streak_summary
+from .wfv import (
+    run_walkforward_backtest,
+    session_performance,
+    streak_summary,
+    build_trade_log,
+)

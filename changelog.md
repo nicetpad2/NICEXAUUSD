@@ -53,3 +53,7 @@
 ## 2025-06-08
 - เมนู Backtest จาก Signal แสดง QA summary และ export ไฟล์ CSV log
 
+## 2025-06-09
+- เพิ่ม `build_trade_log` เพื่อบันทึกรายละเอียดไม้เทรด (R-multiple, session)
+- อัพเดต `run_walkforward_backtest` ใช้งานฟังก์ชันนี้
+
