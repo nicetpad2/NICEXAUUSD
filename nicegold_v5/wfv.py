@@ -112,7 +112,7 @@ def run_walkforward_backtest(df, features, label_col, side='buy', n_folds=3, per
     for fold, (train_idx, test_idx) in enumerate(folds.split(df)):
         df_train = df.iloc[train_idx].copy()
         df_test = df.iloc[test_idx].copy()
-        X_train = df_train[features]
+        X_train = df_train[features].astype(float)
         y_train = df_train[label_col]
 
         model = Pipeline([
@@ -121,7 +121,7 @@ def run_walkforward_backtest(df, features, label_col, side='buy', n_folds=3, per
         ])
         model.fit(X_train, y_train)
 
-        df_test['entry_prob'] = model.predict_proba(df_test[features])[:, 1]
+        df_test['entry_prob'] = model.predict_proba(df_test[features].astype(float))[:, 1]
         prob_thresh = np.percentile(df_test['entry_prob'], percentile_threshold)
 
         equity = INITIAL_CAPITAL

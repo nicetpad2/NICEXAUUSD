@@ -21,7 +21,7 @@ def sample_df():
 
 
 def sample_wfv_df():
-    ts = pd.date_range('2024-01-01', periods=40, freq='H')
+    ts = pd.date_range('2024-01-01', periods=40, freq='h')
     data = {
         'Open': pd.Series(range(40)) + 100,
         'feat1': pd.Series(range(40)) * 0.1,
