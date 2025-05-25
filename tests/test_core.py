@@ -90,6 +90,8 @@ def test_run_walkforward_backtest():
     )
     assert isinstance(trades, pd.DataFrame)
     assert not trades.empty
+    assert 'r_multiple' in trades.columns
+    assert 'session' in trades.columns
 
 
 def test_session_performance():

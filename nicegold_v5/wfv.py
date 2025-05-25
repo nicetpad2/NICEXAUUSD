@@ -47,6 +47,65 @@ def entry_decision(prob, threshold):
     return prob >= threshold
 
 
+def build_trade_log(position, timestamp, price, hit_tp, hit_sl, equity, slippage, df_test):
+    """Generate detailed trade metrics for logging."""
+    entry_time = position["entry_time"]
+    duration_min = (timestamp - entry_time).total_seconds() / 60
+
+    sl_dist = abs(position["entry"] - position["sl"])
+    planned_risk = sl_dist * POINT_VALUE * (position["lot"] / 0.01)
+    pnl_usd = (
+        price - position["entry"] if position["side"] == "buy" else position["entry"] - price
+    )
+    pnl_usd = pnl_usd * POINT_VALUE * (position["lot"] / 0.01) - position["commission"]
+
+    r_multiple = pnl_usd / planned_risk if planned_risk > 0 else 0
+    pnl_pct = pnl_usd / equity * 100 if equity > 0 else 0
+
+    window = df_test.loc[entry_time:timestamp]
+    price_col = "Close" if "Close" in df_test.columns else "Open"
+    break_even_time, mfe = None, 0.0
+    for _, r in window.iterrows():
+        interim_pnl = (
+            r[price_col] - position["entry"]
+            if position["side"] == "buy"
+            else position["entry"] - r[price_col]
+        )
+        interim_pnl = interim_pnl * POINT_VALUE * (position["lot"] / 0.01) - position["commission"]
+        if interim_pnl >= 0 and break_even_time is None:
+            break_even_time = r.name
+        mfe = max(mfe, interim_pnl)
+
+    break_even_min = (
+        (break_even_time - entry_time).total_seconds() / 60 if break_even_time else None
+    )
+    hour = entry_time.hour
+    session = "Asia" if hour < 8 else "London" if hour < 16 else "NY"
+
+    return {
+        "entry_time": entry_time,
+        "exit_time": timestamp,
+        "side": position["side"],
+        "entry": position["entry"],
+        "exit_price": price,
+        "sl": position["sl"],
+        "tp": position["tp"],
+        "lot": position["lot"],
+        "pnl": pnl_usd,
+        "planned_risk": round(planned_risk, 2),
+        "r_multiple": round(r_multiple, 2),
+        "pnl_pct": round(pnl_pct, 2),
+        "commission": position["commission"],
+        "slippage": abs(slippage) * POINT_VALUE * (position["lot"] / 0.01),
+        "spread": SPREAD_VALUE * POINT_VALUE * (position["lot"] / 0.01),
+        "duration_min": round(duration_min, 2),
+        "break_even_min": round(break_even_min, 2) if break_even_min else None,
+        "mfe": round(mfe, 2),
+        "exit_reason": "TP" if hit_tp else "SL" if hit_sl else "Timeout",
+        "session": session,
+    }
+
+
 def run_walkforward_backtest(df, features, label_col, side='buy', n_folds=3, percentile_threshold=75, strategy_name="A"):
     folds = TimeSeriesSplit(n_splits=n_folds)
     trades = []
@@ -80,7 +139,9 @@ def run_walkforward_backtest(df, features, label_col, side='buy', n_folds=3, per
                 hit_tp = price >= position['tp'] if position['side'] == 'buy' else price <= position['tp']
                 hit_sl = price <= position['sl'] if position['side'] == 'buy' else price >= position['sl']
                 if hit_tp or hit_sl or not duration_ok:
-                    pnl = (position['tp'] - position['entry'] if hit_tp else position['sl'] - position['entry'])
+                    pnl = (
+                        position['tp'] - position['entry'] if hit_tp else position['sl'] - position['entry']
+                    )
                     pnl = -pnl if position['side'] == 'sell' else pnl
                     pnl_usd = pnl * POINT_VALUE * (position['lot'] / 0.01) - position['commission']
                     equity += pnl_usd
@@ -89,12 +150,28 @@ def run_walkforward_backtest(df, features, label_col, side='buy', n_folds=3, per
                     is_win = pnl_usd > 0
                     win_streak = win_streak + 1 if is_win else 0
                     loss_streak = loss_streak + 1 if not is_win else 0
-                    trades.append({
-                        'strategy': strategy_name, 'fold': fold+1, 'time': timestamp,
-                        'side': position['side'], 'exit': 'TP' if hit_tp else 'SL' if hit_sl else 'Timeout',
-                        'pnl': pnl_usd, 'equity': equity, 'session': session_label(timestamp),
-                        'drawdown': drawdown, 'win_streak': win_streak, 'loss_streak': loss_streak
-                    })
+
+                    trade_log = build_trade_log(
+                        position,
+                        timestamp,
+                        price,
+                        hit_tp,
+                        hit_sl,
+                        equity,
+                        0,
+                        df_test,
+                    )
+                    trade_log.update(
+                        {
+                            'strategy': strategy_name,
+                            'fold': fold + 1,
+                            'equity': equity,
+                            'drawdown': drawdown,
+                            'win_streak': win_streak,
+                            'loss_streak': loss_streak,
+                        }
+                    )
+                    trades.append(trade_log)
                     position = None
             if not position and entry_decision(prob, prob_thresh) and pass_filters(row):
                 sl_dist = max(row.get('ATR_14', 1.0), 0.1)
