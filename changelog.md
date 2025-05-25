@@ -1,4 +1,7 @@
 # Changelog
+## 2025-06-13
+- ปรับเมนู Backtest จาก Signal ให้ทำงานกับ timestamp แบบ datetime และ export log ที่มีข้อมูล SL/TP1/TP2/BE
+
 ## 2025-06-12
 - แก้ไขคำเตือน pandas ในชุดทดสอบและปรับ `run_parallel_wfv` ให้ใช้ `spawn`
 

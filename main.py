@@ -201,6 +201,9 @@ def welcome():
         show_progress_bar("📡 Backtest Signals", steps=3)
         print("\n⚙️ เริ่มรัน Backtest จาก Signal (ไม่ใช้ ML)...")
         df = load_csv_safe(M1_PATH)
+        # [Patch] Apply full datetime and signal generation
+        df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
+        df = df.sort_values("timestamp")
 
         from nicegold_v5.entry import generate_signals
         from nicegold_v5.backtester import run_backtest
@@ -211,6 +214,7 @@ def welcome():
         )
         import time
 
+        # [Patch] Inject signal + run with updated SL/TP1/TP2/BE
         df = generate_signals(df)
         start = time.time()
         trades, equity = run_backtest(df)
@@ -219,10 +223,9 @@ def welcome():
         start_time = pd.to_datetime(df["timestamp"].iloc[0])
         end_time = pd.to_datetime(df["timestamp"].iloc[-1])
 
-        # QA Console Summary
-        print_qa_summary(trades, equity)
+        print_qa_summary(trades, equity)  # [Patch] Now includes exit_reason, drawdown
 
-        # สร้าง dict และ export 3 CSV
+        # [Patch] Export with updated format including SL/TP1/TP2/BE info
         summary = create_summary_dict(
             trades,
             equity,

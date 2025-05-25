@@ -96,3 +96,6 @@
 ### 2025-06-12
 - แก้คำเตือน pandas เรื่องตัวเลือกความถี่และปรับ Pool ให้ใช้ spawn
 
+
+### 2025-06-13
+- ปรับเมนู Backtest จาก Signal ให้แปลง timestamp เป็น datetime และเรียก generate_signals พร้อม export log รูปแบบใหม่
