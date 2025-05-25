@@ -7,7 +7,19 @@ sys.path.append("/content/drive/MyDrive/NICEGOLD")  # Add project root to path
 import pandas as pd
 import gc
 from tqdm import tqdm, trange
-from nicegold_v5.wfv import run_walkforward_backtest, merge_equity_curves, plot_equity, session_performance, streak_summary
+from nicegold_v5.wfv import (
+    run_walkforward_backtest as raw_run,
+    merge_equity_curves,
+    plot_equity,
+    session_performance,
+    streak_summary,
+)
+
+# Keep backward-compatible name
+run_walkforward_backtest = raw_run
+
+import numpy as np
+from sklearn.model_selection import TimeSeriesSplit
 from nicegold_v5.utils import run_auto_wfv
 from nicegold_v5.entry import generate_signals
 
@@ -32,6 +44,26 @@ def maximize_ram():
         print(
             f"🚀 Using RAM: {ram.percent:.1f}% | Available: {ram.available / 1024**3:.2f} GB"
         )
+
+def run_fast_wfv(df: pd.DataFrame, features: list, label_col: str, n_folds: int = 5):
+    print("\n⚡ Optimized Walk-Forward (RAM Mode)")
+    df = df.copy()
+    df = df.astype({col: np.float32 for col in features if col in df.columns})
+    df[label_col] = df[label_col].astype(np.uint8)
+    splits = TimeSeriesSplit(n_splits=n_folds).split(df)
+    all_trades = []
+    for i, (train_idx, test_idx) in enumerate(splits):
+        df_test = df.iloc[test_idx]
+        trades = raw_run(df_test, features, label_col, strategy_name=f"Fold{i+1}")
+        trades["fold"] = i + 1
+        all_trades.append(trades)
+        print(f"✅ Fold {i+1}: {len(trades)} trades")
+        maximize_ram()
+    all_df = pd.concat(all_trades, ignore_index=True)
+    out_path = os.path.join(TRADE_DIR, "manual_backtest_trades.csv")
+    all_df.to_csv(out_path, index=False)
+    print(f"📦 Saved trades to: {out_path}")
+    return all_df
 
 def load_csv_safe(path, lowercase=True):
     try:
@@ -183,11 +215,7 @@ def welcome():
         df["EMA_50_slope"] = df["EMA_50"].diff()
         df["target"] = (df["close"].shift(-10) > df["close"]).astype(int)
         features = ["EMA_50", "RSI_14", "ATR_14", "ATR_14_MA50", "EMA_50_slope"]
-        trades_df = run_walkforward_backtest(df, features, "target")
-        out_path = os.path.join(TRADE_DIR, "manual_backtest_trades.csv")
-        trades_df.to_csv(out_path, index=False)
-        print(f"📦 บันทึกผล Backtest ที่: {out_path}")
-        maximize_ram()
+        run_fast_wfv(df, features, "target")
 
     elif choice == 5:
         show_progress_bar("👋 กำลังออกจากระบบ", steps=2)
