@@ -48,6 +48,9 @@ def maximize_ram():
 
 def _run_fold(args):
     df, features, label_col, i = args
+    # [Patch] Ensure 'Open' column exists and is capitalized correctly
+    if 'open' in df.columns:
+        df = df.rename(columns={'open': 'Open'})
     trades = raw_run(df, features, label_col, strategy_name=f"Fold{i+1}")
     trades["fold"] = i + 1
     return trades
@@ -56,7 +59,7 @@ def run_parallel_wfv(df: pd.DataFrame, features: list, label_col: str, n_folds: 
     print("\n⚡ Parallel Walk-Forward (Full RAM Mode)")
     df = df.astype({col: np.float32 for col in features if col in df.columns})
     df[label_col] = df[label_col].astype(np.uint8)
-    required_cols = ['Open']
+    required_cols = ['open']  # [Patch] Include lowercase 'open' for renaming
     df = df.drop(columns=[col for col in df.columns if col not in features + [label_col] + required_cols])
 
     tscv = TimeSeriesSplit(n_splits=n_folds)
