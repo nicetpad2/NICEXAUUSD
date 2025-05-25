@@ -1,5 +1,5 @@
 import pandas as pd
-from nicegold_v5.entry import generate_signals
+from nicegold_v5.entry import generate_signals, rsi
 from nicegold_v5.risk import calc_lot
 from nicegold_v5.exit import should_exit
 from nicegold_v5.backtester import run_backtest
@@ -38,6 +38,12 @@ def sample_wfv_df():
 def sample_wfv_df_lower():
     df = sample_wfv_df().rename(columns={'Open': 'open'})
     return df
+
+
+def test_rsi_vectorized():
+    series = pd.Series(range(1, 16))
+    result = rsi(series, period=14)
+    assert round(result.iloc[-1], 2) == 100.0
 
 
 def test_generate_signals():
