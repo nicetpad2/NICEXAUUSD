@@ -3,6 +3,11 @@
 ## 2025-05-31
 - เพิ่มฟังก์ชัน `run_fast_wfv` และปรับเมนู Backtest จาก Signal ให้บันทึกผลโดยฟังก์ชันนี้
 
+## 2025-06-01
+- เพิ่ม `run_parallel_wfv` ใน `main.py` เพื่อรัน Walk-Forward แบบขนาน
+- ปรับเมนู Backtest จาก Signal ให้ใช้ฟังก์ชันใหม่
+- อัพเดต unit test สำหรับ CLI และ core
+
 ## 2025-05-30
 - เมนู Backtest จาก Signal ใช้ walk-forward backtest และบันทึกไฟล์ผลลัพธ์
 

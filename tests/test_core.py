@@ -86,3 +86,13 @@ def test_session_performance():
     trades = wfv.run_walkforward_backtest(df, ['feat1', 'feat2'], 'label', n_folds=2)
     perf = wfv.session_performance(trades)
     assert 'sum' in perf.columns
+
+
+def test_run_parallel_wfv(tmp_path, monkeypatch):
+    import importlib
+    main = importlib.import_module('main')
+    df = sample_wfv_df()
+    monkeypatch.setattr(main, 'TRADE_DIR', str(tmp_path))
+    monkeypatch.setattr(main, 'maximize_ram', lambda: None)
+    trades = main.run_parallel_wfv(df, ['Open', 'feat1', 'feat2'], 'label', n_folds=2)
+    assert isinstance(trades, pd.DataFrame)
