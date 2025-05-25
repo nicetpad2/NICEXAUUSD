@@ -212,27 +212,26 @@ def welcome():
         import time
 
         df = generate_signals(df)
-
-        start_time = pd.to_datetime(df["timestamp"].iloc[0])
-        end_time = pd.to_datetime(df["timestamp"].iloc[-1])
         start = time.time()
         trades, equity = run_backtest(df)
         end = time.time()
 
-        # 1️⃣ แสดงสรุป QA ใน Console
-        metrics = print_qa_summary(trades, equity)
+        start_time = pd.to_datetime(df["timestamp"].iloc[0])
+        end_time = pd.to_datetime(df["timestamp"].iloc[-1])
 
-        # 2️⃣ สร้าง Summary Dict สำหรับ export
-        summary_dict = create_summary_dict(
-            trades, equity,
+        # QA Console Summary
+        print_qa_summary(trades, equity)
+
+        # สร้าง dict และ export 3 CSV
+        summary = create_summary_dict(
+            trades,
+            equity,
             file_name="XAUUSD_M1.csv",
             start_time=start_time,
             end_time=end_time,
-            duration_sec=end - start
+            duration_sec=end - start,
         )
-
-        # 3️⃣ Export CSV Logs (ChatGPT/Excel-ready)
-        export_chatgpt_ready_logs(trades, equity, summary_dict, outdir=TRADE_DIR)
+        export_chatgpt_ready_logs(trades, equity, summary, outdir=TRADE_DIR)
 
     elif choice == 5:
         show_progress_bar("👋 กำลังออกจากระบบ", steps=2)
