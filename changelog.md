@@ -57,3 +57,6 @@
 - เพิ่ม `build_trade_log` เพื่อบันทึกรายละเอียดไม้เทรด (R-multiple, session)
 - อัพเดต `run_walkforward_backtest` ใช้งานฟังก์ชันนี้
 
+## 2025-06-10
+- ปรับเมนู Backtest จาก Signal ให้เรียก Patch K+L+M และปรับโค้ดให้บันทึก summary
+

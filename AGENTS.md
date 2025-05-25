@@ -85,4 +85,7 @@
 - เพิ่มฟังก์ชัน `build_trade_log` บันทึกรายละเอียด R-multiple และ session
 - อัพเดต `run_walkforward_backtest` ให้ใช้ฟังก์ชันนี้
 
+### 2025-06-10
+- ปรับเมนู Backtest จาก Signal ให้เรียก Patch K+L+M
+
 
