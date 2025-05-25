@@ -1,4 +1,8 @@
 # Changelog
+## 2025-06-11
+- ปรับ backtester ให้บันทึกเวลาแบบ datetime และเพิ่มระบบ SL, Breakeven, TP1/TP2
+- เพิ่มการทดสอบ backtest_hit_sl_expected
+
 
 ## 2025-05-31
 - เพิ่มฟังก์ชัน `run_fast_wfv` และปรับเมนู Backtest จาก Signal ให้บันทึกผลโดยฟังก์ชันนี้

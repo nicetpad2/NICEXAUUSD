@@ -89,3 +89,7 @@
 - ปรับเมนู Backtest จาก Signal ให้เรียก Patch K+L+M
 
 
+### 2025-06-11
+- เพิ่มตรรกะ SL ตาม ATR, ระบบ Breakeven และ TP1/TP2 ใน backtester
+- เพิ่ม unit test ตรวจสอบกรณีโดน SL
+
