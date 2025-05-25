@@ -72,25 +72,6 @@ def run_parallel_wfv(df: pd.DataFrame, features: list, label_col: str, n_folds: 
     maximize_ram()
     return all_df
 
-def run_fast_wfv(df: pd.DataFrame, features: list, label_col: str, n_folds: int = 5):
-    print("\n⚡ Optimized Walk-Forward (RAM Mode)")
-    df = df.copy()
-    df = df.astype({col: np.float32 for col in features if col in df.columns})
-    df[label_col] = df[label_col].astype(np.uint8)
-    splits = TimeSeriesSplit(n_splits=n_folds).split(df)
-    all_trades = []
-    for i, (train_idx, test_idx) in enumerate(splits):
-        df_test = df.iloc[test_idx]
-        trades = raw_run(df_test, features, label_col, strategy_name=f"Fold{i+1}")
-        trades["fold"] = i + 1
-        all_trades.append(trades)
-        print(f"✅ Fold {i+1}: {len(trades)} trades")
-        maximize_ram()
-    all_df = pd.concat(all_trades, ignore_index=True)
-    out_path = os.path.join(TRADE_DIR, "manual_backtest_trades.csv")
-    all_df.to_csv(out_path, index=False)
-    print(f"📦 Saved trades to: {out_path}")
-    return all_df
 
 def load_csv_safe(path, lowercase=True):
     try:

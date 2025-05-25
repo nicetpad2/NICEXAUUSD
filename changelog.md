@@ -8,6 +8,9 @@
 - ปรับเมนู Backtest จาก Signal ให้ใช้ฟังก์ชันใหม่
 - อัพเดต unit test สำหรับ CLI และ core
 
+## 2025-06-02
+- เปลี่ยนเมนู Backtest จาก Signal ให้เรียก `run_parallel_wfv` และลบฟังก์ชัน `run_fast_wfv`
+
 ## 2025-05-30
 - เมนู Backtest จาก Signal ใช้ walk-forward backtest และบันทึกไฟล์ผลลัพธ์
 
