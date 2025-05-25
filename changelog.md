@@ -1,5 +1,8 @@
 # Changelog
 
+## 2025-05-31
+- เพิ่มฟังก์ชัน `run_fast_wfv` และปรับเมนู Backtest จาก Signal ให้บันทึกผลโดยฟังก์ชันนี้
+
 ## 2025-05-30
 - เมนู Backtest จาก Signal ใช้ walk-forward backtest และบันทึกไฟล์ผลลัพธ์
 

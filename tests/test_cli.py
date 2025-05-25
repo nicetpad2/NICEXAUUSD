@@ -28,8 +28,12 @@ def test_welcome_manual_backtest(monkeypatch, capsys, tmp_path):
         'low': [1]*20,
         'close': [1]*20
     }))
-    monkeypatch.setattr(main, "run_walkforward_backtest", lambda df, features, label: pd.DataFrame({'time': [pd.Timestamp('2024-01-01')], 'pnl': [1]}))
+    def fake_run_fast_wfv(df, features, label):
+        print("📦 Saved trades to: test.csv")
+        return pd.DataFrame({"time": [pd.Timestamp("2024-01-01")], "pnl": [1]})
+
+    monkeypatch.setattr(main, "run_fast_wfv", fake_run_fast_wfv)
     main.welcome()
     output = capsys.readouterr().out
     assert "Backtest จาก Signal" in output
-    assert "บันทึกผล Backtest" in output
+    assert "Saved trades" in output
