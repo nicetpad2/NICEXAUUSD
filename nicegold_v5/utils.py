@@ -68,7 +68,9 @@ M15_PATH = "/content/drive/MyDrive/NICEGOLD/XAUUSD_M15.csv"
 
 def load_data(path):
     df = pd.read_csv(path)
-    df["timestamp"] = pd.to_datetime(df["timestamp"])
+    df["timestamp"] = pd.to_datetime(
+        df["timestamp"], format="%Y-%m-%d %H:%M:%S", errors="coerce"
+    )
     df = df.sort_values("timestamp")
     return df
 
