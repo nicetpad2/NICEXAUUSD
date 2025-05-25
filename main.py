@@ -57,6 +57,10 @@ def _run_fold(args):
 
 def run_parallel_wfv(df: pd.DataFrame, features: list, label_col: str, n_folds: int = 5):
     print("\n⚡ Parallel Walk-Forward (Full RAM Mode)")
+    df = df.copy()
+    if 'open' in df.columns and 'Open' not in df.columns:
+        df.rename(columns={'open': 'Open'}, inplace=True)
+        features = ['Open' if f == 'open' else f for f in features]
     df = df.astype({col: np.float32 for col in features if col in df.columns})
     df[label_col] = df[label_col].astype(np.uint8)
     required_cols = ['open']  # [Patch] Include lowercase 'open' for renaming
