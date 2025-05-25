@@ -70,4 +70,7 @@
 - ปรับปรุงฟังก์ชัน `rsi` ให้เวกเตอร์ไลซ์และเพิ่ม progress bar ใน `run_backtest`
 =======
 
+### 2025-06-06
+- ปรับเมนู Backtest จาก Signal ให้เรียก `generate_signals` และ `run_backtest`
+
 

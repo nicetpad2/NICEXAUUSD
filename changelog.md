@@ -43,3 +43,6 @@
 - ปรับปรุง `rsi` และ `run_backtest` ให้ทำงานเร็วขึ้นและแสดงผลเวลา
 =======
 
+## 2025-06-06
+- เมนู Backtest จาก Signal ใช้ `generate_signals` และ `run_backtest` โดยตรง
+
