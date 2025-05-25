@@ -56,4 +56,6 @@
 - ปรับเมนู Backtest จาก Signal ให้สร้างฟีเจอร์และใช้ `run_walkforward_backtest`
 ### 2025-05-31
 - เพิ่มฟังก์ชัน `run_fast_wfv` และแก้เมนู Backtest จาก Signal ให้ใช้ฟังก์ชันใหม่นี้
+### 2025-06-01
+- เพิ่มฟังก์ชัน `run_parallel_wfv` ใช้ multiprocessing สำหรับ walk-forward และปรับ unit test
 

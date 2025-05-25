@@ -18,8 +18,9 @@ from nicegold_v5.wfv import (
 # Keep backward-compatible name
 run_walkforward_backtest = raw_run
 
-import numpy as np
+from multiprocessing import Pool, cpu_count
 from sklearn.model_selection import TimeSeriesSplit
+import numpy as np
 from nicegold_v5.utils import run_auto_wfv
 from nicegold_v5.entry import generate_signals
 
@@ -44,6 +45,32 @@ def maximize_ram():
         print(
             f"🚀 Using RAM: {ram.percent:.1f}% | Available: {ram.available / 1024**3:.2f} GB"
         )
+
+def _run_fold(args):
+    df, features, label_col, i = args
+    trades = raw_run(df, features, label_col, strategy_name=f"Fold{i+1}")
+    trades["fold"] = i + 1
+    return trades
+
+def run_parallel_wfv(df: pd.DataFrame, features: list, label_col: str, n_folds: int = 5):
+    print("\n⚡ Parallel Walk-Forward (Full RAM Mode)")
+    df = df.astype({col: np.float32 for col in features if col in df.columns})
+    df[label_col] = df[label_col].astype(np.uint8)
+    required_cols = ['Open']
+    df = df.drop(columns=[col for col in df.columns if col not in features + [label_col] + required_cols])
+
+    tscv = TimeSeriesSplit(n_splits=n_folds)
+    args_list = [(df.iloc[test_idx], features, label_col, i) for i, (_, test_idx) in enumerate(tscv.split(df))]
+
+    with Pool(processes=min(cpu_count(), n_folds)) as pool:
+        trades_list = list(tqdm(pool.imap(_run_fold, args_list), total=n_folds))
+
+    all_df = pd.concat(trades_list, ignore_index=True)
+    out_path = os.path.join(TRADE_DIR, "manual_backtest_trades.csv")
+    all_df.to_csv(out_path, index=False)
+    print(f"📦 Saved trades to: {out_path}")
+    maximize_ram()
+    return all_df
 
 def run_fast_wfv(df: pd.DataFrame, features: list, label_col: str, n_folds: int = 5):
     print("\n⚡ Optimized Walk-Forward (RAM Mode)")
@@ -215,7 +242,7 @@ def welcome():
         df["EMA_50_slope"] = df["EMA_50"].diff()
         df["target"] = (df["close"].shift(-10) > df["close"]).astype(int)
         features = ["EMA_50", "RSI_14", "ATR_14", "ATR_14_MA50", "EMA_50_slope"]
-        run_fast_wfv(df, features, "target")
+        run_parallel_wfv(df, features, "target")
 
     elif choice == 5:
         show_progress_bar("👋 กำลังออกจากระบบ", steps=2)
