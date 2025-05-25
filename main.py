@@ -202,7 +202,9 @@ def welcome():
         print("\n⚙️ เริ่มรัน Backtest จาก Signal (ไม่ใช้ ML)...")
         df = load_csv_safe(M1_PATH)
         # [Patch] Apply full datetime and signal generation
-        df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
+        df["timestamp"] = pd.to_datetime(
+            df["timestamp"], format="%Y-%m-%d %H:%M:%S", errors="coerce"
+        )
         df = df.sort_values("timestamp")
 
         from nicegold_v5.entry import generate_signals
