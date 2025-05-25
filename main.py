@@ -172,8 +172,21 @@ def welcome():
         else:
             raise ValueError("❌ ไม่พบคอลัมน์ date/timestamp สำหรับสร้าง timestamp")
         df.rename(columns={"open": "open", "high": "high", "low": "low", "close": "close"}, inplace=True)
-        df = generate_signals(df)
-        run_auto_wfv(df, outdir=TRADE_DIR)
+        df.set_index("timestamp", inplace=True)
+        df["EMA_50"] = df["close"].ewm(span=50).mean()
+        df["RSI_14"] = df["close"].rolling(14).apply(
+            lambda x: 100 - (100 / (1 + ((x.diff().clip(lower=0).mean()) / (-x.diff().clip(upper=0).mean() + 1e-9)))),
+            raw=False
+        )
+        df["ATR_14"] = (df["high"] - df["low"]).rolling(14).mean()
+        df["ATR_14_MA50"] = df["ATR_14"].rolling(50).mean()
+        df["EMA_50_slope"] = df["EMA_50"].diff()
+        df["target"] = (df["close"].shift(-10) > df["close"]).astype(int)
+        features = ["EMA_50", "RSI_14", "ATR_14", "ATR_14_MA50", "EMA_50_slope"]
+        trades_df = run_walkforward_backtest(df, features, "target")
+        out_path = os.path.join(TRADE_DIR, "manual_backtest_trades.csv")
+        trades_df.to_csv(out_path, index=False)
+        print(f"📦 บันทึกผล Backtest ที่: {out_path}")
         maximize_ram()
 
     elif choice == 5:

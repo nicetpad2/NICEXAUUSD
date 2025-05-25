@@ -1,5 +1,8 @@
 # Changelog
 
+## 2025-05-30
+- เมนู Backtest จาก Signal ใช้ walk-forward backtest และบันทึกไฟล์ผลลัพธ์
+
 ## 2025-05-28
 - เพิ่มสคริปต์ `main.py` สำหรับ NICEGOLD Assistant โหมด CLI
 - เพิ่ม unit test ตรวจสอบเมนูต้อนรับ

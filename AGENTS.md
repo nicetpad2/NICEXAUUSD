@@ -52,3 +52,6 @@
 - เพิ่มสคริปต์ `main.py` สำหรับ NICEGOLD Assistant โหมด CLI และเพิ่มการทดสอบเมนู
 ### 2025-05-29
 - แก้ไขฟังก์ชัน `maximize_ram` และลบโค้ด `fold_pbar` ที่ไม่จำเป็นใน `main.py`
+### 2025-05-30
+- ปรับเมนู Backtest จาก Signal ให้สร้างฟีเจอร์และใช้ `run_walkforward_backtest`
+
