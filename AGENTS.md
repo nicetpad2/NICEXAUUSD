@@ -60,4 +60,6 @@
 - เพิ่มฟังก์ชัน `run_parallel_wfv` ใช้ multiprocessing สำหรับ walk-forward และปรับ unit test
 ### 2025-06-02
 - เปลี่ยนโหมด Backtest จาก `run_fast_wfv` เป็น `run_parallel_wfv` และลบฟังก์ชันเดิม
+### 2025-06-03
+- แก้ไขฟังก์ชัน `run_parallel_wfv` ให้รองรับคอลัมน์ 'open' ตัวพิมพ์เล็ก
 
