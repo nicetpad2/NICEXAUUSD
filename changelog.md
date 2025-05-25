@@ -46,3 +46,7 @@
 ## 2025-06-06
 - เมนู Backtest จาก Signal ใช้ `generate_signals` และ `run_backtest` โดยตรง
 
+## 2025-06-07
+- เพิ่ม `print_qa_summary`, `export_chatgpt_ready_logs`, `create_summary_dict`
+- เพิ่ม unit test สำหรับฟังก์ชันเหล่านี้
+

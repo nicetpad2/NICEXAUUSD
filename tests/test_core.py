@@ -116,3 +116,23 @@ def test_run_parallel_wfv_lowercase(tmp_path, monkeypatch):
     monkeypatch.setattr(main, 'maximize_ram', lambda: None)
     trades = main.run_parallel_wfv(df, ['Open', 'feat1', 'feat2'], 'label', n_folds=2)
     assert isinstance(trades, pd.DataFrame)
+
+
+def test_print_qa_summary_and_export(tmp_path):
+    from nicegold_v5.utils import print_qa_summary, export_chatgpt_ready_logs, create_summary_dict
+    trades = pd.DataFrame({
+        'pnl': [1.0, -0.5],
+        'lot': [0.1, 0.1],
+        'commission': [0.02, 0.02]
+    })
+    equity = pd.DataFrame({
+        'timestamp': pd.date_range('2024-01-01', periods=2, freq='D'),
+        'equity': [100, 100.5]
+    })
+
+    metrics = print_qa_summary(trades, equity)
+    assert metrics['total_trades'] == 2
+    summary = create_summary_dict(trades, equity, file_name="test.csv")
+    export_chatgpt_ready_logs(trades, equity, summary, outdir=str(tmp_path))
+    files = list(tmp_path.iterdir())
+    assert len(files) == 3
