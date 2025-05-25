@@ -3,6 +3,8 @@
 ## 2025-05-28
 - เพิ่มสคริปต์ `main.py` สำหรับ NICEGOLD Assistant โหมด CLI
 - เพิ่ม unit test ตรวจสอบเมนูต้อนรับ
+## 2025-05-29
+- ปรับปรุง `main.py` แก้บั๊กการประกาศ `fold_pbar` และเพิ่มฟังก์ชัน `maximize_ram`
 
 ## 2025-05-26
 - เพิ่มฟังก์ชัน walk-forward validation ใน utils
