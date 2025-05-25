@@ -201,36 +201,14 @@ def welcome():
         show_progress_bar("📡 Backtest Signals", steps=3)
         print("\n⚙️ เริ่มรัน Backtest จาก Signal (ไม่ใช้ ML)...")
         df = load_csv_safe(M1_PATH)
-        if {"date", "timestamp"}.issubset(df.columns):
-            def convert_thai_date(date_int):
-                try:
-                    y = int(str(date_int)[:4]) - 543
-                    m = str(date_int)[4:6]
-                    d = str(date_int)[6:8]
-                    return f"{y}-{m}-{d}"
-                except:
-                    return "1900-01-01"
-            df["timestamp"] = pd.to_datetime(
-                df["date"].apply(convert_thai_date) + " " + df["timestamp"].astype(str),
-                format="%Y-%m-%d %H:%M:%S",
-                errors="coerce"
-            )
-            df.dropna(subset=["timestamp"], inplace=True)
-        else:
-            raise ValueError("❌ ไม่พบคอลัมน์ date/timestamp สำหรับสร้าง timestamp")
-        df.rename(columns={"open": "open", "high": "high", "low": "low", "close": "close"}, inplace=True)
-        df.set_index("timestamp", inplace=True)
-        df["EMA_50"] = df["close"].ewm(span=50).mean()
-        df["RSI_14"] = df["close"].rolling(14).apply(
-            lambda x: 100 - (100 / (1 + ((x.diff().clip(lower=0).mean()) / (-x.diff().clip(upper=0).mean() + 1e-9)))),
-            raw=False
-        )
-        df["ATR_14"] = (df["high"] - df["low"]).rolling(14).mean()
-        df["ATR_14_MA50"] = df["ATR_14"].rolling(50).mean()
-        df["EMA_50_slope"] = df["EMA_50"].diff()
-        df["target"] = (df["close"].shift(-10) > df["close"]).astype(int)
-        features = ["EMA_50", "RSI_14", "ATR_14", "ATR_14_MA50", "EMA_50_slope"]
-        run_parallel_wfv(df, features, "target")
+
+        from nicegold_v5.entry import generate_signals
+        df = generate_signals(df)
+
+        from nicegold_v5.backtester import run_backtest
+        trades, equity = run_backtest(df)
+
+        print(f"✅ เสร็จแล้ว: Trades = {len(trades)} | Profit = {trades['pnl'].sum():.2f}")
 
     elif choice == 5:
         show_progress_bar("👋 กำลังออกจากระบบ", steps=2)
