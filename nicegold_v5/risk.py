@@ -3,3 +3,57 @@ def calc_lot(capital: float, risk_pct: float = 1.5, sl_pips: float = 100) -> flo
     pip_value = 10  # For gold 0.1/point × 100 = $10/lot
     lot = risk_amount / (sl_pips * pip_value)
     return max(0.01, round(lot, 2))
+
+
+# --- Patch C: Advanced Risk Management ---
+
+KILL_SWITCH_DD = 25  # % drawdown limit
+
+
+def kill_switch(equity_curve: list[float]) -> bool:
+    """Return True if drawdown exceeds threshold."""
+    if not equity_curve:
+        return False
+    peak = equity_curve[0]
+    for eq in equity_curve:
+        drawdown = (peak - eq) / peak * 100
+        if drawdown >= KILL_SWITCH_DD:
+            print("[KILL SWITCH] Drawdown limit reached. Backtest halted.")
+            return True
+        peak = max(peak, eq)
+    return False
+
+
+def apply_recovery_lot(capital: float, sl_streak: int, base_lot: float = 0.01) -> float:
+    """Increase lot size after consecutive stop-losses."""
+    if sl_streak >= 2:
+        factor = 1 + 0.5 * (sl_streak - 1)
+        return round(base_lot * factor, 2)
+    return base_lot
+
+
+def adaptive_tp_multiplier(session: str) -> float:
+    if session == "Asia":
+        return 1.5
+    if session == "London":
+        return 2.0
+    if session == "NY":
+        return 2.5
+    return 2.0
+
+
+def get_sl_tp(price: float, atr: float, session: str, direction: str) -> tuple[float, float]:
+    multiplier = adaptive_tp_multiplier(session)
+    sl = price - atr * 1.2 if direction == "buy" else price + atr * 1.2
+    tp = price + atr * multiplier if direction == "buy" else price - atr * multiplier
+    return sl, tp
+
+
+def calc_lot_risk(capital: float, atr: float, risk_pct: float = 1.5) -> float:
+    """True percent risk model using ATR as stop distance."""
+    pip_value = 10  # XAUUSD standard
+    sl_pips = atr * 10
+    risk_amount = capital * (risk_pct / 100)
+    lot = risk_amount / (sl_pips * pip_value)
+    return max(0.01, round(lot, 2))
+

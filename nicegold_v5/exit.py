@@ -8,7 +8,7 @@ def should_exit(trade, row):
     gain = price_now - entry if direction == "buy" else entry - price_now
 
     atr = row.get("atr", 1.0)
-    sl_threshold = atr * 1.5
+    sl_threshold = atr * 1.2
     be_trigger = sl_threshold * 1.2
 
     if gain < -sl_threshold and not trade.get("breakeven"):

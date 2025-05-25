@@ -1,4 +1,6 @@
 # Changelog
+## 2025-06-15
+- เพิ่มระบบ Kill Switch, Recovery Lot และ Dynamic SL/TP ใน backtester
 ## 2025-06-14
 - ระบุรูปแบบวันที่ให้ `pd.to_datetime` ใน `main.py` และ `utils.py` เพื่อลดคำเตือน
 ## 2025-06-13

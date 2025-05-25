@@ -1,6 +1,12 @@
 import pandas as pd
 from nicegold_v5.entry import generate_signals, rsi
-from nicegold_v5.risk import calc_lot
+from nicegold_v5.risk import (
+    calc_lot,
+    kill_switch,
+    apply_recovery_lot,
+    calc_lot_risk,
+    get_sl_tp,
+)
 from nicegold_v5.exit import should_exit
 from nicegold_v5.backtester import run_backtest
 from nicegold_v5.utils import summarize_results, run_auto_wfv
@@ -54,6 +60,23 @@ def test_generate_signals():
 
 def test_calc_lot():
     lot = calc_lot(100)
+    assert lot >= 0.01
+
+
+def test_kill_switch_trigger():
+    curve = [100, 95, 70]
+    assert kill_switch(curve)
+
+
+def test_recovery_lot():
+    lot = apply_recovery_lot(1000, sl_streak=3, base_lot=0.02)
+    assert lot > 0.02
+
+
+def test_calc_lot_risk_and_sl_tp():
+    sl, tp = get_sl_tp(100, 1.0, "Asia", "buy")
+    lot = calc_lot_risk(1000, 1.0, 1.5)
+    assert sl < 100 and tp > 100
     assert lot >= 0.01
 
 

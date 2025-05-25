@@ -1,6 +1,13 @@
 import pandas as pd
 from datetime import datetime
-from nicegold_v5.risk import calc_lot
+from nicegold_v5.risk import (
+    calc_lot,
+    calc_lot_risk,
+    apply_recovery_lot,
+    kill_switch,
+    adaptive_tp_multiplier,
+    get_sl_tp,
+)
 from nicegold_v5.exit import should_exit
 from tqdm import tqdm
 import time
@@ -12,18 +19,27 @@ def run_backtest(df: pd.DataFrame):
     trades = []
     equity = []
     open_trade = None
+    sl_streak = 0
+    equity_curve: list[float] = []
     start = time.time()
 
     for i, row in tqdm(df.iterrows(), total=len(df), desc="⏱️ Running Backtest", unit="rows"):
         ts = pd.to_datetime(row["timestamp"])
         price = row["close"]
         equity.append({"timestamp": ts, "equity": capital})
+        equity_curve.append(capital)
+
+        if kill_switch(equity_curve):
+            break
 
         if open_trade:
-            gain = price - open_trade["entry"] if open_trade["type"] == "buy" else open_trade["entry"] - price
-            sl_dist = row.get("atr", 1.0) * 1.5
+            direction = open_trade["type"]
+            session = open_trade["session"]
+            atr_entry = open_trade["atr"]
+            sl_dist = atr_entry * 1.2
             tp1 = sl_dist * 1.5
-            tp2 = sl_dist * 2.5
+            tp2 = sl_dist * adaptive_tp_multiplier(session)
+            gain = price - open_trade["entry"] if direction == "buy" else open_trade["entry"] - price
 
             if not open_trade.get("tp1_hit") and gain >= tp1:
                 partial_lot = open_trade["lot"] * 0.5
@@ -38,7 +54,7 @@ def run_backtest(df: pd.DataFrame):
                     "lot": partial_lot,
                     "pnl": partial_pnl,
                     "exit_reason": "TP1",
-                    "session": "Asia" if ts.hour < 8 else "London" if ts.hour < 16 else "NY",
+                    "session": session,
                     "duration_min": (ts - open_trade["entry_time"]).total_seconds() / 60,
                 })
                 open_trade["tp1_hit"] = True
@@ -46,51 +62,61 @@ def run_backtest(df: pd.DataFrame):
 
             elif open_trade.get("tp1_hit"):
                 exit_now, reason = should_exit(open_trade, row)
-                if exit_now:
-                    pnl = (price - open_trade["entry"] if open_trade["type"] == "buy"
-                           else open_trade["entry"] - price) * open_trade["lot"] * 10
+                if exit_now or (direction == "buy" and gain >= tp2) or (direction == "sell" and gain >= tp2):
+                    pnl = (price - open_trade["entry"] if direction == "buy" else open_trade["entry"] - price) * open_trade["lot"] * 10
                     capital += pnl
                     trades.append({
                         "entry_time": open_trade["entry_time"],
                         "exit_time": ts,
                         "entry": open_trade["entry"],
                         "exit": price,
-                        "type": open_trade["type"],
+                        "type": direction,
                         "lot": open_trade["lot"],
                         "pnl": pnl,
                         "exit_reason": reason or "TP2",
-                        "session": "Asia" if ts.hour < 8 else "London" if ts.hour < 16 else "NY",
+                        "session": session,
                         "duration_min": (ts - open_trade["entry_time"]).total_seconds() / 60,
                     })
+                    if (reason or "").startswith("SL"):
+                        sl_streak += 1
+                    else:
+                        sl_streak = 0
                     open_trade = None
 
             else:
                 exit_now, reason = should_exit(open_trade, row)
                 if exit_now:
-                    pnl = (price - open_trade["entry"] if open_trade["type"] == "buy"
-                           else open_trade["entry"] - price) * open_trade["lot"] * 10
+                    pnl = (price - open_trade["entry"] if direction == "buy" else open_trade["entry"] - price) * open_trade["lot"] * 10
                     capital += pnl
                     trades.append({
                         "entry_time": open_trade["entry_time"],
                         "exit_time": ts,
                         "entry": open_trade["entry"],
                         "exit": price,
-                        "type": open_trade["type"],
+                        "type": direction,
                         "lot": open_trade["lot"],
                         "pnl": pnl,
                         "exit_reason": reason or "TP",
-                        "session": "Asia" if ts.hour < 8 else "London" if ts.hour < 16 else "NY",
+                        "session": session,
                         "duration_min": (ts - open_trade["entry_time"]).total_seconds() / 60,
                     })
+                    if (reason or "").startswith("SL"):
+                        sl_streak += 1
+                    else:
+                        sl_streak = 0
                     open_trade = None
 
         if not open_trade and row.get("entry_signal") in ["buy", "sell"]:
-            lot = calc_lot(capital)
+            session = "Asia" if ts.hour < 8 else "London" if ts.hour < 16 else "NY"
+            lot = calc_lot_risk(capital, row.get("atr", 1.0), 1.5)
+            lot = apply_recovery_lot(capital, sl_streak, base_lot=lot)
             open_trade = {
                 "entry": price,
                 "entry_time": ts,
                 "type": row.get("entry_signal"),
-                "lot": lot
+                "lot": lot,
+                "session": session,
+                "atr": row.get("atr", 1.0)
             }
 
     end = time.time()
