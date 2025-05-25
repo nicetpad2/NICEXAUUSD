@@ -31,11 +31,16 @@ def test_welcome_manual_backtest(monkeypatch, capsys, tmp_path):
     monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df: df.assign(entry_signal='buy'))
 
     def fake_run_backtest(df):
-        print("✅ เสร็จแล้ว: Trades = 1 | Profit = 1.00")
-        return pd.DataFrame({'pnl': [1]}), pd.DataFrame()
+        return (
+            pd.DataFrame({'pnl': [1]}),
+            pd.DataFrame({'timestamp': [pd.Timestamp('2024-01-01')], 'equity': [100]})
+        )
 
     monkeypatch.setattr('nicegold_v5.backtester.run_backtest', fake_run_backtest)
+    monkeypatch.setattr('nicegold_v5.utils.print_qa_summary', lambda *args, **kwargs: {})
+    monkeypatch.setattr('nicegold_v5.utils.create_summary_dict', lambda *args, **kwargs: {})
+    monkeypatch.setattr('nicegold_v5.utils.export_chatgpt_ready_logs', lambda *args, **kwargs: print('Export Completed'))
     main.welcome()
     output = capsys.readouterr().out
     assert "Backtest จาก Signal" in output
-    assert "เสร็จแล้ว" in output
+    assert "Export Completed" in output
