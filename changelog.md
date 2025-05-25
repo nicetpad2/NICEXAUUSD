@@ -1,4 +1,7 @@
 # Changelog
+## 2025-06-12
+- แก้ไขคำเตือน pandas ในชุดทดสอบและปรับ `run_parallel_wfv` ให้ใช้ `spawn`
+
 ## 2025-06-11
 - ปรับ backtester ให้บันทึกเวลาแบบ datetime และเพิ่มระบบ SL, Breakeven, TP1/TP2
 - เพิ่มการทดสอบ backtest_hit_sl_expected

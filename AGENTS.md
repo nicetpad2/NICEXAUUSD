@@ -93,3 +93,6 @@
 - เพิ่มตรรกะ SL ตาม ATR, ระบบ Breakeven และ TP1/TP2 ใน backtester
 - เพิ่ม unit test ตรวจสอบกรณีโดน SL
 
+### 2025-06-12
+- แก้คำเตือน pandas เรื่องตัวเลือกความถี่และปรับ Pool ให้ใช้ spawn
+
