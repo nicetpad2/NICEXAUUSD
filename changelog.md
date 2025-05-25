@@ -1,5 +1,9 @@
 # Changelog
 
+## 2025-05-28
+- เพิ่มสคริปต์ `main.py` สำหรับ NICEGOLD Assistant โหมด CLI
+- เพิ่ม unit test ตรวจสอบเมนูต้อนรับ
+
 ## 2025-05-26
 - เพิ่มฟังก์ชัน walk-forward validation ใน utils
 - เพิ่ม unit test สำหรับ walk-forward
