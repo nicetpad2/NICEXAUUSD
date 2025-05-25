@@ -69,8 +69,12 @@ def run_parallel_wfv(df: pd.DataFrame, features: list, label_col: str, n_folds: 
     tscv = TimeSeriesSplit(n_splits=n_folds)
     args_list = [(df.iloc[test_idx], features, label_col, i) for i, (_, test_idx) in enumerate(tscv.split(df))]
 
+
     ctx = get_context("spawn")
     with ctx.Pool(processes=min(cpu_count(), n_folds)) as pool:
+
+    with get_context("spawn").Pool(processes=min(cpu_count(), n_folds)) as pool:
+
         trades_list = list(tqdm(pool.imap(_run_fold, args_list), total=n_folds))
 
     all_df = pd.concat(trades_list, ignore_index=True)
