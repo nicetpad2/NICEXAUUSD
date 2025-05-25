@@ -3,7 +3,7 @@ from nicegold_v5.entry import generate_signals
 from nicegold_v5.risk import calc_lot
 from nicegold_v5.exit import should_exit
 from nicegold_v5.backtester import run_backtest
-from nicegold_v5.utils import summarize_results
+from nicegold_v5.utils import summarize_results, run_auto_wfv
 
 
 def sample_df():
@@ -44,3 +44,10 @@ def test_backtester_run():
     assert isinstance(trades, pd.DataFrame)
     assert isinstance(equity, pd.DataFrame)
     summarize_results(trades, equity)
+
+
+def test_run_auto_wfv(tmp_path):
+    df = sample_df()
+    summary = run_auto_wfv(df, outdir=str(tmp_path), n_folds=2)
+    assert isinstance(summary, pd.DataFrame)
+    assert len(summary) == 2
