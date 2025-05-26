@@ -56,6 +56,7 @@ def test_generate_signals():
     df = sample_df()
     out = generate_signals(df)
     assert 'entry_signal' in out.columns
+    assert 'entry_blocked_reason' in out.columns
 
 
 def test_calc_lot():
@@ -86,8 +87,19 @@ def test_calc_lot_risk_and_sl_tp():
 
 
 def test_should_exit():
-    trade = {'entry': 100, 'type': 'buy', 'lot': 0.1}
-    row = {'close': 101, 'gain_z': -1, 'atr': 1.0, 'atr_ma': 1.5}
+    trade = {
+        'entry': 100,
+        'type': 'buy',
+        'lot': 0.1,
+        'entry_time': pd.Timestamp('2025-01-01 00:00:00')
+    }
+    row = {
+        'close': 101,
+        'gain_z': -1,
+        'atr': 1.0,
+        'atr_ma': 1.5,
+        'timestamp': pd.Timestamp('2025-01-01 00:15:00')
+    }
     exit_now, reason = should_exit(trade, row)
     assert exit_now
 

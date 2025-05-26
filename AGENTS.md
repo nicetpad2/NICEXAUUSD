@@ -110,3 +110,6 @@
 ### 2025-06-17
 - เพิ่มต้นทุนค่าคอมมิชัน สเปรด และ Slippage ใน backtester ทุกจุดปิดไม้
 - ปรับ kill_switch ให้รอเทรดครบขั้นต่ำก่อนตรวจ Drawdown และแก้ NaT ใน create_summary_dict
+### 2025-06-18
+- ปรับปรุง `generate_signals` เพิ่มคอลัมน์ `entry_blocked_reason` และเงื่อนไขกรองสัญญาณ
+- เพิ่มตรรกะ TSL และ Minimum Holding ใน `should_exit`
