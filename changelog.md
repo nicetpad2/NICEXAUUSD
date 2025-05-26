@@ -119,3 +119,7 @@
 - เพิ่มตัวกรอง session, envelope และ momentum ใน generate_signals
 ## 2025-06-28
 - เพิ่มฟังก์ชัน `generate_signals_qa_clean` และ unit test ตัวอย่าง
+
+## 2025-06-29
+- ปรับปรุง `generate_signals` ด้วยระบบ fallback และบันทึกเหตุผลการบล็อก (Patch D.9)
+- ปรับ `should_exit` เพิ่ม Momentum exit logic (Patch D.10)

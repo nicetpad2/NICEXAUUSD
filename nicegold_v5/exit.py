@@ -29,6 +29,8 @@ def should_exit(trade, row):
     recovery_prefix = "recovery_" if risk_mode == "recovery" else ""
 
     atr = _rget(row, "atr", 1.0)
+    atr_ma = _rget(row, "atr_ma", 1.0)
+    gain_z = _rget(row, "gain_z", 0)
     sl_threshold = atr * 1.2
     be_trigger = sl_threshold * 1.2
 
@@ -36,26 +38,21 @@ def should_exit(trade, row):
     entry_time = trade["entry_time"]
     holding_min = (now - entry_time).total_seconds() / 60
 
-    # ❌ ยังไม่ให้ปิดก่อนเวลาถือขั้นต่ำ
     if holding_min < MIN_HOLD_MINUTES:
         return False, None
 
-    # ✅ ปิดไม้ทันทีถ้าถือเกิน max bars
     if holding_min > MAX_HOLD_MINUTES:
         return True, "timeout_exit"
 
-    # ✅ SL Hit (ก่อน TSL)
     if gain < -sl_threshold and not trade.get("breakeven"):
         logging.info(f"[{recovery_prefix.upper()}SL] Hit @ {price_now:.2f}")
         return True, f"{recovery_prefix}sl"
 
-    # ✅ TSL Triggered
     if gain >= TSL_TRIGGER_GAIN * atr and not trade.get("tsl_activated"):
         trade["tsl_activated"] = True
-        trade["trailing_sl"] = entry  # ตัดขาดทุนจะถูกเลื่อนขึ้น
+        trade["trailing_sl"] = entry
         logging.info(f"[{recovery_prefix.upper()}TSL] Activated")
 
-    # ✅ ถ้ามี BE หรือ TSL แล้ว SL โดน
     if trade.get("breakeven") or trade.get("tsl_activated"):
         trailing_sl = trade.get("trailing_sl", entry)
         if (direction == "buy" and price_now <= trailing_sl) or (direction == "sell" and price_now >= trailing_sl):
@@ -63,32 +60,20 @@ def should_exit(trade, row):
             logging.info(f"[{reason.upper()}] Triggered")
             return True, reason
 
-    # ✅ BE Trigger (ยังไม่ได้ชน)
     if gain >= be_trigger and not trade.get("breakeven"):
         trade["breakeven"] = True
         trade["breakeven_price"] = entry
-        trade["break_even_time"] = _rget(row, "timestamp")
+        trade["break_even_time"] = now
         logging.info(f"[BE] Triggered to {entry:.2f}")
 
-    # ✅ Exit Guard (เช่น gain_z < -0.5 หลัง gain บวก)
     if gain > 0:
-        atr_val = _rget(row, "atr", 1.0)
-        atr_ma_val = _rget(row, "atr_ma", 1.0)
-        gain_z = _rget(row, "gain_z", 0)
+        atr_fading = atr < 0.8 * atr_ma
+        if atr_fading and gain_z < -0.3:
+            logging.info("[Patch D.10] Exit: ATR fading + gain_z drop")
+            return True, "atr_fade_gain_z_drop"
 
-        atr_fading_trigger = atr_val < 0.8 * atr_ma_val and gain_z < -0.5
-        tp1_threshold = atr_val * 1.2 * 1.5 * 0.8
-
-        if atr_fading_trigger and gain >= tp1_threshold:
-            logging.info(
-                f"[Patch D.1] Exit due to confirmed atr fading (gain_z={gain_z:.2f})"
-            )
-            return True, "atr fading"
-        elif atr_fading_trigger:
-            logging.debug(
-                f"[Patch D.1] Skip early atr fading exit: gain={gain:.2f} < TP1×0.8"
-            )
-        if gain_z < -0.5:
-            return True, "gain_z drop"
+        if gain_z < -0.3:
+            logging.info("[Patch D.10] Exit: gain_z reversal after profit")
+            return True, "gain_z_reverse"
 
     return False, None
