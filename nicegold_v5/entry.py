@@ -244,3 +244,16 @@ def generate_signals_v6_5(df: pd.DataFrame, fold_id: int) -> pd.DataFrame:
     print(f"[Patch v6.5] Entry Signal Blocked: {blocked_pct:.2f}%")
 
     return df
+
+
+# --- Patch v7.1 ---
+
+
+def generate_signals_v7_1(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
+    """Apply Sniper TP ratio boost (Patch v7.1)."""
+    df = generate_signals(df, config=config)
+    df["tp_rr_ratio"] = 4.8
+    sniper_boost = (df["entry_tier"] == "A") & (df["gain_z"] > 0.8)
+    df.loc[sniper_boost, "tp_rr_ratio"] = 7.5
+    return df
+

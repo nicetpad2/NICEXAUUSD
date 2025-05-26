@@ -217,3 +217,21 @@ def run_auto_wfv(df: pd.DataFrame, outdir: str, n_folds: int = 5) -> pd.DataFram
         equity.to_csv(os.path.join(outdir, f"equity_fold{i + 1}_{ts}.csv"), index=False)
 
     return pd.DataFrame(summary)
+
+
+def split_by_session(df: pd.DataFrame) -> dict:
+    """Split dataframe into session-based subsets."""
+    df = df.copy()
+    if "timestamp" not in df.columns:
+        df["timestamp"] = pd.date_range("2000-01-01", periods=len(df), freq="H")
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
+    df["hour"] = df["timestamp"].dt.hour
+    df = df.set_index("timestamp")
+    asia_df = df[df["hour"].between(3, 7)]
+    london_df = df[df["hour"].between(8, 15)]
+    ny_df = df[df["hour"].between(16, 22)]
+    return {
+        "Asia": asia_df,
+        "London": london_df,
+        "NY": ny_df,
+    }

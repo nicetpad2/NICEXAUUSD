@@ -71,7 +71,7 @@ def run_backtest(df: pd.DataFrame):
             atr_entry = open_trade["atr"]
             sl_dist = atr_entry * 1.2
             tp1 = sl_dist * 1.5
-            tp2 = sl_dist * adaptive_tp_multiplier(session)
+            tp2 = sl_dist * open_trade.get("tp_rr_ratio", adaptive_tp_multiplier(session))
             gain = price - open_trade["entry"] if direction == "buy" else open_trade["entry"] - price
 
             if not open_trade.get("tp1_hit") and gain >= tp1:
@@ -179,7 +179,11 @@ def run_backtest(df: pd.DataFrame):
                 "session": session,
                 "atr": atr_val,
                 "risk_mode": "recovery" if recovery_mode else "normal",
+                "tp_rr_ratio": getattr(row, "tp_rr_ratio", adaptive_tp_multiplier(session)),
             }
+            logging.info(
+                f"[Patch v7.x] Using lot: {lot:.2f} | Tier: {getattr(row, 'entry_tier', '')} | RR: {open_trade['tp_rr_ratio']}"
+            )
 
     end = time.time()
     logging.info(f"[TIME] run_backtest() done in {end - start:.2f}s")

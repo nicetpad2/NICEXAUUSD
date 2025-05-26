@@ -148,6 +148,14 @@ def test_generate_signals_v6_5_no_session_filter():
     assert not out['entry_blocked_reason'].str.contains('off_session').any()
 
 
+def test_generate_signals_v7_1_tp_ratio():
+    from nicegold_v5.entry import generate_signals_v7_1
+    df = sample_df()
+    out = generate_signals_v7_1(df)
+    assert 'tp_rr_ratio' in out.columns
+    assert out['tp_rr_ratio'].iloc[0] == 4.8
+
+
 def test_auto_entry_config():
     df = sample_df()
     df = df.assign(ema_fast=1.0, gain_z=0.0, atr=1.0)
@@ -339,6 +347,13 @@ def test_run_parallel_wfv_lowercase(tmp_path, monkeypatch):
     monkeypatch.setattr(main, 'maximize_ram', lambda: None)
     trades = main.run_parallel_wfv(df, ['Open', 'feat1', 'feat2'], 'label', n_folds=2)
     assert isinstance(trades, pd.DataFrame)
+
+
+def test_split_by_session():
+    from nicegold_v5.utils import split_by_session
+    df = sample_df()
+    sessions = split_by_session(df)
+    assert set(sessions.keys()) == {'Asia', 'London', 'NY'}
 
 
 def test_print_qa_summary_and_export(tmp_path):
