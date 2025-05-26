@@ -113,3 +113,5 @@
 ### 2025-06-18
 - ปรับปรุง `generate_signals` เพิ่มคอลัมน์ `entry_blocked_reason` และเงื่อนไขกรองสัญญาณ
 - เพิ่มตรรกะ TSL และ Minimum Holding ใน `should_exit`
+### 2025-06-19
+- แก้ตัวอย่างข้อมูล `sample_wfv_df` ให้สร้างคอลัมน์ด้วย index เดียวกัน ลดคำเตือน sklearn
