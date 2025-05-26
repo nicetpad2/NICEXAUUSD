@@ -6,6 +6,7 @@ sys.path.append("/content/drive/MyDrive/NICEGOLD")  # Add project root to path
 
 import pandas as pd
 import gc
+import logging
 from tqdm import tqdm, trange
 from nicegold_v5.wfv import (
     run_walkforward_backtest as raw_run,
@@ -84,21 +85,16 @@ MAX_RAM_MODE = True
 
 
 def maximize_ram():
-    try:
-        import psutil
-    except ImportError:
-        psutil = None
     if MAX_RAM_MODE:
-        import gc
-        gc.disable()  # ✅ ปิด GC เพื่อให้ MAX RAM ใช้จริง
-        print("🚀 MAX_RAM_MODE: ON – GC disabled")
+        try:
+            import psutil
+            gc.disable()
+            print("🚀 MAX_RAM_MODE: ON – GC disabled")
+            print(f"✅ Total RAM: {psutil.virtual_memory().total / 1024**3:.2f} GB")
+        except Exception:
+            pass
     else:
         gc.collect()
-    if psutil:
-        ram = psutil.virtual_memory()
-        print(
-            f"🚀 Using RAM: {ram.percent:.1f}% | Available: {ram.available / 1024**3:.2f} GB"
-        )
 
 def _run_fold(args):
     df, features, label_col, i = args
@@ -111,7 +107,7 @@ def _run_fold(args):
 
 def run_parallel_wfv(df: pd.DataFrame, features: list, label_col: str, n_folds: int = 5):
     print("\n⚡ Parallel Walk-Forward (Full RAM Mode)")
-    df = df.copy()
+    df = df.copy(deep=False)  # [Perf-C] ลด RAM ใช้ deepcopy
     if 'open' in df.columns and 'Open' not in df.columns:
         df.rename(columns={'open': 'Open'}, inplace=True)
         features = ['Open' if f == 'open' else f for f in features]
@@ -151,6 +147,8 @@ def run_wfv_with_progress(df, features, label_col):
     from sklearn.model_selection import TimeSeriesSplit
     import numpy as np
 
+    logging.info("[TIME] run_wfv_with_progress(): Start")
+
     splits = list(TimeSeriesSplit(n_splits=5).split(df))
     all_trades = []
     print("\n📊 Running Walk-Forward Folds:")
@@ -186,6 +184,7 @@ def run_wfv_with_progress(df, features, label_col):
             maximize_ram()
         except Exception as e:
             print(f"❌ Error in {fold_label}: {e}")
+    logging.info("[TIME] run_wfv_with_progress(): Done")
     return pd.concat(all_trades, ignore_index=True) if all_trades else pd.DataFrame()
 
 def show_progress_bar(task_desc, steps=5):

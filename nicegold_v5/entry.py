@@ -89,30 +89,20 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
         & session
     )
 
-    df.loc[buy_cond, "entry_signal"] = "buy"
-    df.loc[sell_cond, "entry_signal"] = "sell"
+    df["entry_signal"] = np.where(buy_cond, "buy", np.where(sell_cond, "sell", None))
 
     # --- Logging QA Reason ---
-    fail_reason = []
-    for i in df.index:
-        reasons = []
-        if not trend_up[i] and not trend_dn[i]:
-            reasons.append("no_trend")
-        if not volatility_ok[i]:
-            reasons.append("low_vol")
-        if not momentum_ok[i]:
-            reasons.append("low_momentum")
-        if not volume_ok[i]:
-            reasons.append("low_volume")
-        if not atr_enough[i]:
-            reasons.append("atr_too_small")
-        if not session[i]:
-            reasons.append("off_session")
-        if not breakout_up[i] and not breakout_dn[i]:
-            reasons.append("no_breakout")
-        fail_reason.append("|".join(reasons))
-
-    df.loc[df["entry_signal"].isnull(), "entry_blocked_reason"] = fail_reason
+    # [Perf-B] ปรับให้ QA Block Reason ทำงานแบบ vectorized (ลด loop)
+    df["entry_blocked_reason"] = ""
+    df.loc[~trend_up & ~trend_dn, "entry_blocked_reason"] += "no_trend|"
+    df.loc[~volatility_ok, "entry_blocked_reason"] += "low_vol|"
+    df.loc[~momentum_ok, "entry_blocked_reason"] += "low_momentum|"
+    df.loc[~volume_ok, "entry_blocked_reason"] += "low_volume|"
+    df.loc[~atr_enough, "entry_blocked_reason"] += "atr_too_small|"
+    df.loc[~session, "entry_blocked_reason"] += "off_session|"
+    df.loc[~(breakout_up | breakout_dn), "entry_blocked_reason"] += "no_breakout|"
+    df["entry_blocked_reason"] = df["entry_blocked_reason"].str.rstrip("|")
+    df.loc[df["entry_signal"].notnull(), "entry_blocked_reason"] = None
     blocked_pct = df["entry_signal"].isnull().mean() * 100
     print(f"[Patch VBTB+ UltraFix v4.1] Entry Signal Blocked: {blocked_pct:.2f}%")
 

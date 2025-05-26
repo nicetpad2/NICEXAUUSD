@@ -22,6 +22,7 @@ MAX_RAM_MODE = True
 
 def run_backtest(df: pd.DataFrame):
     """Backtest พร้อม Recovery Mode และ Logging เต็มรูปแบบ"""
+    logging.info(f"[TIME] run_backtest() start: {time.strftime('%H:%M:%S')}")
     capital = 100.0
     trades = []
     equity = []
@@ -34,16 +35,20 @@ def run_backtest(df: pd.DataFrame):
     if MAX_RAM_MODE:
         df = df.astype({col: np.float32 for col in df.select_dtypes(include="number").columns})
 
-    for i, row in enumerate(tqdm(
-        df.itertuples(index=False),
-        total=len(df),
-        desc="⏱️ Running Backtest",
-        unit="rows",
-    )):
+    it = df.itertuples(index=False)
+    bar_count = len(df)
+    for i, row in enumerate(
+        tqdm(it, total=bar_count, desc="⏱️ Running Backtest", unit="rows")
+    ):
         ts = pd.to_datetime(row.timestamp)
         price = row.close
         atr_val = row.atr if hasattr(row, "atr") else 1.0
         gain_z = getattr(row, "gain_z", 0)
+        # [Perf-A] เพิ่ม caching ATR เพื่อไม่เรียกซ้ำ
+        if i == 0:
+            last_atr = atr_val
+        else:
+            last_atr = 0.9 * last_atr + 0.1 * atr_val
 
         equity.append({"timestamp": ts, "equity": capital})
         equity_curve.append(capital)
@@ -175,6 +180,7 @@ def run_backtest(df: pd.DataFrame):
             }
 
     end = time.time()
+    logging.info(f"[TIME] run_backtest() done in {end - start:.2f}s")
     print(
         f"⏱️ Backtest Duration: {end - start:.2f}s | Trades: {len(trades)} | Avg per row: {(end - start)/len(df):.6f}s"
     )
