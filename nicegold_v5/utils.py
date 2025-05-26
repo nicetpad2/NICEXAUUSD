@@ -109,10 +109,26 @@ def export_chatgpt_ready_logs(trades: pd.DataFrame, equity: pd.DataFrame, summar
     print(f"   └ summary_metrics → {summary_path}")
 
 
-def create_summary_dict(trades: pd.DataFrame, equity: pd.DataFrame, file_name: str = "", start_time: datetime | None = None, end_time: datetime | None = None, duration_sec: float | None = None) -> dict:
+def create_summary_dict(
+    trades: pd.DataFrame,
+    equity: pd.DataFrame,
+    file_name: str = "",
+    start_time: datetime | None = None,
+    end_time: datetime | None = None,
+    duration_sec: float | None = None,
+) -> dict:
     """Create a summary dictionary for export_chatgpt_ready_logs."""
+
     start_eq = equity.iloc[0]["equity"] if not equity.empty else 0
     end_eq = equity.iloc[-1]["equity"] if not equity.empty else 0
+
+    safe_start_time = (
+        start_time.strftime("%Y-%m-%d %H:%M:%S") if pd.notnull(start_time) else ""
+    )
+    safe_end_time = (
+        end_time.strftime("%Y-%m-%d %H:%M:%S") if pd.notnull(end_time) else ""
+    )
+
     return {
         "file_name": file_name,
         "total_trades": len(trades),
@@ -123,17 +139,17 @@ def create_summary_dict(trades: pd.DataFrame, equity: pd.DataFrame, file_name: s
         "avg_pnl": round(trades["pnl"].mean(), 4) if not trades.empty else 0,
         "total_lot": round(trades.get("lot", pd.Series(dtype=float)).sum(), 2),
         "commission_paid": round(trades.get("commission", pd.Series(dtype=float)).sum(), 2),
-        "spread_impact": round(trades.get("spread", pd.Series(dtype=float)).sum(), 2),
-        "slippage_impact": round(trades.get("slippage", pd.Series(dtype=float)).sum(), 2),
+        "spread_impact": round(trades.get("spread_cost", pd.Series(dtype=float)).sum(), 2),
+        "slippage_impact": round(trades.get("slippage_cost", pd.Series(dtype=float)).sum(), 2),
         "total_cost_deducted": round(
             trades.get("commission", pd.Series(dtype=float)).sum()
-            + trades.get("spread", pd.Series(dtype=float)).sum()
-            + trades.get("slippage", pd.Series(dtype=float)).sum(),
+            + trades.get("spread_cost", pd.Series(dtype=float)).sum()
+            + trades.get("slippage_cost", pd.Series(dtype=float)).sum(),
             2,
         ),
         "duration_sec": round(duration_sec, 2) if duration_sec is not None else None,
-        "start_time": start_time.strftime("%Y-%m-%d %H:%M:%S") if start_time else "",
-        "end_time": end_time.strftime("%Y-%m-%d %H:%M:%S") if end_time else "",
+        "start_time": safe_start_time,
+        "end_time": safe_end_time,
     }
 
 

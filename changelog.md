@@ -1,6 +1,10 @@
 # Changelog
 ## 2025-06-16
 - รวมฟังก์ชันจาก `m.ainmain.py` เข้ากับ `main.py`
+## 2025-06-17
+- เพิ่มต้นทุนค่าคอมมิชัน สเปรด และ Slippage ให้ทุก trade ใน backtester
+- ปรับ kill_switch รอให้มีเทรดมากกว่า 100 ไม้ก่อนเริ่มตรวจ Drawdown
+- ป้องกัน NaTType crash ใน `create_summary_dict`
 ## 2025-06-15
 - เพิ่มระบบ Kill Switch, Recovery Lot และ Dynamic SL/TP ใน backtester
 ## 2025-06-14

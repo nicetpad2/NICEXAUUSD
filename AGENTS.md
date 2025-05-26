@@ -107,3 +107,6 @@
 
 ### 2025-06-16
 - รวมฟังก์ชันจาก `m.ainmain.py` เข้ากับ `main.py` เพื่อใช้งาน Advanced Risk Management
+### 2025-06-17
+- เพิ่มต้นทุนค่าคอมมิชัน สเปรด และ Slippage ใน backtester ทุกจุดปิดไม้
+- ปรับ kill_switch ให้รอเทรดครบขั้นต่ำก่อนตรวจ Drawdown และแก้ NaT ใน create_summary_dict
