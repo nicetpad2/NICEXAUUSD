@@ -197,3 +197,8 @@
 - ปรับ run_wfv_with_progress ใช้ split_by_session และบันทึกสรุปแบบ Session
 - ปรับ tp_rr_ratio ใช้ค่าจากสัญญาณแต่ละแถว หากไม่มีใช้ 4.8 และเพิ่ม logging QA style
 
+### 2025-07-19
+- ปรับ breakout ให้ดีเลย์ 1 แท่งและคืนระบบบันทึกเหตุผล (Patch v7.2)
+### 2025-07-20
+- ขยาย sniper zone เป็น gain_z > 0.2 (Patch v7.3)
+

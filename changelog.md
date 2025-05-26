@@ -173,3 +173,8 @@
 - ปรับ run_wfv_with_progress ใช้ split_by_session แทน TimeSeriesSplit
 - ใช้ tp_rr_ratio ต่อไม้ใน backtester และเพิ่ม logging QA style
 
+## 2025-07-19
+- ปรับปรุง generate_signals และ generate_signals_v6_5 ให้ดีเลย์ breakout 1 แท่ง และคืนระบบบันทึกเหตุผล (Patch v7.2)
+## 2025-07-20
+- ขยาย sniper_zone ให้ใช้ gain_z > 0.2 (Patch v7.3)
+
