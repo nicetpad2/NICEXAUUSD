@@ -157,4 +157,6 @@
 ## 2025-07-13
 - เพิ่ม `generate_signals_v6_5` สำหรับปรับ threshold ตาม ATR และ fold
 - เพิ่ม unit test สำหรับฟังก์ชันใหม่
+## 2025-07-14
+- ปรับ `generate_signals_v6_5` ปิดกรอง session เมื่อ fold_id=4 (Patch v6.6)
 

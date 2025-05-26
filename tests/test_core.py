@@ -140,6 +140,12 @@ def test_generate_signals_v6_5():
     assert 'entry_signal' in out.columns
     assert 'entry_blocked_reason' in out.columns
 
+def test_generate_signals_v6_5_no_session_filter():
+    from nicegold_v5.entry import generate_signals_v6_5
+    df = sample_df()
+    out = generate_signals_v6_5(df, fold_id=4)
+    assert not out['entry_blocked_reason'].str.contains('off_session').any()
+
 
 def test_auto_entry_config():
     df = sample_df()

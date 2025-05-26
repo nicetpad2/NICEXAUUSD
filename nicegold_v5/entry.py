@@ -161,7 +161,6 @@ def generate_signals_v6_5(df: pd.DataFrame, fold_id: int) -> pd.DataFrame:
     df["volume_ma"] = df["volume"].rolling(20).mean()
 
     df["session_label"] = "None"
-    df.loc[df["timestamp"].dt.hour.between(13, 17), "session_label"] = "NY"
 
     mean_atr = df["atr"].mean()
     if mean_atr < 1.5:
@@ -190,13 +189,18 @@ def generate_signals_v6_5(df: pd.DataFrame, fold_id: int) -> pd.DataFrame:
     volume_ok = df["volume"] > df["volume_ma"] * 1.0
     atr_enough = df["atr"] > atr_thresh  # [Patch v6.3]
     session = df["timestamp"].dt.hour.between(session_range[0], session_range[1])
+    if fold_id == 4:
+        session_ok = pd.Series(True, index=df.index)  # [Patch v6.6] ปิดกรองเวลา
+    else:
+        df.loc[session, "session_label"] = "Active"
+        session_ok = df["session_label"] != "None"
 
     if trend_bypass:
         buy_cond = (
-            breakout_up & volatility_ok & momentum_ok & volume_ok & atr_enough & session
+            breakout_up & volatility_ok & momentum_ok & volume_ok & atr_enough & session_ok
         )
         sell_cond = (
-            breakout_dn & volatility_ok & momentum_ok & volume_ok & atr_enough & session
+            breakout_dn & volatility_ok & momentum_ok & volume_ok & atr_enough & session_ok
         )
     else:
         buy_cond = (
@@ -206,7 +210,7 @@ def generate_signals_v6_5(df: pd.DataFrame, fold_id: int) -> pd.DataFrame:
             & momentum_ok
             & volume_ok
             & atr_enough
-            & session
+            & session_ok
         )
         sell_cond = (
             trend_dn
@@ -215,7 +219,7 @@ def generate_signals_v6_5(df: pd.DataFrame, fold_id: int) -> pd.DataFrame:
             & momentum_ok
             & volume_ok
             & atr_enough
-            & session
+            & session_ok
         )
 
     df["entry_signal"] = np.where(buy_cond, "buy", np.where(sell_cond, "sell", None))
@@ -226,7 +230,8 @@ def generate_signals_v6_5(df: pd.DataFrame, fold_id: int) -> pd.DataFrame:
     df.loc[~momentum_ok, "entry_blocked_reason"] += "low_momentum|"
     df.loc[~volume_ok, "entry_blocked_reason"] += "low_volume|"
     df.loc[~atr_enough, "entry_blocked_reason"] += "atr_too_small|"
-    df.loc[~session, "entry_blocked_reason"] += "off_session|"
+    if fold_id != 4:
+        df.loc[~session_ok, "entry_blocked_reason"] += "off_session|"
     df.loc[~(breakout_up | breakout_dn), "entry_blocked_reason"] += "no_breakout|"
     df["entry_blocked_reason"] = df["entry_blocked_reason"].str.rstrip("|")
     df.loc[df["entry_signal"].notnull(), "entry_blocked_reason"] = None
