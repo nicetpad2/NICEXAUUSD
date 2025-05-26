@@ -16,9 +16,9 @@ def rsi(series: pd.Series, period: int = 14) -> pd.Series:
 def generate_signals(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     df["entry_signal"] = None
-    df["entry_blocked_reason"] = None  # [Patch A] QA column
+    df["entry_blocked_reason"] = None
 
-    # === Core Indicator Calculation ===
+    # --- Core Indicator ---
     df["ema_fast"] = df["close"].ewm(span=15, adjust=False).mean()
     df["ema_slow"] = df["close"].ewm(span=50, adjust=False).mean()
     df["rsi"] = rsi(df["close"], 14)
@@ -26,26 +26,31 @@ def generate_signals(df: pd.DataFrame) -> pd.DataFrame:
     df["atr_ma"] = df["atr"].rolling(50).mean()
     df["ema_slope"] = df["ema_fast"].diff()
 
-    # === Trend Conditions ===
-    trend_up = (df["ema_fast"] > df["ema_slow"]) & (df["rsi"] > 55)
-    trend_dn = (df["ema_fast"] < df["ema_slow"]) & (df["rsi"] < 45)
+    # --- Patch C.1: Fallback gain_z ---
+    gainz = df["gain_z"] if "gain_z" in df.columns else pd.Series(1.0, index=df.index)
 
-    # === Recovery Entry Guard ===
-    gainz_guard = df.get("gain_z", pd.Series(0, index=df.index)) < 0.1
+    # --- Filter Logic (Relaxed) ---
+    gainz_guard = gainz < -0.1
     ema_flat = df["ema_slope"] <= 0
-    if "entry_time" in df.columns:
-        time_gap_ok = (
-            df["entry_time"].diff().dt.total_seconds().fillna(999999) > 15 * 60
-        )
+    if "timestamp" in df.columns:
+        df["entry_time"] = df["timestamp"]
+        time_gap_ok = df["entry_time"].diff().dt.total_seconds().fillna(999999) > 15 * 60
     else:
         time_gap_ok = pd.Series(True, index=df.index)
 
     recovery_block = gainz_guard | ema_flat | ~time_gap_ok
-
     df.loc[recovery_block, "entry_blocked_reason"] = "Recovery Filter Blocked"
-    allow_recovery_entry = trend_up & df["entry_blocked_reason"].isnull()
 
-    df.loc[allow_recovery_entry, "entry_signal"] = "buy"
+    # --- Trend Logic ---
+    trend_up = (df["ema_fast"] > df["ema_slow"]) & (df["rsi"] > 55)
+    trend_dn = (df["ema_fast"] < df["ema_slow"]) & (df["rsi"] < 45)
+
+    # --- Final Entry Assignment ---
+    df.loc[trend_up & df["entry_blocked_reason"].isnull(), "entry_signal"] = "buy"
     df.loc[trend_dn & df["entry_blocked_reason"].isnull(), "entry_signal"] = "sell"
+
+    # --- Logging QA Summary ---
+    blocked_pct = df["entry_signal"].isnull().mean() * 100
+    print(f"[Patch C.1] Entry Signal Blocked: {blocked_pct:.2f}%")
 
     return df

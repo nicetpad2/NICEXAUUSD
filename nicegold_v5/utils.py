@@ -99,6 +99,17 @@ def export_chatgpt_ready_logs(trades: pd.DataFrame, equity: pd.DataFrame, summar
     equity_path = os.path.join(outdir, f"equity_curve_{ts}.csv")
     summary_path = os.path.join(outdir, f"summary_metrics_{ts}.csv")
 
+    # [Patch E] Fill missing meta columns if absent
+    for col in ["planned_risk", "r_multiple", "pnl_pct", "break_even_min", "mfe"]:
+        if col not in trades.columns:
+            trades[col] = None
+
+    # [Patch E] Meta tags for ML filtering
+    trades["is_recovery"] = trades.get("risk_mode", "") == "recovery"
+    exit_reason_series = trades.get("exit_reason", pd.Series(dtype=str))
+    trades["is_tsl"] = exit_reason_series.str.contains("tsl", na=False)
+    trades["is_tp2"] = exit_reason_series == "TP2"
+
     trades.to_csv(trades_path, index=False)
     equity.to_csv(equity_path, index=False)
     pd.DataFrame([summary_dict]).to_csv(summary_path, index=False)
