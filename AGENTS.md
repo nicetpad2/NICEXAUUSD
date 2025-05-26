@@ -193,3 +193,7 @@
 - เพิ่ม generate_signals_v7_1 ปรับ tp_rr_ratio เป็น 4.8 และ 7.5 สำหรับ Sniper Tier A
 - เพิ่มฟังก์ชัน split_by_session และปรับ run_parallel_wfv ใช้ session-based fold
 
+### 2025-07-18
+- ปรับ run_wfv_with_progress ใช้ split_by_session และบันทึกสรุปแบบ Session
+- ปรับ tp_rr_ratio ใช้ค่าจากสัญญาณแต่ละแถว หากไม่มีใช้ 4.8 และเพิ่ม logging QA style
+
