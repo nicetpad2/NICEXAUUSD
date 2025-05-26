@@ -67,6 +67,12 @@ def test_generate_signals_with_config():
     assert out_default['entry_signal'].notnull().sum() < out_cfg['entry_signal'].notnull().sum()
 
 
+def test_generate_signals_volatility_filter():
+    df = sample_df()
+    out = generate_signals(df, config={'volatility_thresh': 3.0})
+    assert out['entry_signal'].notnull().sum() == 0
+
+
 def test_auto_entry_config():
     df = sample_df()
     df = df.assign(ema_fast=1.0, gain_z=0.0, atr=1.0)
