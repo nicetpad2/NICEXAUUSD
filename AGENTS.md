@@ -160,4 +160,6 @@
 - ปรับ `generate_signals` ใช้กลยุทธ์ VBTB และเพิ่ม log entry_blocked_reason
 ### 2025-07-04
 - ปรับปรุง `generate_signals` เป็น Patch VBTB+ กรองเฉพาะช่วง London Open
+### 2025-07-05
+- ปรับปรุง `generate_signals` เป็น Patch VBTB+ Enhanced เพิ่มตัวกรอง Volume และขยาย threshold
 

@@ -24,6 +24,7 @@ def sample_df():
         'high': pd.Series(range(rows)) + 101,
         'low': pd.Series(range(rows)) + 99,
         'close': pd.Series(range(rows)) + 100,
+        'volume': [100] * rows,
         'gain_z': [0.0] * rows,
         'atr_ma': [1.0] * rows
     }
@@ -99,6 +100,7 @@ def test_generate_signals_session_filter():
         'high': pd.Series(range(30)) + 101,
         'low': pd.Series(range(30)) + 99,
         'close': pd.Series(range(30)) + 100,
+        'volume': [100]*30,
         'gain_z': [0.1]*30,
         'atr_ma': [1.0]*30,
     })
@@ -109,6 +111,13 @@ def test_generate_signals_session_filter():
     df_out['timestamp'] = ts_out
     out_out = generate_signals(df_out)
     assert (out_out['entry_blocked_reason'] == 'filtered_out').all()
+
+
+def test_generate_signals_volume_filter():
+    df = sample_df()
+    df['volume'] = 10  # lower than rolling mean
+    out = generate_signals(df)
+    assert (out['entry_signal'].isnull()).all()
 
 
 def test_generate_signals_qa_clean():
