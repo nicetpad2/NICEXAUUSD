@@ -78,6 +78,7 @@ def test_generate_signals():
     assert 'entry_blocked_reason' in out.columns
     assert 'lot_suggested' in out.columns
     assert 'entry_score' in out.columns
+    assert 'sniper_risk_score' in out.columns
     assert 'session_label' in out.columns
     assert out['lot_suggested'].iloc[0] == 0.05
     assert 'use_be' in out.columns and out['use_be'].all()
