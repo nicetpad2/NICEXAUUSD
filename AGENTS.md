@@ -168,4 +168,6 @@
 - ปรับปรุง `generate_signals` เป็น Patch VBTB+ UltraFix v3 เพิ่ม session_label, entry_score, lot_suggested และระบุเหตุผลบล็อกอย่างละเอียด
 ### 2025-07-08
 - ปรับปรุง `generate_signals` เป็น Patch VBTB+ UltraFix v4 เพิ่ม risk_level, tp_rr_ratio และ entry_tier
+### 2025-07-09
+- ปรับปรุง `generate_signals` เป็น Patch VBTB+ UltraFix v4.1 เพิ่มคอลัมน์ `use_be` และ `use_tsl`
 

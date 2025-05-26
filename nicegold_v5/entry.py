@@ -14,7 +14,7 @@ def rsi(series: pd.Series, period: int = 14) -> pd.Series:
 
 
 def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
-    """Patch VBTB+ UltraFix v4 – QA Enterprise Ready"""
+    """Patch VBTB+ UltraFix v4.1 – QA Enterprise Ready"""
     df = df.copy()
     df["entry_signal"] = None
     df["entry_blocked_reason"] = None
@@ -57,6 +57,8 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
     df["entry_score"] = df["gain_z"] * df["atr"] / (df["atr_ma"] + 1e-9)
     df["entry_score"].fillna(0, inplace=True)
     df["tp_rr_ratio"] = 3.5
+    df["use_be"] = True  # ✅ ใช้ Break-even
+    df["use_tsl"] = True  # ✅ ใช้ Trailing SL
 
     # --- Risk Level by score ---
     df["risk_level"] = "low"
@@ -112,7 +114,7 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
 
     df.loc[df["entry_signal"].isnull(), "entry_blocked_reason"] = fail_reason
     blocked_pct = df["entry_signal"].isnull().mean() * 100
-    print(f"[Patch VBTB+ UltraFix v4] Entry Signal Blocked: {blocked_pct:.2f}%")
+    print(f"[Patch VBTB+ UltraFix v4.1] Entry Signal Blocked: {blocked_pct:.2f}%")
 
     return df
 
