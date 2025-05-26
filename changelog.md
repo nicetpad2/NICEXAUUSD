@@ -142,3 +142,5 @@
 - ปรับปรุง `generate_signals` เป็น Patch VBTB+ UltraFix v3 เพิ่มคอลัมน์ lot_suggested, entry_score, session_label และเหตุผลบล็อกละเอียด
 ## 2025-07-08
 - ปรับปรุง `generate_signals` เป็น Patch VBTB+ UltraFix v4 เพิ่ม risk_level, tp_rr_ratio และ entry_tier พร้อมเงื่อนไขใหม่
+## 2025-07-09
+- ปรับปรุง `generate_signals` เป็น Patch VBTB+ UltraFix v4.1 เพิ่มคอลัมน์ `use_be` และ `use_tsl` เพื่อเปิด Breakeven และ Trailing SL โดยค่าเริ่มต้น

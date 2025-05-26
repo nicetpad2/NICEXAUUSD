@@ -79,6 +79,8 @@ def test_generate_signals():
     assert 'entry_score' in out.columns
     assert 'session_label' in out.columns
     assert out['lot_suggested'].iloc[0] == 0.05
+    assert 'use_be' in out.columns and out['use_be'].all()
+    assert 'use_tsl' in out.columns and out['use_tsl'].all()
 
 
 def test_generate_signals_with_config():
