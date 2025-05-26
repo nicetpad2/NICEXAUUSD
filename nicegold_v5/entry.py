@@ -14,10 +14,11 @@ def rsi(series: pd.Series, period: int = 14) -> pd.Series:
 
 
 def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
-    """Patch VBTB+ Final PRO – กรองทุกเซสชัน Lot ≥ 0.05 กำไร ≥ $1"""
+    """Patch VBTB+ UltraFix v3 – QA Enterprise Ready"""
     df = df.copy()
     df["entry_signal"] = None
     df["entry_blocked_reason"] = None
+    df["lot_suggested"] = 0.05
 
     # --- Indicators ---
     df["ema_15"] = df["close"].ewm(span=15).mean()
@@ -28,6 +29,14 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
     df["gain_z"] = (gain - gain.rolling(20).mean()) / (gain.rolling(20).std() + 1e-9)
     df["volume_ma"] = df["volume"].rolling(20).mean()
     df["entry_time"] = df["timestamp"]
+    df["signal_id"] = df["timestamp"].astype(str)
+
+    # --- Session Tag ---
+    df["session_label"] = "None"
+    df.loc[df["timestamp"].dt.hour.between(3, 6), "session_label"] = "Asia"
+    df.loc[df["timestamp"].dt.hour.between(8, 11), "session_label"] = "London"
+    df.loc[df["timestamp"].dt.hour.between(13, 16), "session_label"] = "NY"
+    session = df["session_label"] != "None"
 
     # คอลัมน์เดิมสำหรับโมดูลอื่น
     df["ema_fast"] = df["ema_15"]
@@ -35,42 +44,63 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
     df["ema_slope"] = df["ema_fast"].diff()
 
     # --- Entry Conditions ---
-    session_all = df["timestamp"].dt.hour.between(3, 22)
     trend_up = df["ema_15"] > df["ema_50"]
     trend_dn = df["ema_15"] < df["ema_50"]
-    breakout_up = df["close"] > df["ema_50"] + 0.3
-    breakout_dn = df["close"] < df["ema_50"] - 0.3
-    volatility_ok = df["atr"] > df["atr_ma"] * 1.0
-    momentum_strong = df["gain_z"] > 1.5
-    volume_ok = df["volume"] > df["volume_ma"] * 1.5
-    atr_min_profit = df["atr"] > 3.0
+    breakout_up = df["close"] > df["ema_50"] + 0.25
+    breakout_dn = df["close"] < df["ema_50"] - 0.25
+    volatility_ok = df["atr"] > df["atr_ma"] * 0.9
+    momentum_ok = df["gain_z"] > 1.0
+    volume_ok = df["volume"] > df["volume_ma"] * 1.2
+    atr_enough = df["atr"] > 2.5
+
+    # --- Entry Score ---
+    df["entry_score"] = df["gain_z"] * df["atr"] / (df["atr_ma"] + 1e-9)
 
     buy_cond = (
         trend_up
         & breakout_up
         & volatility_ok
-        & momentum_strong
+        & momentum_ok
         & volume_ok
-        & atr_min_profit
-        & session_all
+        & atr_enough
+        & session
     )
     sell_cond = (
         trend_dn
         & breakout_dn
         & volatility_ok
-        & momentum_strong
+        & momentum_ok
         & volume_ok
-        & atr_min_profit
-        & session_all
+        & atr_enough
+        & session
     )
 
     df.loc[buy_cond, "entry_signal"] = "buy"
     df.loc[sell_cond, "entry_signal"] = "sell"
 
-    # --- Logging QA ---
-    df.loc[df["entry_signal"].isnull(), "entry_blocked_reason"] = "filtered_out"
+    # --- Logging QA Reason ---
+    fail_reason = []
+    for i in df.index:
+        reasons = []
+        if not trend_up[i] and not trend_dn[i]:
+            reasons.append("no_trend")
+        if not volatility_ok[i]:
+            reasons.append("low_vol")
+        if not momentum_ok[i]:
+            reasons.append("low_momentum")
+        if not volume_ok[i]:
+            reasons.append("low_volume")
+        if not atr_enough[i]:
+            reasons.append("atr_too_small")
+        if not session[i]:
+            reasons.append("off_session")
+        if not breakout_up[i] and not breakout_dn[i]:
+            reasons.append("no_breakout")
+        fail_reason.append("|".join(reasons))
+
+    df.loc[df["entry_signal"].isnull(), "entry_blocked_reason"] = fail_reason
     blocked_pct = df["entry_signal"].isnull().mean() * 100
-    print(f"[Patch VBTB+ Final PRO] Entry Signal Blocked: {blocked_pct:.2f}%")
+    print(f"[Patch VBTB+ UltraFix v3] Entry Signal Blocked: {blocked_pct:.2f}%")
 
     return df
 
