@@ -1,13 +1,15 @@
 import pandas as pd
 from datetime import datetime
 import random
+import logging
 from nicegold_v5.risk import (
-    calc_lot,
     calc_lot_risk,
-    apply_recovery_lot,
     kill_switch,
     adaptive_tp_multiplier,
     get_sl_tp,
+    calc_lot_recovery,
+    get_sl_tp_recovery,
+    RECOVERY_SL_TRIGGER,
 )
 from nicegold_v5.exit import should_exit
 from tqdm import tqdm
@@ -15,13 +17,14 @@ import time
 
 
 def run_backtest(df: pd.DataFrame):
-    """Backtest แบบง่ายพร้อมแถบสถานะและบันทึกเวลา"""
+    """Backtest พร้อม Recovery Mode และ Logging เต็มรูปแบบ"""
     capital = 100.0
     trades = []
     equity = []
     open_trade = None
     sl_streak = 0
     equity_curve: list[float] = []
+    recovery_mode = False  # เริ่มแบบปกติ
     start = time.time()
 
     for i, row in tqdm(df.iterrows(), total=len(df), desc="⏱️ Running Backtest", unit="rows"):
@@ -32,6 +35,13 @@ def run_backtest(df: pd.DataFrame):
 
         if kill_switch(equity_curve):
             break
+
+        # ตรวจว่าเข้าสู่ Recovery Mode หรือไม่
+        if sl_streak >= RECOVERY_SL_TRIGGER and not recovery_mode:
+            recovery_mode = True
+            logging.info(
+                f"[Patch B] Recovery Mode Triggered at {ts} after SL streak = {sl_streak}"
+            )
 
         if open_trade:
             direction = open_trade["type"]
@@ -62,6 +72,7 @@ def run_backtest(df: pd.DataFrame):
                     "slippage_cost": slippage_cost,
                     "exit_reason": "TP1",
                     "session": session,
+                    "risk_mode": "recovery" if recovery_mode else "normal",
                     "duration_min": (ts - open_trade["entry_time"]).total_seconds() / 60,
                 })
                 open_trade["tp1_hit"] = True
@@ -88,12 +99,15 @@ def run_backtest(df: pd.DataFrame):
                         "slippage_cost": slippage_cost,
                         "exit_reason": reason or "TP2",
                         "session": session,
+                        "risk_mode": "recovery" if recovery_mode else "normal",
                         "duration_min": (ts - open_trade["entry_time"]).total_seconds() / 60,
                     })
                     if (reason or "").startswith("SL"):
                         sl_streak += 1
+                        recovery_mode = sl_streak >= RECOVERY_SL_TRIGGER
                     else:
                         sl_streak = 0
+                        recovery_mode = False
                     open_trade = None
 
             else:
@@ -117,25 +131,31 @@ def run_backtest(df: pd.DataFrame):
                         "slippage_cost": slippage_cost,
                         "exit_reason": reason or "TP",
                         "session": session,
+                        "risk_mode": "recovery" if recovery_mode else "normal",
                         "duration_min": (ts - open_trade["entry_time"]).total_seconds() / 60,
                     })
                     if (reason or "").startswith("SL"):
                         sl_streak += 1
+                        recovery_mode = sl_streak >= RECOVERY_SL_TRIGGER
                     else:
                         sl_streak = 0
+                        recovery_mode = False
                     open_trade = None
 
         if not open_trade and row.get("entry_signal") in ["buy", "sell"]:
             session = "Asia" if ts.hour < 8 else "London" if ts.hour < 16 else "NY"
-            lot = calc_lot_risk(capital, row.get("atr", 1.0), 1.5)
-            lot = apply_recovery_lot(capital, sl_streak, base_lot=lot)
+            if recovery_mode:
+                lot = calc_lot_recovery(capital, row.get("atr", 1.0), 1.5)
+            else:
+                lot = calc_lot_risk(capital, row.get("atr", 1.0), 1.5)
             open_trade = {
                 "entry": price,
                 "entry_time": ts,
                 "type": row.get("entry_signal"),
                 "lot": lot,
                 "session": session,
-                "atr": row.get("atr", 1.0)
+                "atr": row.get("atr", 1.0),
+                "risk_mode": "recovery" if recovery_mode else "normal",
             }
 
     end = time.time()

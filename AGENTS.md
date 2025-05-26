@@ -115,3 +115,5 @@
 - เพิ่มตรรกะ TSL และ Minimum Holding ใน `should_exit`
 ### 2025-06-19
 - แก้ตัวอย่างข้อมูล `sample_wfv_df` ให้สร้างคอลัมน์ด้วย index เดียวกัน ลดคำเตือน sklearn
+### 2025-06-20
+- เพิ่มระบบ Recovery Mode และอัพเดตฟังก์ชัน backtester, risk, exit และ entry
