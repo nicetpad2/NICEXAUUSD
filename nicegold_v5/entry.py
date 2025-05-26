@@ -44,8 +44,9 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
     # --- Entry Conditions v4 ---
     trend_up = df["ema_15"] > df["ema_50"]
     trend_dn = df["ema_15"] < df["ema_50"]
-    breakout_up = df["close"] > df["ema_50"] + 0.25
-    breakout_dn = df["close"] < df["ema_50"] - 0.25
+    breakout_margin = 0.25
+    breakout_up = df["close"].shift(1) > df["ema_50"].shift(1) + breakout_margin  # [Patch v7.2]
+    breakout_dn = df["close"].shift(1) < df["ema_50"].shift(1) - breakout_margin  # [Patch v7.2]
     volatility_ok = df["atr"] > df["atr_ma"] * 0.85
     momentum_ok = df["gain_z"] > 0.4  # [Patch v6.1]
     volume_ok = df["volume"] > df["volume_ma"] * 1.0  # [Patch v6.1]
@@ -70,7 +71,7 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
 
     # [Patch v7.0] Sniper filter: High momentum + trend confirm + Tier A only
     sniper_zone = (
-        (df["gain_z"] > 0.8)
+        (df["gain_z"] > 0.2)  # [Patch v7.3]
         & (df["ema_slope"] > 0)
         & (df["entry_tier"] == "A")
     )
@@ -95,16 +96,26 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
     df["entry_signal"] = np.where(buy_cond, "buy", np.where(sell_cond, "sell", None))
 
     # --- Logging QA Reason ---
-    # [Perf-B] ปรับให้ QA Block Reason ทำงานแบบ vectorized (ลด loop)
-    df["entry_blocked_reason"] = ""
-    df.loc[~trend_up & ~trend_dn, "entry_blocked_reason"] += "no_trend|"
-    df.loc[~volatility_ok, "entry_blocked_reason"] += "low_vol|"
-    df.loc[~momentum_ok, "entry_blocked_reason"] += "low_momentum|"
-    df.loc[~volume_ok, "entry_blocked_reason"] += "low_volume|"
-    df.loc[~atr_enough, "entry_blocked_reason"] += "atr_too_small|"
-    df.loc[~session, "entry_blocked_reason"] += "off_session|"
-    df.loc[~(breakout_up | breakout_dn), "entry_blocked_reason"] += "no_breakout|"
-    df["entry_blocked_reason"] = df["entry_blocked_reason"].str.rstrip("|")
+    # [Patch v7.2] Restore entry_blocked_reason logic
+    trend_ok = trend_up | trend_dn
+    session_ok = session
+    conditions = {
+        "no_trend": ~trend_ok,
+        "low_vol": ~volatility_ok,
+        "low_momentum": ~momentum_ok,
+        "low_volume": ~volume_ok,
+        "atr_too_small": ~atr_enough,
+        "off_session": ~session_ok,
+        "no_breakout": ~(breakout_up | breakout_dn),
+    }
+
+    reason_series = []
+    for name, cond in conditions.items():
+        reason_series.append(cond.map({True: name, False: ""}))
+    reason_df = pd.concat(reason_series, axis=1)
+    df["entry_blocked_reason"] = reason_df.apply(
+        lambda row: "|".join(filter(None, row)), axis=1
+    )
     df.loc[df["entry_signal"].notnull(), "entry_blocked_reason"] = None
     blocked_pct = df["entry_signal"].isnull().mean() * 100
     print(f"[Patch VBTB+ UltraFix v4.1] Entry Signal Blocked: {blocked_pct:.2f}%")
@@ -187,8 +198,8 @@ def generate_signals_v6_5(df: pd.DataFrame, fold_id: int) -> pd.DataFrame:
     trend_up = df["ema_15"] > df["ema_50"]
     trend_dn = df["ema_15"] < df["ema_50"]
     trend_bypass = fold_id == 4  # [Patch v6.5]
-    breakout_up = df["close"] > df["ema_50"] + breakout_margin
-    breakout_dn = df["close"] < df["ema_50"] - breakout_margin
+    breakout_up = df["close"].shift(1) > df["ema_50"].shift(1) + breakout_margin  # [Patch v7.2]
+    breakout_dn = df["close"].shift(1) < df["ema_50"].shift(1) - breakout_margin  # [Patch v7.2]
     volatility_ok = df["atr"] > df["atr_ma"] * 0.85
     momentum_ok = df["gain_z"] > gain_z_thresh  # [Patch v6.3]
     volume_ok = df["volume"] > df["volume_ma"] * 1.0
@@ -229,16 +240,23 @@ def generate_signals_v6_5(df: pd.DataFrame, fold_id: int) -> pd.DataFrame:
 
     df["entry_signal"] = np.where(buy_cond, "buy", np.where(sell_cond, "sell", None))
 
-    df["entry_blocked_reason"] = ""
-    df.loc[~trend_up & ~trend_dn, "entry_blocked_reason"] += "no_trend|"
-    df.loc[~volatility_ok, "entry_blocked_reason"] += "low_vol|"
-    df.loc[~momentum_ok, "entry_blocked_reason"] += "low_momentum|"
-    df.loc[~volume_ok, "entry_blocked_reason"] += "low_volume|"
-    df.loc[~atr_enough, "entry_blocked_reason"] += "atr_too_small|"
-    if fold_id != 4:
-        df.loc[~session_ok, "entry_blocked_reason"] += "off_session|"
-    df.loc[~(breakout_up | breakout_dn), "entry_blocked_reason"] += "no_breakout|"
-    df["entry_blocked_reason"] = df["entry_blocked_reason"].str.rstrip("|")
+    conditions = {
+        "no_trend": ~(trend_up | trend_dn),
+        "low_vol": ~volatility_ok,
+        "low_momentum": ~momentum_ok,
+        "low_volume": ~volume_ok,
+        "atr_too_small": ~atr_enough,
+        "off_session": ~session_ok,
+        "no_breakout": ~(breakout_up | breakout_dn),
+    }
+
+    reason_series = []
+    for name, cond in conditions.items():
+        reason_series.append(cond.map({True: name, False: ""}))
+    reason_df = pd.concat(reason_series, axis=1)
+    df["entry_blocked_reason"] = reason_df.apply(
+        lambda row: "|".join(filter(None, row)), axis=1
+    )
     df.loc[df["entry_signal"].notnull(), "entry_blocked_reason"] = None
     blocked_pct = df["entry_signal"].isnull().mean() * 100
     print(f"[Patch v6.5] Entry Signal Blocked: {blocked_pct:.2f}%")
