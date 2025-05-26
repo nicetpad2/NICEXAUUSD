@@ -181,4 +181,6 @@
 - ปรับ session_label ให้ระบุเฉพาะช่วง NY เท่านั้น
 ### 2025-07-13
 - เพิ่มฟังก์ชัน `generate_signals_v6_5` ปรับ threshold ตาม ATR และ fold_id
+### 2025-07-14
+- ปรับ `generate_signals_v6_5` ให้ปิดกรองเวลาเมื่อ fold_id = 4 (Patch v6.6)
 
