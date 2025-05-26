@@ -156,4 +156,6 @@
 - ปรับปรุง `should_exit` ด้วยตรรกะ Adaptive Exit Intelligence (Patch D.13)
 ### 2025-07-02
 - เพิ่ม Scalping Viability Enhancer และ Micro-Momentum Lock ใน `should_exit` (Patch D.14)
+### 2025-07-03
+- ปรับ `generate_signals` ใช้กลยุทธ์ VBTB และเพิ่ม log entry_blocked_reason
 
