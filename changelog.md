@@ -154,4 +154,7 @@
 ## 2025-07-12
 - ปรับค่าคอมมิชันตามจริงและลด threshold momentum/ATR/volume
 - กำหนด session_label เฉพาะช่วง NY เท่านั้น
+## 2025-07-13
+- เพิ่ม `generate_signals_v6_5` สำหรับปรับ threshold ตาม ATR และ fold
+- เพิ่ม unit test สำหรับฟังก์ชันใหม่
 
