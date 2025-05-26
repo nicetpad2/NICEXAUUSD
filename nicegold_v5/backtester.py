@@ -2,6 +2,7 @@ import pandas as pd
 from datetime import datetime
 import random
 import logging
+import numpy as np
 from nicegold_v5.risk import (
     calc_lot_risk,
     kill_switch,
@@ -15,6 +16,9 @@ from nicegold_v5.exit import should_exit
 from tqdm import tqdm
 import time
 
+# [Patch C.2] Enable full RAM mode
+MAX_RAM_MODE = True
+
 
 def run_backtest(df: pd.DataFrame):
     """Backtest พร้อม Recovery Mode และ Logging เต็มรูปแบบ"""
@@ -26,6 +30,9 @@ def run_backtest(df: pd.DataFrame):
     equity_curve: list[float] = []
     recovery_mode = False  # เริ่มแบบปกติ
     start = time.time()
+
+    if MAX_RAM_MODE:
+        df = df.astype({col: np.float32 for col in df.select_dtypes(include="number").columns})
 
     for i, row in enumerate(tqdm(
         df.itertuples(index=False),

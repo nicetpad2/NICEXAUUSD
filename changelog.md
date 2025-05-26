@@ -91,3 +91,8 @@
 
 ## 2025-06-21
 - ปรับปรุง run_backtest ให้ใช้ itertuples และตรวจ kill_switch ทุก 100 แถว
+## 2025-06-22
+- ปรับ generate_signals ให้ใช้ fallback gain_z และแสดงสัดส่วนสัญญาณที่ถูกบล็อก
+- เพิ่ม MAX_RAM_MODE ปิด GC ใน main.py และ backtester
+- เพิ่ม MAX_HOLD_MINUTES และ timeout_exit ใน should_exit
+- อัพเดต export_chatgpt_ready_logs ให้รองรับ meta columns
