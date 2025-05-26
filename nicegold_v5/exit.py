@@ -3,6 +3,7 @@ from datetime import timedelta
 
 TSL_TRIGGER_GAIN = 1.5   # Trigger TSL เมื่อ gain ≥ SL × 1.5
 MIN_HOLD_MINUTES = 10    # ห้าม exit ถ้ายังถือไม่ถึง 10 นาที
+MAX_HOLD_MINUTES = 360   # [Patch C.3] ถือสูงสุด 6 ชม.
 
 
 def _rget(row, key, default=None):
@@ -35,9 +36,13 @@ def should_exit(trade, row):
     entry_time = trade["entry_time"]
     holding_min = (now - entry_time).total_seconds() / 60
 
-    # [Patch A.2] ห้าม exit ก่อนถึงระยะถือขั้นต่ำ
+    # ❌ ยังไม่ให้ปิดก่อนเวลาถือขั้นต่ำ
     if holding_min < MIN_HOLD_MINUTES:
         return False, None
+
+    # ✅ ปิดไม้ทันทีถ้าถือเกิน max bars
+    if holding_min > MAX_HOLD_MINUTES:
+        return True, "timeout_exit"
 
     # ✅ SL Hit (ก่อน TSL)
     if gain < -sl_threshold and not trade.get("breakeven"):

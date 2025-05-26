@@ -79,13 +79,21 @@ M1_PATH = "/content/drive/MyDrive/NICEGOLD/XAUUSD_M1.csv"
 M15_PATH = "/content/drive/MyDrive/NICEGOLD/XAUUSD_M15.csv"
 os.makedirs(TRADE_DIR, exist_ok=True)
 
+# [Patch C.2] Enable full RAM mode
+MAX_RAM_MODE = True
+
 
 def maximize_ram():
     try:
         import psutil
     except ImportError:
         psutil = None
-    gc.collect()
+    if MAX_RAM_MODE:
+        import gc
+        gc.disable()  # ✅ ปิด GC เพื่อให้ MAX RAM ใช้จริง
+        print("🚀 MAX_RAM_MODE: ON – GC disabled")
+    else:
+        gc.collect()
     if psutil:
         ram = psutil.virtual_memory()
         print(

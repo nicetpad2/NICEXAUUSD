@@ -119,3 +119,8 @@
 - เพิ่มระบบ Recovery Mode และอัพเดตฟังก์ชัน backtester, risk, exit และ entry
 ### 2025-06-21
 - ปรับ `run_backtest` ให้ใช้ itertuples และตรวจ kill_switch ทุก 100 แถว
+### 2025-06-22
+- ปรับปรุง generate_signals ใช้ fallback gain_z และแสดงเปอร์เซ็นต์สัญญาณที่ถูกบล็อก
+- เพิ่ม MAX_RAM_MODE ปิด GC ใน main.py และ backtester
+- เพิ่มเงื่อนไข MAX_HOLD_MINUTES และ timeout_exit ใน should_exit
+- อัพเดต export_chatgpt_ready_logs ให้เติมคอลัมน์ meta
