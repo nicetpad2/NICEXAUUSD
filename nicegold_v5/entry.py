@@ -55,7 +55,7 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
 
     # --- Entry Score + TP Ratio ---
     df["entry_score"] = df["gain_z"] * df["atr"] / (df["atr_ma"] + 1e-9)
-    df["entry_score"].fillna(0, inplace=True)
+    df["entry_score"] = df["entry_score"].fillna(0)
     df["tp_rr_ratio"] = 3.5
     df["use_be"] = True  # ✅ ใช้ Break-even
     df["use_tsl"] = True  # ✅ ใช้ Trailing SL
