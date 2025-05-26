@@ -5,6 +5,7 @@ from .backtester import run_backtest
 from .utils import (
     summarize_results,
     run_auto_wfv,
+    auto_entry_config,
     print_qa_summary,
     export_chatgpt_ready_logs,
     create_summary_dict,

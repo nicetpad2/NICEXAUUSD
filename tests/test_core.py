@@ -11,6 +11,7 @@ from nicegold_v5.risk import (
 from nicegold_v5.exit import should_exit
 from nicegold_v5.backtester import run_backtest
 from nicegold_v5.utils import summarize_results, run_auto_wfv
+from nicegold_v5.utils import auto_entry_config
 from nicegold_v5 import wfv
 
 
@@ -64,6 +65,13 @@ def test_generate_signals_with_config():
     out_default = generate_signals(df)
     out_cfg = generate_signals(df, config={'gain_z_thresh': -0.2})
     assert out_default['entry_signal'].notnull().sum() < out_cfg['entry_signal'].notnull().sum()
+
+
+def test_auto_entry_config():
+    df = sample_df()
+    df = df.assign(ema_fast=1.0, gain_z=0.0, atr=1.0)
+    config = auto_entry_config(df)
+    assert 'gain_z_thresh' in config and 'ema_slope_min' in config
 
 
 def test_calc_lot():
