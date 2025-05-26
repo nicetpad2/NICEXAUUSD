@@ -141,3 +141,6 @@
 ### 2025-06-26
 - ปรับปรุง `generate_signals` ด้วย Momentum Rebalance Filter และตัวแปร `volatility_thresh`
 - เพิ่ม unit test ตรวจสอบการทำงานของตัวกรองความผันผวน
+### 2025-06-27
+- เพิ่มตัวกรอง session, envelope และ momentum สำหรับ Enterprise QA ใน generate_signals
+

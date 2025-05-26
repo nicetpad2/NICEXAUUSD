@@ -52,16 +52,20 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
     ema_slope_min = config.get("ema_slope_min", 0.0) if config else 0.0
     volatility_ratio = config.get("volatility_thresh", 0.8) if config else 0.8
 
-    buy_cond = (
-        (df["ema_slope"] > ema_slope_min)
-        & (gainz > gainz_thresh)
-        & (df["atr"] > df["atr_ma"] * volatility_ratio)
+    session_ok = (
+        df["timestamp"].dt.hour.between(13, 20)
+        if "timestamp" in df.columns
+        else pd.Series(True, index=df.index)
     )
-    sell_cond = (
-        (df["ema_slope"] < -ema_slope_min)
-        & (gainz > gainz_thresh)
-        & (df["atr"] > df["atr_ma"] * volatility_ratio)
-    )
+    trend_up = df["ema_fast"] > df["ema_slow"]
+    trend_dn = df["ema_fast"] < df["ema_slow"]
+    envelope_up = df["close"] > df["ema_slow"] + 0.3
+    envelope_dn = df["close"] < df["ema_slow"] - 0.3
+    volatility = df["atr"] > df["atr_ma"] * volatility_ratio
+    momentum = gainz > gainz_thresh
+
+    buy_cond = trend_up & envelope_up & volatility & momentum & session_ok
+    sell_cond = trend_dn & envelope_dn & volatility & momentum & session_ok
 
     # --- Final Entry Assignment ---
     df.loc[buy_cond & df["entry_blocked_reason"].isnull(), "entry_signal"] = "buy"
