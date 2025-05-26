@@ -169,7 +169,7 @@ def test_tsl_activation():
     }
     row = {
         "close": 102.0,
-        "gain_z": 0.0,
+        "gain_z": 0.2,
         "atr": 1.0,
         "atr_ma": 1.0,
         "timestamp": pd.Timestamp("2025-01-01 00:05:00"),
@@ -213,6 +213,44 @@ def test_early_profit_lock():
     exit_now, reason = should_exit(trade, row)
     assert exit_now
     assert reason == 'early_profit_lock'
+
+
+def test_atr_contract_exit():
+    trade = {
+        'entry': 100,
+        'type': 'buy',
+        'lot': 0.1,
+        'entry_time': pd.Timestamp('2025-01-01 00:00:00')
+    }
+    row = {
+        'close': 100.4,
+        'gain_z': 0.2,
+        'atr': 1.0,
+        'atr_ma': 0.6,
+        'timestamp': pd.Timestamp('2025-01-01 00:20:00')
+    }
+    exit_now, reason = should_exit(trade, row)
+    assert exit_now
+    assert reason == 'atr_contract_exit'
+
+
+def test_micro_gain_lock():
+    trade = {
+        'entry': 100,
+        'type': 'buy',
+        'lot': 0.1,
+        'entry_time': pd.Timestamp('2025-01-01 00:00:00')
+    }
+    row = {
+        'close': 100.25,
+        'gain_z': -0.05,
+        'atr': 1.0,
+        'atr_ma': 1.0,
+        'timestamp': pd.Timestamp('2025-01-01 00:20:00')
+    }
+    exit_now, reason = should_exit(trade, row)
+    assert exit_now
+    assert reason == 'micro_gain_lock'
 
 
 def test_backtester_run():

@@ -126,3 +126,7 @@
 
 ## 2025-06-30
 - เพิ่ม Early Profit Lock ใน `should_exit` และบันทึก debug ถือครองสั้น (Patch D.12)
+## 2025-07-01
+- ปรับ `should_exit` ให้ใช้ Adaptive Exit Intelligence และเงื่อนไข ATR fading (Patch D.13)
+## 2025-07-02
+- เพิ่ม Micro-Momentum Lock และเงื่อนไข volatility contraction (Patch D.14)

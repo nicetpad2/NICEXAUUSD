@@ -152,4 +152,8 @@
 
 ### 2025-06-30
 - ปรับปรุง `should_exit` เพิ่ม Early Profit Lock และข้อความ debug (Patch D.12)
+### 2025-07-01
+- ปรับปรุง `should_exit` ด้วยตรรกะ Adaptive Exit Intelligence (Patch D.13)
+### 2025-07-02
+- เพิ่ม Scalping Viability Enhancer และ Micro-Momentum Lock ใน `should_exit` (Patch D.14)
 
