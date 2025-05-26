@@ -117,3 +117,5 @@
 - แก้ตัวอย่างข้อมูล `sample_wfv_df` ให้สร้างคอลัมน์ด้วย index เดียวกัน ลดคำเตือน sklearn
 ### 2025-06-20
 - เพิ่มระบบ Recovery Mode และอัพเดตฟังก์ชัน backtester, risk, exit และ entry
+### 2025-06-21
+- ปรับ `run_backtest` ให้ใช้ itertuples และตรวจ kill_switch ทุก 100 แถว
