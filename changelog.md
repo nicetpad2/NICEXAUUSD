@@ -100,3 +100,8 @@
 ## 2025-06-23
 - เพิ่มไฟล์ config.py และปรับ generate_signals ให้ใช้ threshold แบบยืดหยุ่น
 - ปรับ should_exit ด้วยตรรกะ atr fading ใหม่ และอัพเดต run_auto_wfv
+
+## 2025-06-24
+- ปรับ multiplier ของ SL ใน `get_sl_tp` เป็น 1.5 และ recovery SL เป็น 1.8
+- เลื่อนเงื่อนไขเปิด TSL เป็นกำไรเท่ากับ SL × 2.0
+- เพิ่มการทดสอบ get_sl_tp_recovery และการทำงานของ TSL

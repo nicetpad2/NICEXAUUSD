@@ -44,8 +44,9 @@ def adaptive_tp_multiplier(session: str) -> float:
 
 
 def get_sl_tp(price: float, atr: float, session: str, direction: str) -> tuple[float, float]:
+    """คำนวณ SL/TP สำหรับโหมดปกติ"""
     multiplier = adaptive_tp_multiplier(session)
-    sl = price - atr * 1.2 if direction == "buy" else price + atr * 1.2
+    sl = price - atr * 1.5 if direction == "buy" else price + atr * 1.5
     tp = price + atr * multiplier if direction == "buy" else price - atr * multiplier
     return sl, tp
 
@@ -72,7 +73,7 @@ def calc_lot_recovery(capital: float, atr: float, risk_pct: float = 1.5) -> floa
 
 def get_sl_tp_recovery(price: float, atr: float, direction: str) -> tuple[float, float]:
     """คำนวณ SL/TP แบบกว้างขึ้นสำหรับ Recovery Mode."""
-    sl_multiplier = 1.4
+    sl_multiplier = 1.8
     tp_multiplier = 1.8
     if direction == "buy":
         sl = price - atr * sl_multiplier
