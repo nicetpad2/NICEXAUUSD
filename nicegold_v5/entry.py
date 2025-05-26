@@ -45,8 +45,8 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
     df.loc[recovery_block, "entry_blocked_reason"] = "Recovery Filter Blocked"
 
     # --- Trend Logic ---
-    trend_up = (df["ema_fast"] > df["ema_slow"]) & (df["rsi"] > 55)
-    trend_dn = (df["ema_fast"] < df["ema_slow"]) & (df["rsi"] < 45)
+    trend_up = (df["ema_fast"] > df["ema_slow"]) & (df["rsi"] > 51)
+    trend_dn = (df["ema_fast"] < df["ema_slow"]) & (df["rsi"] < 49)
 
     # --- Final Entry Assignment ---
     df.loc[trend_up & df["entry_blocked_reason"].isnull(), "entry_signal"] = "buy"

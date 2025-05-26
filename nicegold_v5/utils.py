@@ -3,7 +3,6 @@ import os
 from datetime import datetime
 from nicegold_v5.entry import generate_signals
 from nicegold_v5.backtester import run_backtest
-from nicegold_v5.config import ENTRY_CONFIG_PER_FOLD
 
 
 def print_qa_summary(trades: pd.DataFrame, equity: pd.DataFrame) -> dict:
@@ -165,6 +164,18 @@ def create_summary_dict(
     }
 
 
+def auto_entry_config(fold_df: pd.DataFrame) -> dict:
+    """Generate entry config based on fold statistics."""
+    atr_std = fold_df["atr"].std()
+    ema_slope_mean = fold_df["ema_fast"].diff().mean()
+    gainz_std = fold_df["gain_z"].std() if "gain_z" in fold_df.columns else 0.1
+
+    return {
+        "gain_z_thresh": -0.05 if gainz_std > 0.2 else -0.1 if gainz_std > 0.1 else -0.2,
+        "ema_slope_min": -0.005 if ema_slope_mean < 0 else 0.0,
+    }
+
+
 # ✅ Run Walk-Forward Validation
 
 def split_folds(df: pd.DataFrame, n_folds: int = 5) -> list[pd.DataFrame]:
@@ -185,9 +196,18 @@ def run_auto_wfv(df: pd.DataFrame, outdir: str, n_folds: int = 5) -> pd.DataFram
         fold_id = i + 1
         print(f"\n[WFV] Fold {fold_id}/{n_folds}")
 
-        config = ENTRY_CONFIG_PER_FOLD.get(fold_id, {})
-        fold_df = generate_signals(fold_df, config=config)
-        trades, equity = run_backtest(fold_df)
+        # คำนวณอินดิเคเตอร์พื้นฐานก่อนหา config อัตโนมัติ
+        base_df = generate_signals(fold_df)
+        config = auto_entry_config(base_df)
+        fold_df_filtered = generate_signals(fold_df, config=config)
+        trades, equity = run_backtest(fold_df_filtered)
+
+        if trades.empty:
+            # [Patch D.4.3] ผ่อนปรนตัวกรองเมื่อไม่มีเทรดเลย
+            relaxed_config = {"gain_z_thresh": -0.3, "ema_slope_min": -0.01}
+            fold_df_filtered = generate_signals(fold_df, config=relaxed_config)
+            trades, equity = run_backtest(fold_df_filtered)
+            config = relaxed_config
         metrics = summarize_results(trades, equity)
         metrics["fold"] = fold_id
         summary.append(metrics)
