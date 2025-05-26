@@ -14,55 +14,44 @@ def rsi(series: pd.Series, period: int = 14) -> pd.Series:
 
 
 def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
-    """สร้างสัญญาณตามกลยุทธ์ VBTB (Volatility Breakout + Trend Bias)"""
+    """ปรับปรุงสัญญาณ VBTB+ เน้นช่วง London Open"""
     df = df.copy()
     df["entry_signal"] = None
     df["entry_blocked_reason"] = None
 
-    # [Patch VBTB] คำนวณอินดิเคเตอร์พื้นฐาน
+    # --- Indicators ---
     df["ema_15"] = df["close"].ewm(span=15).mean()
     df["ema_50"] = df["close"].ewm(span=50).mean()
     df["atr"] = (df["high"] - df["low"]).rolling(14).mean()
     df["atr_ma"] = df["atr"].rolling(50).mean()
     gain = df["close"].diff()
     df["gain_z"] = (gain - gain.rolling(20).mean()) / (gain.rolling(20).std() + 1e-9)
+    df["entry_time"] = df["timestamp"]
 
-    # คอลัมน์เดิมสำหรับโมดูลอื่นยังคงใช้งานได้
+    # คอลัมน์เดิมสำหรับโมดูลอื่น
     df["ema_fast"] = df["ema_15"]
     df["ema_slow"] = df["ema_50"]
     df["ema_slope"] = df["ema_fast"].diff()
 
-    df["entry_time"] = df["timestamp"]
-
-    # --- เงื่อนไข VBTB ---
+    # --- Filtered Entry Logic ---
     trend_up = df["ema_15"] > df["ema_50"]
     trend_dn = df["ema_15"] < df["ema_50"]
+    breakout_up = df["close"] > df["ema_50"] + 0.1
+    breakout_dn = df["close"] < df["ema_50"] - 0.1
+    volatility_ok = df["atr"] > df["atr_ma"] * 0.6
+    momentum_ok = df["gain_z"] > -0.2
+    session_london_open = df["timestamp"].dt.hour.between(13, 15)
 
-    breakout_up = df["close"] > df["ema_50"] + 0.3
-    breakout_dn = df["close"] < df["ema_50"] - 0.3
+    buy_cond = trend_up & breakout_up & volatility_ok & momentum_ok & session_london_open
+    sell_cond = trend_dn & breakout_dn & volatility_ok & momentum_ok & session_london_open
 
-    volatility_ok = df["atr"] > df["atr_ma"] * 0.8
-    momentum_ok = df["gain_z"] > -0.1
-    session_ok = df["timestamp"].dt.hour.between(13, 20)
-
-    buy_cond = trend_up & breakout_up & volatility_ok & momentum_ok & session_ok
-    sell_cond = trend_dn & breakout_dn & volatility_ok & momentum_ok & session_ok
     df.loc[buy_cond, "entry_signal"] = "buy"
     df.loc[sell_cond, "entry_signal"] = "sell"
 
-    # [Patch VBTB] บันทึกเหตุผลที่บล็อกสัญญาณอย่างย่อ
-    reasons = (
-        np.where(~(trend_up | trend_dn), "no_trend|", "")
-        + np.where(~volatility_ok, "low_vol|", "")
-        + np.where(~momentum_ok, "gain_z_low|", "")
-        + np.where(~session_ok, "off_session|", "")
-    )
-    df.loc[df["entry_signal"].isnull(), "entry_blocked_reason"] = (
-        pd.Series(reasons).str.strip("|")
-    )
-
+    # --- Logging QA ---
+    df.loc[df["entry_signal"].isnull(), "entry_blocked_reason"] = "filtered_out"
     blocked_pct = df["entry_signal"].isnull().mean() * 100
-    print(f"[Patch VBTB] Entry Signal Blocked: {blocked_pct:.2f}%")
+    print(f"[Patch VBTB+] Entry Signal Blocked: {blocked_pct:.2f}%")
 
     return df
 

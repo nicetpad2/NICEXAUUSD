@@ -158,4 +158,6 @@
 - เพิ่ม Scalping Viability Enhancer และ Micro-Momentum Lock ใน `should_exit` (Patch D.14)
 ### 2025-07-03
 - ปรับ `generate_signals` ใช้กลยุทธ์ VBTB และเพิ่ม log entry_blocked_reason
+### 2025-07-04
+- ปรับปรุง `generate_signals` เป็น Patch VBTB+ กรองเฉพาะช่วง London Open
 

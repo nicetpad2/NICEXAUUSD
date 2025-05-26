@@ -132,3 +132,5 @@
 - เพิ่ม Micro-Momentum Lock และเงื่อนไข volatility contraction (Patch D.14)
 ## 2025-07-03
 - ปรับ `generate_signals` ใช้กลยุทธ์ VBTB และ log QA (Patch VBTB)
+## 2025-07-04
+- ปรับปรุง `generate_signals` เป็น Patch VBTB+ กรอง London Open อย่างเข้มงวด
