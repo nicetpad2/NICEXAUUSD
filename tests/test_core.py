@@ -108,7 +108,7 @@ def test_generate_signals_session_filter():
     df_out = df_in.copy()
     df_out['timestamp'] = ts_out
     out_out = generate_signals(df_out)
-    assert out_out['entry_blocked_reason'].str.contains('session').any()
+    assert (out_out['entry_blocked_reason'] == 'filtered_out').all()
 
 
 def test_generate_signals_qa_clean():
