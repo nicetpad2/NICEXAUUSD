@@ -183,4 +183,6 @@
 - เพิ่มฟังก์ชัน `generate_signals_v6_5` ปรับ threshold ตาม ATR และ fold_id
 ### 2025-07-14
 - ปรับ `generate_signals_v6_5` ให้ปิดกรองเวลาเมื่อ fold_id = 4 (Patch v6.6)
+### 2025-07-15
+- กำหนดเพดานลอตที่ 1.0 และปรับฟังก์ชัน risk/backtester ให้ตรวจสอบค่านี้ (Patch v6.7)
 

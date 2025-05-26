@@ -159,4 +159,6 @@
 - เพิ่ม unit test สำหรับฟังก์ชันใหม่
 ## 2025-07-14
 - ปรับ `generate_signals_v6_5` ปิดกรอง session เมื่อ fold_id=4 (Patch v6.6)
+## 2025-07-15
+- เพิ่ม MAX_LOT_CAP จำกัด lot ไม่เกิน 1.0 และปรับ risk/backtester ตรวจสอบค่าดังกล่าว (Patch v6.7)
 

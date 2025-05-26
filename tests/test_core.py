@@ -8,6 +8,7 @@ from nicegold_v5.risk import (
     calc_lot_risk,
     get_sl_tp,
     get_sl_tp_recovery,
+    MAX_LOT_CAP,
 )
 from nicegold_v5.exit import should_exit
 from nicegold_v5.backtester import run_backtest
@@ -157,6 +158,7 @@ def test_auto_entry_config():
 def test_calc_lot():
     lot = calc_lot(100)
     assert lot >= 0.01
+    assert lot <= MAX_LOT_CAP
 
 
 def test_kill_switch_trigger():
@@ -179,6 +181,7 @@ def test_calc_lot_risk_and_sl_tp():
     lot = calc_lot_risk(1000, 1.0, 1.5)
     assert sl < 100 and tp > 100
     assert lot >= 0.01
+    assert lot <= MAX_LOT_CAP
 
 
 def test_get_sl_tp_recovery():

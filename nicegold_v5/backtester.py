@@ -170,6 +170,7 @@ def run_backtest(df: pd.DataFrame):
                 lot = calc_lot_recovery(capital, atr_val, 1.5)
             else:
                 lot = calc_lot_risk(capital, atr_val, 1.5)
+            lot = min(lot, 1.0)  # [Patch v6.7] ensure cap
             open_trade = {
                 "entry": price,
                 "entry_time": ts,

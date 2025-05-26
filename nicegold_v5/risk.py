@@ -1,8 +1,10 @@
+MAX_LOT_CAP = 1.0  # [Patch v6.7]
+
 def calc_lot(capital: float, risk_pct: float = 1.5, sl_pips: float = 100) -> float:
     risk_amount = capital * (risk_pct / 100)
     pip_value = 10  # For gold 0.1/point × 100 = $10/lot
     lot = risk_amount / (sl_pips * pip_value)
-    return max(0.01, round(lot, 2))
+    return min(MAX_LOT_CAP, max(0.01, round(lot, 2)))  # [Patch v6.7]
 
 
 # --- Patch C: Advanced Risk Management ---
@@ -57,7 +59,7 @@ def calc_lot_risk(capital: float, atr: float, risk_pct: float = 1.5) -> float:
     sl_pips = atr * 10
     risk_amount = capital * (risk_pct / 100)
     lot = risk_amount / (sl_pips * pip_value)
-    return max(0.01, round(lot, 2))
+    return min(MAX_LOT_CAP, max(0.01, round(lot, 2)))  # [Patch v6.7]
 
 
 # --- Patch B.2: Recovery Mode Risk Logic ---
@@ -68,7 +70,7 @@ def calc_lot_recovery(capital: float, atr: float, risk_pct: float = 1.5) -> floa
     """Adaptive lot size เมื่ออยู่ใน Recovery Mode (lot × 1.5)."""
     base_lot = calc_lot_risk(capital, atr, risk_pct)
     recovery_lot = base_lot * 1.5
-    return max(0.01, round(recovery_lot, 2))
+    return min(MAX_LOT_CAP, max(0.01, round(recovery_lot, 2)))  # [Patch v6.7]
 
 
 def get_sl_tp_recovery(price: float, atr: float, direction: str) -> tuple[float, float]:
