@@ -162,3 +162,6 @@
 ## 2025-07-15
 - เพิ่ม MAX_LOT_CAP จำกัด lot ไม่เกิน 1.0 และปรับ risk/backtester ตรวจสอบค่าดังกล่าว (Patch v6.7)
 
+## 2025-07-16
+- ปรับ generate_signals ด้วย Sniper filter และใช้ tier A เท่านั้น (Patch v7.0)
+
