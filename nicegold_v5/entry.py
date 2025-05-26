@@ -14,7 +14,7 @@ def rsi(series: pd.Series, period: int = 14) -> pd.Series:
 
 
 def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
-    """Patch VBTB+ UltraFix v3 – QA Enterprise Ready"""
+    """Patch VBTB+ UltraFix v4 – QA Enterprise Ready"""
     df = df.copy()
     df["entry_signal"] = None
     df["entry_blocked_reason"] = None
@@ -35,7 +35,7 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
     df["session_label"] = "None"
     df.loc[df["timestamp"].dt.hour.between(3, 6), "session_label"] = "Asia"
     df.loc[df["timestamp"].dt.hour.between(8, 11), "session_label"] = "London"
-    df.loc[df["timestamp"].dt.hour.between(13, 16), "session_label"] = "NY"
+    df.loc[df["timestamp"].dt.hour.between(13, 17), "session_label"] = "NY"
     session = df["session_label"] != "None"
 
     # คอลัมน์เดิมสำหรับโมดูลอื่น
@@ -43,18 +43,30 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
     df["ema_slow"] = df["ema_50"]
     df["ema_slope"] = df["ema_fast"].diff()
 
-    # --- Entry Conditions ---
+    # --- Entry Conditions v4 ---
     trend_up = df["ema_15"] > df["ema_50"]
     trend_dn = df["ema_15"] < df["ema_50"]
     breakout_up = df["close"] > df["ema_50"] + 0.25
     breakout_dn = df["close"] < df["ema_50"] - 0.25
-    volatility_ok = df["atr"] > df["atr_ma"] * 0.9
-    momentum_ok = df["gain_z"] > 1.0
-    volume_ok = df["volume"] > df["volume_ma"] * 1.2
-    atr_enough = df["atr"] > 2.5
+    volatility_ok = df["atr"] > df["atr_ma"] * 0.85
+    momentum_ok = df["gain_z"] > 0.8
+    volume_ok = df["volume"] > df["volume_ma"] * 1.1
+    atr_enough = df["atr"] > 2.2
 
-    # --- Entry Score ---
+    # --- Entry Score + TP Ratio ---
     df["entry_score"] = df["gain_z"] * df["atr"] / (df["atr_ma"] + 1e-9)
+    df["entry_score"].fillna(0, inplace=True)
+    df["tp_rr_ratio"] = 3.5
+
+    # --- Risk Level by score ---
+    df["risk_level"] = "low"
+    df.loc[df["entry_score"] > 2.5, "risk_level"] = "med"
+    df.loc[df["entry_score"] > 4.0, "risk_level"] = "high"
+
+    # --- Entry Tier (Quantile Classifier) ---
+    df["entry_tier"] = pd.qcut(
+        df["entry_score"].rank(method="first"), q=3, labels=["C", "B", "A"], duplicates="drop"
+    )
 
     buy_cond = (
         trend_up
@@ -100,7 +112,7 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
 
     df.loc[df["entry_signal"].isnull(), "entry_blocked_reason"] = fail_reason
     blocked_pct = df["entry_signal"].isnull().mean() * 100
-    print(f"[Patch VBTB+ UltraFix v3] Entry Signal Blocked: {blocked_pct:.2f}%")
+    print(f"[Patch VBTB+ UltraFix v4] Entry Signal Blocked: {blocked_pct:.2f}%")
 
     return df
 

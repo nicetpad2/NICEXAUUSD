@@ -166,4 +166,6 @@
 - ปรับปรุง `generate_signals` เป็น Patch VBTB+ Final PRO กรองทุกเซสชันและตรวจสอบกำไรขั้นต่ำ
 ### 2025-07-07
 - ปรับปรุง `generate_signals` เป็น Patch VBTB+ UltraFix v3 เพิ่ม session_label, entry_score, lot_suggested และระบุเหตุผลบล็อกอย่างละเอียด
+### 2025-07-08
+- ปรับปรุง `generate_signals` เป็น Patch VBTB+ UltraFix v4 เพิ่ม risk_level, tp_rr_ratio และ entry_tier
 
