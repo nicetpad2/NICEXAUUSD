@@ -144,3 +144,8 @@
 - ปรับปรุง `generate_signals` เป็น Patch VBTB+ UltraFix v4 เพิ่ม risk_level, tp_rr_ratio และ entry_tier พร้อมเงื่อนไขใหม่
 ## 2025-07-09
 - ปรับปรุง `generate_signals` เป็น Patch VBTB+ UltraFix v4.1 เพิ่มคอลัมน์ `use_be` และ `use_tsl` เพื่อเปิด Breakeven และ Trailing SL โดยค่าเริ่มต้น
+## 2025-07-10
+- เพิ่ม Patch Perf-A ปรับ loop backtester และ cache ATR
+- เพิ่ม Patch Perf-B ทำเวกเตอร์ entry_signal และเหตุผลบล็อก
+- เพิ่ม Patch Perf-C ลดการ copy DataFrame และปรับ maximize_ram
+- เพิ่ม Patch Perf-D เพิ่ม log เวลาในฟังก์ชันหลัก

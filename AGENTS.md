@@ -170,4 +170,6 @@
 - ปรับปรุง `generate_signals` เป็น Patch VBTB+ UltraFix v4 เพิ่ม risk_level, tp_rr_ratio และ entry_tier
 ### 2025-07-09
 - ปรับปรุง `generate_signals` เป็น Patch VBTB+ UltraFix v4.1 เพิ่มคอลัมน์ `use_be` และ `use_tsl`
+### 2025-07-10
+- เพิ่ม Patch Perf-A ถึง Perf-D ปรับความเร็ว backtester, signal, WFV และเพิ่ม log timing
 
