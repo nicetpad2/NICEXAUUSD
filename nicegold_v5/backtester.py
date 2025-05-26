@@ -24,6 +24,7 @@ def run_backtest(df: pd.DataFrame):
     """Backtest พร้อม Recovery Mode และ Logging เต็มรูปแบบ"""
     logging.info(f"[TIME] run_backtest() start: {time.strftime('%H:%M:%S')}")
     capital = 100.0
+    COMMISSION_PER_001_LOT = 0.07  # [Patch v6.0] ค่าคอมจริง: 0.07 USD ต่อ 0.01 lot
     trades = []
     equity = []
     open_trade = None
@@ -76,7 +77,7 @@ def run_backtest(df: pd.DataFrame):
             if not open_trade.get("tp1_hit") and gain >= tp1:
                 partial_lot = open_trade["lot"] * 0.5
                 partial_pnl = tp1 * open_trade["lot"] * 10 * 0.5
-                commission = partial_lot * 2
+                commission = partial_lot / 0.01 * COMMISSION_PER_001_LOT  # [Patch v6.0]
                 spread_cost = partial_lot * 0.2
                 slippage_cost = abs(random.uniform(-0.3, 0.3)) * partial_lot
                 capital += partial_pnl - commission - spread_cost - slippage_cost
@@ -103,7 +104,7 @@ def run_backtest(df: pd.DataFrame):
                 exit_now, reason = should_exit(open_trade, row)
                 if exit_now or (direction == "buy" and gain >= tp2) or (direction == "sell" and gain >= tp2):
                     pnl = (price - open_trade["entry"] if direction == "buy" else open_trade["entry"] - price) * open_trade["lot"] * 10
-                    commission = open_trade["lot"] * 2
+                    commission = open_trade["lot"] / 0.01 * COMMISSION_PER_001_LOT  # [Patch v6.0]
                     spread_cost = open_trade["lot"] * 0.2
                     slippage_cost = abs(random.uniform(-0.3, 0.3)) * open_trade["lot"]
                     capital += pnl - commission - spread_cost - slippage_cost
@@ -135,7 +136,7 @@ def run_backtest(df: pd.DataFrame):
                 exit_now, reason = should_exit(open_trade, row)
                 if exit_now:
                     pnl = (price - open_trade["entry"] if direction == "buy" else open_trade["entry"] - price) * open_trade["lot"] * 10
-                    commission = open_trade["lot"] * 2
+                    commission = open_trade["lot"] / 0.01 * COMMISSION_PER_001_LOT  # [Patch v6.0]
                     spread_cost = open_trade["lot"] * 0.2
                     slippage_cost = abs(random.uniform(-0.3, 0.3)) * open_trade["lot"]
                     capital += pnl - commission - spread_cost - slippage_cost

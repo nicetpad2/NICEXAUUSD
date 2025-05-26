@@ -33,8 +33,6 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
 
     # --- Session Tag ---
     df["session_label"] = "None"
-    df.loc[df["timestamp"].dt.hour.between(3, 6), "session_label"] = "Asia"
-    df.loc[df["timestamp"].dt.hour.between(8, 11), "session_label"] = "London"
     df.loc[df["timestamp"].dt.hour.between(13, 17), "session_label"] = "NY"
     session = df["session_label"] != "None"
 
@@ -49,9 +47,9 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
     breakout_up = df["close"] > df["ema_50"] + 0.25
     breakout_dn = df["close"] < df["ema_50"] - 0.25
     volatility_ok = df["atr"] > df["atr_ma"] * 0.85
-    momentum_ok = df["gain_z"] > 0.8
-    volume_ok = df["volume"] > df["volume_ma"] * 1.1
-    atr_enough = df["atr"] > 2.2
+    momentum_ok = df["gain_z"] > 0.4  # [Patch v6.1]
+    volume_ok = df["volume"] > df["volume_ma"] * 1.0  # [Patch v6.1]
+    atr_enough = df["atr"] > 1.4  # [Patch v6.1]
 
     # --- Entry Score + TP Ratio ---
     df["entry_score"] = df["gain_z"] * df["atr"] / (df["atr_ma"] + 1e-9)

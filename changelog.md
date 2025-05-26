@@ -151,4 +151,7 @@
 - เพิ่ม Patch Perf-D เพิ่ม log เวลาในฟังก์ชันหลัก
 ## 2025-07-11
 - แก้คำเตือน pandas ใน `nicegold_v5/entry.py` ที่ใช้ fillna inplace บน Series
+## 2025-07-12
+- ปรับค่าคอมมิชันตามจริงและลด threshold momentum/ATR/volume
+- กำหนด session_label เฉพาะช่วง NY เท่านั้น
 

@@ -175,4 +175,8 @@
 
 ### 2025-07-11
 - แก้คำเตือน pandas เรื่องการใช้ inplace บน Series ใน `nicegold_v5/entry.py`
+### 2025-07-12
+- ปรับค่าคอมมิชันเป็น 0.07 USD ต่อ 0.01 lot ใน backtester
+- ผ่อนปรนเงื่อนไข momentum, ATR และ volume ใน generate_signals (Patch v6.1)
+- ปรับ session_label ให้ระบุเฉพาะช่วง NY เท่านั้น
 
