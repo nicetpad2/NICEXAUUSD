@@ -5,8 +5,21 @@ TSL_TRIGGER_GAIN = 1.5   # Trigger TSL เมื่อ gain ≥ SL × 1.5
 MIN_HOLD_MINUTES = 10    # ห้าม exit ถ้ายังถือไม่ถึง 10 นาที
 
 
+def _rget(row, key, default=None):
+    if isinstance(row, dict):
+        return row.get(key, default)
+    if hasattr(row, key):
+        return getattr(row, key)
+    if hasattr(row, '__getitem__'):
+        try:
+            return row[key]
+        except Exception:
+            return default
+    return default
+
+
 def should_exit(trade, row):
-    price_now = row["close"]
+    price_now = _rget(row, "close")
     entry = trade["entry"]
     direction = trade["type"]
     gain = price_now - entry if direction == "buy" else entry - price_now
@@ -14,11 +27,11 @@ def should_exit(trade, row):
     risk_mode = trade.get("risk_mode", "normal")
     recovery_prefix = "recovery_" if risk_mode == "recovery" else ""
 
-    atr = row.get("atr", 1.0)
+    atr = _rget(row, "atr", 1.0)
     sl_threshold = atr * 1.2
     be_trigger = sl_threshold * 1.2
 
-    now = row["timestamp"]
+    now = _rget(row, "timestamp")
     entry_time = trade["entry_time"]
     holding_min = (now - entry_time).total_seconds() / 60
 
@@ -49,13 +62,13 @@ def should_exit(trade, row):
     if gain >= be_trigger and not trade.get("breakeven"):
         trade["breakeven"] = True
         trade["breakeven_price"] = entry
-        trade["break_even_time"] = row["timestamp"]
+        trade["break_even_time"] = _rget(row, "timestamp")
         logging.info(f"[BE] Triggered to {entry:.2f}")
 
     # ✅ Exit Guard (เช่น gain_z < -0.5 หลัง gain บวก)
-    if gain > 0 and row.get("gain_z", 0) < -0.5:
+    if gain > 0 and _rget(row, "gain_z", 0) < -0.5:
         return True, "gain_z drop"
-    if gain > 0 and row.get("atr", 1.0) < row.get("atr_ma", 1.0):
+    if gain > 0 and _rget(row, "atr", 1.0) < _rget(row, "atr_ma", 1.0):
         return True, "atr fading"
 
     return False, None

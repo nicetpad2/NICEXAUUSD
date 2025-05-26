@@ -27,13 +27,22 @@ def run_backtest(df: pd.DataFrame):
     recovery_mode = False  # เริ่มแบบปกติ
     start = time.time()
 
-    for i, row in tqdm(df.iterrows(), total=len(df), desc="⏱️ Running Backtest", unit="rows"):
-        ts = pd.to_datetime(row["timestamp"])
-        price = row["close"]
+    for i, row in enumerate(tqdm(
+        df.itertuples(index=False),
+        total=len(df),
+        desc="⏱️ Running Backtest",
+        unit="rows",
+    )):
+        ts = pd.to_datetime(row.timestamp)
+        price = row.close
+        atr_val = row.atr if hasattr(row, "atr") else 1.0
+        gain_z = getattr(row, "gain_z", 0)
+
         equity.append({"timestamp": ts, "equity": capital})
         equity_curve.append(capital)
 
-        if kill_switch(equity_curve):
+        # 🚀 Boost: ตรวจ kill_switch ทุก 100 แถวเท่านั้น
+        if i % 100 == 0 and kill_switch(equity_curve):
             break
 
         # ตรวจว่าเข้าสู่ Recovery Mode หรือไม่
@@ -142,19 +151,19 @@ def run_backtest(df: pd.DataFrame):
                         recovery_mode = False
                     open_trade = None
 
-        if not open_trade and row.get("entry_signal") in ["buy", "sell"]:
+        if not open_trade and getattr(row, "entry_signal", None) in ["buy", "sell"]:
             session = "Asia" if ts.hour < 8 else "London" if ts.hour < 16 else "NY"
             if recovery_mode:
-                lot = calc_lot_recovery(capital, row.get("atr", 1.0), 1.5)
+                lot = calc_lot_recovery(capital, atr_val, 1.5)
             else:
-                lot = calc_lot_risk(capital, row.get("atr", 1.0), 1.5)
+                lot = calc_lot_risk(capital, atr_val, 1.5)
             open_trade = {
                 "entry": price,
                 "entry_time": ts,
-                "type": row.get("entry_signal"),
+                "type": getattr(row, "entry_signal", None),
                 "lot": lot,
                 "session": session,
-                "atr": row.get("atr", 1.0),
+                "atr": atr_val,
                 "risk_mode": "recovery" if recovery_mode else "normal",
             }
 

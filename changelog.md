@@ -89,3 +89,5 @@
 ## 2025-06-10
 - ปรับเมนู Backtest จาก Signal ให้เรียก Patch K+L+M และปรับโค้ดให้บันทึก summary
 
+## 2025-06-21
+- ปรับปรุง run_backtest ให้ใช้ itertuples และตรวจ kill_switch ทุก 100 แถว
