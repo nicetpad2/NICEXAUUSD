@@ -165,7 +165,7 @@ def run_backtest(df: pd.DataFrame):
                     open_trade = None
 
         if not open_trade and getattr(row, "entry_signal", None) in ["buy", "sell"]:
-            session = "Asia" if ts.hour < 8 else "London" if ts.hour < 16 else "NY"
+            session = "Asia" if ts.hour < 8 else "London" if ts.hour < 15 else "NY"  # [Patch v7.4]
             if recovery_mode:
                 lot = calc_lot_recovery(capital, atr_val, 1.5)
             else:

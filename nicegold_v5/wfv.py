@@ -80,7 +80,7 @@ def build_trade_log(position, timestamp, price, hit_tp, hit_sl, equity, slippage
         (break_even_time - entry_time).total_seconds() / 60 if break_even_time else None
     )
     hour = entry_time.hour
-    session = "Asia" if hour < 8 else "London" if hour < 16 else "NY"
+    session = "Asia" if hour < 8 else "London" if hour < 15 else "NY"  # [Patch v7.4]
 
     return {
         "entry_time": entry_time,
@@ -189,10 +189,10 @@ def session_label(ts):
     hour = ts.hour
     if 0 <= hour < 8:
         return "Asia"
-    elif 8 <= hour < 16:
+    elif 8 <= hour < 15:
         return "London"
-    elif 16 <= hour < 23:
-        return "NY"
+    elif 15 <= hour < 23:
+        return "NY"  # [Patch v7.4]
     else:
         return "Off"
 

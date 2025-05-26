@@ -178,3 +178,9 @@
 ## 2025-07-20
 - ขยาย sniper_zone ให้ใช้ gain_z > 0.2 (Patch v7.3)
 
+## 2025-07-21
+- ปรับช่วงเวลา NY เป็น 15-23 และผ่อนปรน ATR สำหรับช่วงนี้ (Patch v7.4)
+- เพิ่มคอลัมน์ sniper_risk_score และใช้เกณฑ์คะแนนขั้นต่ำ 7.5 (Patch v7.5)
+- ปรับ breakout ช่วง Asia ไม่ใช้ margin (Patch v7.6)
+- ผ่อนปรนเกณฑ์ momentum, volume และคะแนน Sniper สำหรับ Asia (Patch v7.7)
+

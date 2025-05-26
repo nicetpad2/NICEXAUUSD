@@ -31,6 +31,12 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
     df["entry_time"] = df["timestamp"]
     df["signal_id"] = df["timestamp"].astype(str)
 
+    # --- Session Info ---
+    hour = df["timestamp"].dt.hour
+    df["session_name"] = np.where(
+        hour < 8, "Asia", np.where(hour < 15, "London", "NY")
+    )
+
     # --- Session Tag ---
     df["session_label"] = "None"
     df.loc[df["timestamp"].dt.hour.between(13, 17), "session_label"] = "NY"
@@ -46,11 +52,28 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
     trend_dn = df["ema_15"] < df["ema_50"]
     breakout_margin = 0.25
     breakout_up = df["close"].shift(1) > df["ema_50"].shift(1) + breakout_margin  # [Patch v7.2]
+    breakout_up_asia = df["close"].shift(1) > df["ema_50"].shift(1)
+    breakout_up = breakout_up.where(df["session_name"] != "Asia", breakout_up_asia)  # [Patch v7.6]
     breakout_dn = df["close"].shift(1) < df["ema_50"].shift(1) - breakout_margin  # [Patch v7.2]
     volatility_ok = df["atr"] > df["atr_ma"] * 0.85
-    momentum_ok = df["gain_z"] > 0.4  # [Patch v6.1]
-    volume_ok = df["volume"] > df["volume_ma"] * 1.0  # [Patch v6.1]
-    atr_enough = df["atr"] > 1.4  # [Patch v6.1]
+    momentum_thresh = np.where(df["session_name"] == "Asia", 0.0, 0.4)
+    momentum_ok = df["gain_z"] > momentum_thresh  # [Patch v7.7]
+    volume_mult = np.where(df["session_name"] == "Asia", 0.80, 1.0)
+    volume_ok = df["volume"] > df["volume_ma"] * volume_mult  # [Patch v7.7]
+    atr_thresh = np.where(
+        df["session_name"] == "NY",
+        0.7,
+        np.where(df["session_name"] == "Asia", 0.5, 1.1),
+    )
+    atr_enough = df["atr"] > atr_thresh  # [Patch v7.4 & v7.7]
+
+    df["sniper_risk_score"] = (
+        df["gain_z"].clip(0, 2) * 2.5
+        + df["ema_slope"].clip(0, 2) * 2.0
+        + (df["atr"] / df["atr_ma"]).clip(0.5, 1.5) * 2.0
+        + (df["volume"] / df["volume_ma"]).clip(0.8, 1.5) * 3.5
+    )
+    df["sniper_risk_score"].fillna(0, inplace=True)
 
     # --- Entry Score + TP Ratio ---
     df["entry_score"] = df["gain_z"] * df["atr"] / (df["atr_ma"] + 1e-9)
@@ -69,12 +92,15 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
         df["entry_score"].rank(method="first"), q=3, labels=["C", "B", "A"], duplicates="drop"
     )
 
-    # [Patch v7.0] Sniper filter: High momentum + trend confirm + Tier A only
     sniper_zone = (
-        (df["gain_z"] > 0.2)  # [Patch v7.3]
-        & (df["ema_slope"] > 0)
+        (df["session_name"] == "Asia")
+        & (df["sniper_risk_score"] >= 6.0)
+        & df["entry_tier"].isin(["A", "B"])
+    ) | (
+        (df["session_name"] != "Asia")
+        & (df["sniper_risk_score"] >= 7.5)
         & (df["entry_tier"] == "A")
-    )
+    )  # [Patch v7.5 & v7.7]
 
     buy_cond = (
         sniper_zone

@@ -202,3 +202,9 @@
 ### 2025-07-20
 - ขยาย sniper zone เป็น gain_z > 0.2 (Patch v7.3)
 
+### 2025-07-21
+- ปรับเวลา NY เป็น 15-23 และปรับ ATR threshold ตาม session (Patch v7.4)
+- เพิ่มคอลัมน์ sniper_risk_score และเกณฑ์ Sniper ใหม่ (Patch v7.5)
+- ปรับ breakout ช่วง Asia ไม่ใช้ margin (Patch v7.6)
+- ผ่อนปรน momentum/volume และคะแนน Sniper สำหรับ Asia (Patch v7.7)
+

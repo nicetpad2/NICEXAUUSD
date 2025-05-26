@@ -228,8 +228,8 @@ def split_by_session(df: pd.DataFrame) -> dict:
     df["hour"] = df["timestamp"].dt.hour
     df = df.set_index("timestamp")
     asia_df = df[df["hour"].between(3, 7)]
-    london_df = df[df["hour"].between(8, 15)]
-    ny_df = df[df["hour"].between(16, 22)]
+    london_df = df[df["hour"].between(8, 14)]
+    ny_df = df[df["hour"].between(15, 23)]  # [Patch v7.4]
     return {
         "Asia": asia_df,
         "London": london_df,
