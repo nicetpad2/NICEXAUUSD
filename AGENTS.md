@@ -143,4 +143,6 @@
 - เพิ่ม unit test ตรวจสอบการทำงานของตัวกรองความผันผวน
 ### 2025-06-27
 - เพิ่มตัวกรอง session, envelope และ momentum สำหรับ Enterprise QA ใน generate_signals
+### 2025-06-28
+- เพิ่มฟังก์ชัน `generate_signals_qa_clean` สำหรับตัวอย่างชุดข้อมูล QA
 
