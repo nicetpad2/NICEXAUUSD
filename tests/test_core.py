@@ -75,6 +75,10 @@ def test_generate_signals():
     out = generate_signals(df)
     assert 'entry_signal' in out.columns
     assert 'entry_blocked_reason' in out.columns
+    assert 'lot_suggested' in out.columns
+    assert 'entry_score' in out.columns
+    assert 'session_label' in out.columns
+    assert out['lot_suggested'].iloc[0] == 0.05
 
 
 def test_generate_signals_with_config():
@@ -110,7 +114,7 @@ def test_generate_signals_session_filter():
     df_out = df_in.copy()
     df_out['timestamp'] = ts_out
     out_out = generate_signals(df_out)
-    assert (out_out['entry_blocked_reason'] == 'filtered_out').all()
+    assert out_out['entry_blocked_reason'].str.contains('off_session').all()
 
 
 def test_generate_signals_volume_filter():

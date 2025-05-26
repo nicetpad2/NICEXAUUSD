@@ -138,3 +138,5 @@
 - ปรับปรุง `generate_signals` เป็น Patch VBTB+ Enhanced เพิ่มตัวกรอง Volume และปรับ threshold
 ## 2025-07-06
 - ปรับปรุง `generate_signals` เป็น Patch VBTB+ Final PRO กรองทุกเซสชัน Lot ≥ 0.05 และกำไรขั้นต่ำ $1
+## 2025-07-07
+- ปรับปรุง `generate_signals` เป็น Patch VBTB+ UltraFix v3 เพิ่มคอลัมน์ lot_suggested, entry_score, session_label และเหตุผลบล็อกละเอียด
