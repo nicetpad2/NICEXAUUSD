@@ -68,20 +68,25 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
         df["entry_score"].rank(method="first"), q=3, labels=["C", "B", "A"], duplicates="drop"
     )
 
+    # [Patch v7.0] Sniper filter: High momentum + trend confirm + Tier A only
+    sniper_zone = (
+        (df["gain_z"] > 0.8)
+        & (df["ema_slope"] > 0)
+        & (df["entry_tier"] == "A")
+    )
+
     buy_cond = (
-        trend_up
+        sniper_zone
         & breakout_up
         & volatility_ok
-        & momentum_ok
         & volume_ok
         & atr_enough
         & session
     )
     sell_cond = (
-        trend_dn
+        sniper_zone
         & breakout_dn
         & volatility_ok
-        & momentum_ok
         & volume_ok
         & atr_enough
         & session
