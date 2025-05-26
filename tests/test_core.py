@@ -61,6 +61,7 @@ def test_generate_signals():
 
 def test_generate_signals_with_config():
     df = sample_df()
+    df['timestamp'] = df['timestamp'] + pd.Timedelta(hours=14)
     df['gain_z'] = -0.15
     out_default = generate_signals(df)
     out_cfg = generate_signals(df, config={'gain_z_thresh': -0.2})
@@ -71,6 +72,27 @@ def test_generate_signals_volatility_filter():
     df = sample_df()
     out = generate_signals(df, config={'volatility_thresh': 3.0})
     assert out['entry_signal'].notnull().sum() == 0
+
+
+def test_generate_signals_session_filter():
+    ts_in = pd.date_range('2024-01-01 13:00', periods=30, freq='D')
+    df_in = pd.DataFrame({
+        'timestamp': ts_in,
+        'open': pd.Series(range(30)) + 100,
+        'high': pd.Series(range(30)) + 101,
+        'low': pd.Series(range(30)) + 99,
+        'close': pd.Series(range(30)) + 100,
+        'gain_z': [0.1]*30,
+        'atr_ma': [1.0]*30,
+    })
+    out_in = generate_signals(df_in)
+    assert out_in['entry_signal'].notnull().sum() > 0
+
+    ts_out = pd.date_range('2024-01-01 08:00', periods=30, freq='D')
+    df_out = df_in.copy()
+    df_out['timestamp'] = ts_out
+    out_out = generate_signals(df_out)
+    assert out_out['entry_signal'].notnull().sum() == 0
 
 
 def test_auto_entry_config():
