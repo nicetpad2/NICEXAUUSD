@@ -64,8 +64,13 @@ def test_calc_lot():
 
 
 def test_kill_switch_trigger():
-    curve = [100, 95, 70]
+    curve = [100] * 100 + [95, 70]
     assert kill_switch(curve)
+
+
+def test_kill_switch_waits_min_trades():
+    curve = [100, 95, 70]
+    assert not kill_switch(curve)
 
 
 def test_recovery_lot():
@@ -148,7 +153,9 @@ def test_print_qa_summary_and_export(tmp_path):
     trades = pd.DataFrame({
         'pnl': [1.0, -0.5],
         'lot': [0.1, 0.1],
-        'commission': [0.02, 0.02]
+        'commission': [0.02, 0.02],
+        'spread_cost': [0.01, 0.01],
+        'slippage_cost': [0.0, 0.0]
     })
     equity = pd.DataFrame({
         'timestamp': pd.date_range('2024-01-01', periods=2, freq='D'),

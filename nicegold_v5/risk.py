@@ -8,12 +8,13 @@ def calc_lot(capital: float, risk_pct: float = 1.5, sl_pips: float = 100) -> flo
 # --- Patch C: Advanced Risk Management ---
 
 KILL_SWITCH_DD = 25  # % drawdown limit
+MIN_TRADES_BEFORE_KILL = 100  # ต้องมีเทรดมากกว่า 100 ไม้ก่อนจึงเริ่มตรวจ DD
 
 
 def kill_switch(equity_curve: list[float]) -> bool:
-    """Return True if drawdown exceeds threshold."""
-    if not equity_curve:
-        return False
+    """Return True if drawdown exceeds threshold (หลังจากเทรดครบ MIN_TRADES_BEFORE_KILL)"""
+    if not equity_curve or len(equity_curve) < MIN_TRADES_BEFORE_KILL:
+        return False  # ยังไม่ตรวจ drawdown
     peak = equity_curve[0]
     for eq in equity_curve:
         drawdown = (peak - eq) / peak * 100
