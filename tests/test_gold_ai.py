@@ -16,6 +16,8 @@ def test_backtest_hit_sl_expected():
         "gain_z": [0.0] * 5,
     })
 
+    from nicegold_v5 import exit as exit_mod
+    exit_mod.MIN_HOLD_MINUTES = 0
     trades, equity = run_backtest(df)
     assert not trades.empty
     assert any(trades["exit_reason"] == "SL")
