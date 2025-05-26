@@ -13,7 +13,7 @@ def rsi(series: pd.Series, period: int = 14) -> pd.Series:
     return 100 - (100 / (1 + rs))
 
 
-def generate_signals(df: pd.DataFrame) -> pd.DataFrame:
+def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
     df = df.copy()
     df["entry_signal"] = None
     df["entry_blocked_reason"] = None
@@ -29,9 +29,12 @@ def generate_signals(df: pd.DataFrame) -> pd.DataFrame:
     # --- Patch C.1: Fallback gain_z ---
     gainz = df["gain_z"] if "gain_z" in df.columns else pd.Series(1.0, index=df.index)
 
-    # --- Filter Logic (Relaxed) ---
-    gainz_guard = gainz < -0.1
-    ema_flat = df["ema_slope"] <= 0
+    # --- ใช้ config fold-based ---
+    gainz_threshold = config.get("gain_z_thresh", -0.1) if config else -0.1
+    ema_slope_threshold = config.get("ema_slope_min", 0.0) if config else 0.0
+
+    gainz_guard = gainz < gainz_threshold
+    ema_flat = df["ema_slope"] <= ema_slope_threshold
     if "timestamp" in df.columns:
         df["entry_time"] = df["timestamp"]
         time_gap_ok = df["entry_time"].diff().dt.total_seconds().fillna(999999) > 15 * 60
@@ -51,6 +54,6 @@ def generate_signals(df: pd.DataFrame) -> pd.DataFrame:
 
     # --- Logging QA Summary ---
     blocked_pct = df["entry_signal"].isnull().mean() * 100
-    print(f"[Patch C.1] Entry Signal Blocked: {blocked_pct:.2f}%")
+    print(f"[Patch D.2] Entry Signal Blocked: {blocked_pct:.2f}%")
 
     return df

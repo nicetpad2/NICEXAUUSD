@@ -71,9 +71,24 @@ def should_exit(trade, row):
         logging.info(f"[BE] Triggered to {entry:.2f}")
 
     # ✅ Exit Guard (เช่น gain_z < -0.5 หลัง gain บวก)
-    if gain > 0 and _rget(row, "gain_z", 0) < -0.5:
-        return True, "gain_z drop"
-    if gain > 0 and _rget(row, "atr", 1.0) < _rget(row, "atr_ma", 1.0):
-        return True, "atr fading"
+    if gain > 0:
+        atr_val = _rget(row, "atr", 1.0)
+        atr_ma_val = _rget(row, "atr_ma", 1.0)
+        gain_z = _rget(row, "gain_z", 0)
+
+        atr_fading_trigger = atr_val < 0.8 * atr_ma_val and gain_z < -0.5
+        tp1_threshold = atr_val * 1.2 * 1.5 * 0.8
+
+        if atr_fading_trigger and gain >= tp1_threshold:
+            logging.info(
+                f"[Patch D.1] Exit due to confirmed atr fading (gain_z={gain_z:.2f})"
+            )
+            return True, "atr fading"
+        elif atr_fading_trigger:
+            logging.debug(
+                f"[Patch D.1] Skip early atr fading exit: gain={gain:.2f} < TP1×0.8"
+            )
+        if gain_z < -0.5:
+            return True, "gain_z drop"
 
     return False, None
