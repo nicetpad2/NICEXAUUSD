@@ -30,22 +30,22 @@ def generate_signals(df: pd.DataFrame) -> pd.DataFrame:
     trend_up = (df["ema_fast"] > df["ema_slow"]) & (df["rsi"] > 55)
     trend_dn = (df["ema_fast"] < df["ema_slow"]) & (df["rsi"] < 45)
 
-    # === [Patch A] SL Filtering Guard ===
-    # เงื่อนไขการบล็อกสัญญาณ
-    block_gainz = df.get("gain_z", pd.Series(0, index=df.index)) < -0.3
-    block_atr_spike = df["atr"] / (df["atr_ma"] + 1e-9) > 2.5
-    block_ema_down = df["ema_slope"] < 0
+    # === Recovery Entry Guard ===
+    gainz_guard = df.get("gain_z", pd.Series(0, index=df.index)) < 0.1
+    ema_flat = df["ema_slope"] <= 0
+    if "entry_time" in df.columns:
+        time_gap_ok = (
+            df["entry_time"].diff().dt.total_seconds().fillna(999999) > 15 * 60
+        )
+    else:
+        time_gap_ok = pd.Series(True, index=df.index)
 
-    # สร้างคำอธิบายเหตุผลบล็อก
-    df.loc[block_gainz, "entry_blocked_reason"] = "gain_z < -0.3"
-    df.loc[block_atr_spike, "entry_blocked_reason"] = "ATR spike"
-    df.loc[block_ema_down & trend_up, "entry_blocked_reason"] = "EMA slope < 0"
+    recovery_block = gainz_guard | ema_flat | ~time_gap_ok
 
-    # บล็อก entry จริงๆ
-    allow_buy = trend_up & df["entry_blocked_reason"].isnull()
-    allow_sell = trend_dn & df["entry_blocked_reason"].isnull()
+    df.loc[recovery_block, "entry_blocked_reason"] = "Recovery Filter Blocked"
+    allow_recovery_entry = trend_up & df["entry_blocked_reason"].isnull()
 
-    df.loc[allow_buy, "entry_signal"] = "buy"
-    df.loc[allow_sell, "entry_signal"] = "sell"
+    df.loc[allow_recovery_entry, "entry_signal"] = "buy"
+    df.loc[trend_dn & df["entry_blocked_reason"].isnull(), "entry_signal"] = "sell"
 
     return df

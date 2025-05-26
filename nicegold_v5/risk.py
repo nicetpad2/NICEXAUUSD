@@ -58,3 +58,27 @@ def calc_lot_risk(capital: float, atr: float, risk_pct: float = 1.5) -> float:
     lot = risk_amount / (sl_pips * pip_value)
     return max(0.01, round(lot, 2))
 
+
+# --- Patch B.2: Recovery Mode Risk Logic ---
+RECOVERY_SL_TRIGGER = 3  # SL สะสมกี่ครั้งจึงเข้าโหมด recovery
+
+
+def calc_lot_recovery(capital: float, atr: float, risk_pct: float = 1.5) -> float:
+    """Adaptive lot size เมื่ออยู่ใน Recovery Mode (lot × 1.5)."""
+    base_lot = calc_lot_risk(capital, atr, risk_pct)
+    recovery_lot = base_lot * 1.5
+    return max(0.01, round(recovery_lot, 2))
+
+
+def get_sl_tp_recovery(price: float, atr: float, direction: str) -> tuple[float, float]:
+    """คำนวณ SL/TP แบบกว้างขึ้นสำหรับ Recovery Mode."""
+    sl_multiplier = 1.4
+    tp_multiplier = 1.8
+    if direction == "buy":
+        sl = price - atr * sl_multiplier
+        tp = price + atr * tp_multiplier
+    else:
+        sl = price + atr * sl_multiplier
+        tp = price - atr * tp_multiplier
+    return sl, tp
+

@@ -20,5 +20,5 @@ def test_backtest_hit_sl_expected():
     exit_mod.MIN_HOLD_MINUTES = 0
     trades, equity = run_backtest(df)
     assert not trades.empty
-    assert any(trades["exit_reason"] == "SL")
+    assert any(trades["exit_reason"].str.lower().isin(["sl", "recovery_sl"]))
     assert (trades["pnl"] < 0).any()
