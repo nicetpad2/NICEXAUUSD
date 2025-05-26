@@ -14,69 +14,56 @@ def rsi(series: pd.Series, period: int = 14) -> pd.Series:
 
 
 def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
-    """สร้างคอลัมน์ entry_signal และเหตุผลที่บล็อกแบบละเอียด"""
+    """สร้างสัญญาณตามกลยุทธ์ VBTB (Volatility Breakout + Trend Bias)"""
     df = df.copy()
     df["entry_signal"] = None
     df["entry_blocked_reason"] = None
 
-    df["ema_fast"] = df["close"].ewm(span=15).mean()
-    df["ema_slow"] = df["close"].ewm(span=50).mean()
-    df["ema_slope"] = df["ema_fast"].diff()
+    # [Patch VBTB] คำนวณอินดิเคเตอร์พื้นฐาน
+    df["ema_15"] = df["close"].ewm(span=15).mean()
+    df["ema_50"] = df["close"].ewm(span=50).mean()
     df["atr"] = (df["high"] - df["low"]).rolling(14).mean()
     df["atr_ma"] = df["atr"].rolling(50).mean()
     gain = df["close"].diff()
     df["gain_z"] = (gain - gain.rolling(20).mean()) / (gain.rolling(20).std() + 1e-9)
 
-    gainz = df["gain_z"]
-    gainz_thresh = config.get("gain_z_thresh", -0.2) if config else -0.2
-    ema_slope_min = config.get("ema_slope_min", 0.0) if config else 0.0
-    volatility_ratio = config.get("volatility_thresh", 0.8) if config else 0.8
+    # คอลัมน์เดิมสำหรับโมดูลอื่นยังคงใช้งานได้
+    df["ema_fast"] = df["ema_15"]
+    df["ema_slow"] = df["ema_50"]
+    df["ema_slope"] = df["ema_fast"].diff()
 
     df["entry_time"] = df["timestamp"]
-    time_filter = df["timestamp"].dt.hour.between(6, 22)
-    trend_up = df["ema_fast"] > df["ema_slow"]
-    trend_dn = df["ema_fast"] < df["ema_slow"]
-    envelope_up = df["close"] > df["ema_slow"] + 0.2
-    envelope_dn = df["close"] < df["ema_slow"] - 0.2
-    volatility = df["atr"] > df["atr_ma"] * volatility_ratio
-    momentum = gainz > gainz_thresh
 
-    buy_cond = trend_up & envelope_up & volatility & momentum & time_filter
-    sell_cond = trend_dn & envelope_dn & volatility & momentum & time_filter
+    # --- เงื่อนไข VBTB ---
+    trend_up = df["ema_15"] > df["ema_50"]
+    trend_dn = df["ema_15"] < df["ema_50"]
 
+    breakout_up = df["close"] > df["ema_50"] + 0.3
+    breakout_dn = df["close"] < df["ema_50"] - 0.3
+
+    volatility_ok = df["atr"] > df["atr_ma"] * 0.8
+    momentum_ok = df["gain_z"] > -0.1
+    session_ok = df["timestamp"].dt.hour.between(13, 20)
+
+    buy_cond = trend_up & breakout_up & volatility_ok & momentum_ok & session_ok
+    sell_cond = trend_dn & breakout_dn & volatility_ok & momentum_ok & session_ok
     df.loc[buy_cond, "entry_signal"] = "buy"
     df.loc[sell_cond, "entry_signal"] = "sell"
 
-    if df["entry_signal"].notnull().sum() < len(df) * 0.05:
-        df["entry_signal"] = None
-        gainz_thresh = -0.3
-        ema_slope_min = -0.01
-        momentum = gainz > gainz_thresh
-        buy_cond = trend_up & envelope_up & volatility & momentum & time_filter
-        sell_cond = trend_dn & envelope_dn & volatility & momentum & time_filter
-        df.loc[buy_cond, "entry_signal"] = "buy"
-        df.loc[sell_cond, "entry_signal"] = "sell"
-        df["entry_blocked_reason"] = df["entry_blocked_reason"].fillna("fallback_config")
+    # [Patch VBTB] บันทึกเหตุผลที่บล็อกสัญญาณอย่างย่อ
+    reasons = (
+        np.where(~(trend_up | trend_dn), "no_trend|", "")
+        + np.where(~volatility_ok, "low_vol|", "")
+        + np.where(~momentum_ok, "gain_z_low|", "")
+        + np.where(~session_ok, "off_session|", "")
+    )
+    df.loc[df["entry_signal"].isnull(), "entry_blocked_reason"] = (
+        pd.Series(reasons).str.strip("|")
+    )
 
-    no_trend = ~(trend_up | trend_dn)
-    low_volatility = ~volatility
-    no_momentum = ~momentum
-    out_of_session = ~time_filter
+    blocked_pct = df["entry_signal"].isnull().mean() * 100
+    print(f"[Patch VBTB] Entry Signal Blocked: {blocked_pct:.2f}%")
 
-    blocked_reason = []
-    for t, v, m, s in zip(no_trend, low_volatility, no_momentum, out_of_session):
-        reasons = []
-        if t:
-            reasons.append("trend")
-        if v:
-            reasons.append("volatility")
-        if m:
-            reasons.append("momentum")
-        if s:
-            reasons.append("session")
-        blocked_reason.append(",".join(reasons) if reasons else None)
-
-    df.loc[df["entry_signal"].isnull(), "entry_blocked_reason"] = blocked_reason
     return df
 
 
