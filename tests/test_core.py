@@ -6,6 +6,7 @@ from nicegold_v5.risk import (
     apply_recovery_lot,
     calc_lot_risk,
     get_sl_tp,
+    get_sl_tp_recovery,
 )
 from nicegold_v5.exit import should_exit
 from nicegold_v5.backtester import run_backtest
@@ -90,6 +91,33 @@ def test_calc_lot_risk_and_sl_tp():
     lot = calc_lot_risk(1000, 1.0, 1.5)
     assert sl < 100 and tp > 100
     assert lot >= 0.01
+
+
+def test_get_sl_tp_recovery():
+    sl, tp = get_sl_tp_recovery(100, 1.0, "buy")
+    assert round(sl, 2) == 98.2
+    assert round(tp, 2) == 101.8
+
+
+def test_tsl_activation():
+    from nicegold_v5 import exit as exit_mod
+    exit_mod.MIN_HOLD_MINUTES = 0
+    trade = {
+        "entry": 100,
+        "type": "buy",
+        "lot": 0.1,
+        "entry_time": pd.Timestamp("2025-01-01 00:00:00"),
+    }
+    row = {
+        "close": 102.0,
+        "gain_z": 0.0,
+        "atr": 1.0,
+        "atr_ma": 1.0,
+        "timestamp": pd.Timestamp("2025-01-01 00:05:00"),
+    }
+    exit_now, reason = should_exit(trade, row)
+    assert not exit_now
+    assert trade.get("tsl_activated")
 
 
 def test_should_exit():

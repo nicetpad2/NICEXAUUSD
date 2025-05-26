@@ -130,3 +130,7 @@
 - แก้ `generate_signals` ให้รับพารามิเตอร์ config และพิมพ์ผลแบบ Patch D.2
 - ปรับ should_exit ด้วยตรรกะ atr fading ใหม่ (Patch D.1)
 - อัพเดต `run_auto_wfv` ให้ส่ง config เข้าฟังก์ชัน generate_signals
+
+### 2025-06-24
+- ปรับ multiplier SL ให้กว้างขึ้นและยืดการเปิด TSL เป็นกำไรเท่ากับ SL × 2.0
+- เพิ่ม unit test สำหรับ get_sl_tp_recovery และการเปิด TSL

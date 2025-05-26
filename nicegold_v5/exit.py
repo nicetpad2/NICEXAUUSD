@@ -1,7 +1,7 @@
 import logging
 from datetime import timedelta
 
-TSL_TRIGGER_GAIN = 1.5   # Trigger TSL เมื่อ gain ≥ SL × 1.5
+TSL_TRIGGER_GAIN = 2.0   # Trigger TSL เมื่อ gain ≥ SL × 2.0
 MIN_HOLD_MINUTES = 10    # ห้าม exit ถ้ายังถือไม่ถึง 10 นาที
 MAX_HOLD_MINUTES = 360   # [Patch C.3] ถือสูงสุด 6 ชม.
 
