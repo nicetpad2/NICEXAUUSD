@@ -145,24 +145,19 @@ def load_csv_safe(path, lowercase=True):
         raise
 
 def run_wfv_with_progress(df, features, label_col):
-    from sklearn.model_selection import TimeSeriesSplit
-    import numpy as np
+    from nicegold_v5.utils import split_by_session
 
     logging.info("[TIME] run_wfv_with_progress(): Start")
 
-    splits = list(TimeSeriesSplit(n_splits=5).split(df))
+    session_folds = split_by_session(df)
     all_trades = []
-    print("\n📊 Running Walk-Forward Folds:")
-    for i, (train_idx, test_idx) in enumerate(splits):
-        fold_pbar = tqdm(total=1, desc=f"🔁 Fold {i+1}/5", unit="step")
+    print("\n📊 Running Session Folds:")
+    for name, sess_df in session_folds.items():
+        fold_pbar = tqdm(total=1, desc=f"🔁 {name}", unit="step")
         try:
-            fold_label = f"Fold{i+1}"
-            df_train = df.iloc[train_idx].copy()
-            df_test = df.iloc[test_idx].copy()
-            print(f"🔄 {fold_label}: Train {df_train.shape[0]} rows | Test {df_test.shape[0]} rows")
-            trades = run_walkforward_backtest(df_test, features, label_col, strategy_name=fold_label)
+            trades = run_walkforward_backtest(sess_df, features, label_col, strategy_name=name)
             if not trades.empty:
-                trades["fold"] = fold_label
+                trades["fold"] = name
                 start_time = trades["time"].min() if "time" in trades.columns else "N/A"
                 end_time = trades["time"].max() if "time" in trades.columns else "N/A"
                 duration_days = (pd.to_datetime(end_time) - pd.to_datetime(start_time)).days if start_time != "N/A" else "-"
@@ -173,7 +168,7 @@ def run_wfv_with_progress(df, features, label_col):
                 loss_trades = trades[trades["pnl"] < 0].shape[0]
                 max_dd = trades["drawdown"].max() if "drawdown" in trades.columns else None
 
-                print(f"📈 {fold_label} Summary:")
+                print(f"📈 {name} Summary:")
                 print(f"    ▸ Orders     : {num_orders}")
                 print(f"    ▸ Total Lots : {total_lots:.2f}")
                 print(f"    ▸ Win Trades : {win_trades} | Loss Trades : {loss_trades}")
@@ -184,7 +179,7 @@ def run_wfv_with_progress(df, features, label_col):
             fold_pbar.update(1)
             maximize_ram()
         except Exception as e:
-            print(f"❌ Error in {fold_label}: {e}")
+            print(f"❌ Error in {name}: {e}")
     logging.info("[TIME] run_wfv_with_progress(): Done")
     return pd.concat(all_trades, ignore_index=True) if all_trades else pd.DataFrame()
 

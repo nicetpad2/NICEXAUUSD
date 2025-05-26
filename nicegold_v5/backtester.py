@@ -71,7 +71,7 @@ def run_backtest(df: pd.DataFrame):
             atr_entry = open_trade["atr"]
             sl_dist = atr_entry * 1.2
             tp1 = sl_dist * 1.5
-            tp2 = sl_dist * open_trade.get("tp_rr_ratio", adaptive_tp_multiplier(session))
+            tp2 = sl_dist * open_trade.get("tp_rr_ratio", 4.8)
             gain = price - open_trade["entry"] if direction == "buy" else open_trade["entry"] - price
 
             if not open_trade.get("tp1_hit") and gain >= tp1:
@@ -171,6 +171,7 @@ def run_backtest(df: pd.DataFrame):
             else:
                 lot = calc_lot_risk(capital, atr_val, 1.5)
             lot = min(lot, 1.0)  # [Patch v6.7] ensure cap
+            rr_ratio = getattr(row, "tp_rr_ratio", 4.8)
             open_trade = {
                 "entry": price,
                 "entry_time": ts,
@@ -179,10 +180,11 @@ def run_backtest(df: pd.DataFrame):
                 "session": session,
                 "atr": atr_val,
                 "risk_mode": "recovery" if recovery_mode else "normal",
-                "tp_rr_ratio": getattr(row, "tp_rr_ratio", adaptive_tp_multiplier(session)),
+                "tp_rr_ratio": rr_ratio,
             }
             logging.info(
-                f"[Patch v7.x] Using lot: {lot:.2f} | Tier: {getattr(row, 'entry_tier', '')} | RR: {open_trade['tp_rr_ratio']}"
+                f"[Patch] Lot={lot:.2f}, Tier={getattr(row, 'entry_tier', '')}, RR={rr_ratio}, "
+                f"GainZ={getattr(row, 'gain_z', 0):.2f}, Entry={getattr(row, 'entry_signal', '')}"
             )
 
     end = time.time()
