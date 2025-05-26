@@ -149,3 +149,6 @@
 - เพิ่ม Patch Perf-B ทำเวกเตอร์ entry_signal และเหตุผลบล็อก
 - เพิ่ม Patch Perf-C ลดการ copy DataFrame และปรับ maximize_ram
 - เพิ่ม Patch Perf-D เพิ่ม log เวลาในฟังก์ชันหลัก
+## 2025-07-11
+- แก้คำเตือน pandas ใน `nicegold_v5/entry.py` ที่ใช้ fillna inplace บน Series
+

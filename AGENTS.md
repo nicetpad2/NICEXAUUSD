@@ -173,3 +173,6 @@
 ### 2025-07-10
 - เพิ่ม Patch Perf-A ถึง Perf-D ปรับความเร็ว backtester, signal, WFV และเพิ่ม log timing
 
+### 2025-07-11
+- แก้คำเตือน pandas เรื่องการใช้ inplace บน Series ใน `nicegold_v5/entry.py`
+
