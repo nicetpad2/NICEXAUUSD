@@ -146,3 +146,7 @@
 ### 2025-06-28
 - เพิ่มฟังก์ชัน `generate_signals_qa_clean` สำหรับตัวอย่างชุดข้อมูล QA
 
+### 2025-06-29
+- ปรับปรุง `generate_signals` เพิ่มระบบ fallback และบันทึกเหตุผลการบล็อกอย่างละเอียด (Patch D.9)
+- ปรับ `should_exit` ด้วย Momentum exit logic ใหม่ (Patch D.10)
+
