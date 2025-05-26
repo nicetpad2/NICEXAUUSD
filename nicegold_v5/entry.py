@@ -14,7 +14,7 @@ def rsi(series: pd.Series, period: int = 14) -> pd.Series:
 
 
 def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
-    """ปรับปรุงสัญญาณ VBTB+ ด้วยตัวกรอง Volume"""
+    """Patch VBTB+ Final PRO – กรองทุกเซสชัน Lot ≥ 0.05 กำไร ≥ $1"""
     df = df.copy()
     df["entry_signal"] = None
     df["entry_blocked_reason"] = None
@@ -34,18 +34,35 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
     df["ema_slow"] = df["ema_50"]
     df["ema_slope"] = df["ema_fast"].diff()
 
-    # --- Filtered Entry Logic ---
+    # --- Entry Conditions ---
+    session_all = df["timestamp"].dt.hour.between(3, 22)
     trend_up = df["ema_15"] > df["ema_50"]
     trend_dn = df["ema_15"] < df["ema_50"]
     breakout_up = df["close"] > df["ema_50"] + 0.3
     breakout_dn = df["close"] < df["ema_50"] - 0.3
-    volatility_ok = df["atr"] > df["atr_ma"] * 0.7
-    momentum_ok = df["gain_z"] > 0
-    volume_ok = df["volume"] > df["volume_ma"]
-    session_london_open = df["timestamp"].dt.hour.between(13, 15)
+    volatility_ok = df["atr"] > df["atr_ma"] * 1.0
+    momentum_strong = df["gain_z"] > 1.5
+    volume_ok = df["volume"] > df["volume_ma"] * 1.5
+    atr_min_profit = df["atr"] > 3.0
 
-    buy_cond = trend_up & breakout_up & volatility_ok & momentum_ok & volume_ok & session_london_open
-    sell_cond = trend_dn & breakout_dn & volatility_ok & momentum_ok & volume_ok & session_london_open
+    buy_cond = (
+        trend_up
+        & breakout_up
+        & volatility_ok
+        & momentum_strong
+        & volume_ok
+        & atr_min_profit
+        & session_all
+    )
+    sell_cond = (
+        trend_dn
+        & breakout_dn
+        & volatility_ok
+        & momentum_strong
+        & volume_ok
+        & atr_min_profit
+        & session_all
+    )
 
     df.loc[buy_cond, "entry_signal"] = "buy"
     df.loc[sell_cond, "entry_signal"] = "sell"
@@ -53,7 +70,7 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
     # --- Logging QA ---
     df.loc[df["entry_signal"].isnull(), "entry_blocked_reason"] = "filtered_out"
     blocked_pct = df["entry_signal"].isnull().mean() * 100
-    print(f"[Patch VBTB+ Enhanced] Entry Signal Blocked: {blocked_pct:.2f}%")
+    print(f"[Patch VBTB+ Final PRO] Entry Signal Blocked: {blocked_pct:.2f}%")
 
     return df
 

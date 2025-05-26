@@ -136,3 +136,5 @@
 - ปรับปรุง `generate_signals` เป็น Patch VBTB+ กรอง London Open อย่างเข้มงวด
 ## 2025-07-05
 - ปรับปรุง `generate_signals` เป็น Patch VBTB+ Enhanced เพิ่มตัวกรอง Volume และปรับ threshold
+## 2025-07-06
+- ปรับปรุง `generate_signals` เป็น Patch VBTB+ Final PRO กรองทุกเซสชัน Lot ≥ 0.05 และกำไรขั้นต่ำ $1
