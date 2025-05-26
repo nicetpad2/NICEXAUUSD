@@ -196,6 +196,24 @@ def test_should_exit():
     exit_now, reason = should_exit(trade, row)
     assert exit_now
 
+def test_early_profit_lock():
+    trade = {
+        'entry': 100,
+        'type': 'buy',
+        'lot': 0.1,
+        'entry_time': pd.Timestamp('2025-01-01 00:00:00')
+    }
+    row = {
+        'close': 100.6,
+        'gain_z': -0.1,
+        'atr': 1.0,
+        'atr_ma': 1.0,
+        'timestamp': pd.Timestamp('2025-01-01 00:20:00')
+    }
+    exit_now, reason = should_exit(trade, row)
+    assert exit_now
+    assert reason == 'early_profit_lock'
+
 
 def test_backtester_run():
     df = sample_df()
