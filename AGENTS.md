@@ -189,3 +189,7 @@
 ### 2025-07-16
 - เพิ่ม Sniper filter ใช้ gain_z สูง, ema_slope บวก และ tier A เท่านั้น (Patch v7.0)
 
+### 2025-07-17
+- เพิ่ม generate_signals_v7_1 ปรับ tp_rr_ratio เป็น 4.8 และ 7.5 สำหรับ Sniper Tier A
+- เพิ่มฟังก์ชัน split_by_session และปรับ run_parallel_wfv ใช้ session-based fold
+

@@ -20,13 +20,13 @@ from nicegold_v5.wfv import (
 run_walkforward_backtest = raw_run
 
 from multiprocessing import cpu_count, get_context
-from sklearn.model_selection import TimeSeriesSplit
 import numpy as np
-from nicegold_v5.utils import run_auto_wfv
-from nicegold_v5.entry import generate_signals
+from nicegold_v5.utils import run_auto_wfv, split_by_session
+from nicegold_v5.entry import generate_signals_v7_1 as generate_signals
 
 # --- Advanced Risk Management (Patch C) ---
 KILL_SWITCH_DD = 25  # %
+MAX_LOT_CAP = 1.0  # [Patch v6.7] จำกัดขนาดลอตสูงสุดต่อไม้
 
 
 def kill_switch(equity_curve):
@@ -116,11 +116,12 @@ def run_parallel_wfv(df: pd.DataFrame, features: list, label_col: str, n_folds: 
     required_cols = ['open']  # [Patch] Include lowercase 'open' for renaming
     df = df.drop(columns=[col for col in df.columns if col not in features + [label_col] + required_cols])
 
-    tscv = TimeSeriesSplit(n_splits=n_folds)
-    args_list = [(df.iloc[test_idx], features, label_col, i) for i, (_, test_idx) in enumerate(tscv.split(df))]
-
-    with get_context("spawn").Pool(processes=min(cpu_count(), n_folds)) as pool:
-        trades_list = list(tqdm(pool.imap(_run_fold, args_list), total=n_folds))
+    session_dict = split_by_session(df)
+    trades_list = []
+    for name, sess_df in session_dict.items():
+        trades = raw_run(sess_df, features, label_col, strategy_name=name)
+        trades["fold"] = name
+        trades_list.append(trades)
 
     all_df = pd.concat(trades_list, ignore_index=True)
     out_path = os.path.join(TRADE_DIR, "manual_backtest_trades.csv")

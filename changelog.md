@@ -165,3 +165,7 @@
 ## 2025-07-16
 - ปรับ generate_signals ด้วย Sniper filter และใช้ tier A เท่านั้น (Patch v7.0)
 
+## 2025-07-17
+- เพิ่ม generate_signals_v7_1 และปรับ tp_rr_ratio ตาม Tier A
+- เพิ่มฟังก์ชัน split_by_session และปรับ run_parallel_wfv ใช้ session-based fold
+
