@@ -1,9 +1,9 @@
 import logging
 from datetime import timedelta
 
-TSL_TRIGGER_GAIN = 2.0   # Trigger TSL เมื่อ gain ≥ SL × 2.0
-MIN_HOLD_MINUTES = 10    # ห้าม exit ถ้ายังถือไม่ถึง 10 นาที
-MAX_HOLD_MINUTES = 360   # [Patch C.3] ถือสูงสุด 6 ชม.
+TSL_TRIGGER_GAIN = 2.0
+MIN_HOLD_MINUTES = 10
+MAX_HOLD_MINUTES = 360
 
 
 def _rget(row, key, default=None):
@@ -39,9 +39,11 @@ def should_exit(trade, row):
     holding_min = (now - entry_time).total_seconds() / 60
 
     if holding_min < MIN_HOLD_MINUTES:
+        logging.debug("[EXIT] Holding period too short")
         return False, None
 
     if holding_min > MAX_HOLD_MINUTES:
+        logging.info(f"[EXIT] Max hold exceeded ({holding_min:.1f} min)")
         return True, "timeout_exit"
 
     if gain < -sl_threshold and not trade.get("breakeven"):
@@ -69,11 +71,15 @@ def should_exit(trade, row):
     if gain > 0:
         atr_fading = atr < 0.8 * atr_ma
         if atr_fading and gain_z < -0.3:
-            logging.info("[Patch D.10] Exit: ATR fading + gain_z drop")
+            logging.info("[Patch D.12] Exit: ATR fading + gain_z drop")
             return True, "atr_fade_gain_z_drop"
 
         if gain_z < -0.3:
-            logging.info("[Patch D.10] Exit: gain_z reversal after profit")
+            logging.info("[Patch D.12] Exit: gain_z reversal after profit")
             return True, "gain_z_reverse"
+
+    if gain > atr * 0.5 and gain_z < 0:
+        logging.info("[Patch D.12] Exit: early profit lock before gain_z turns negative")
+        return True, "early_profit_lock"
 
     return False, None

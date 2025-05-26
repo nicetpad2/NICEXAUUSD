@@ -123,3 +123,6 @@
 ## 2025-06-29
 - ปรับปรุง `generate_signals` ด้วยระบบ fallback และบันทึกเหตุผลการบล็อก (Patch D.9)
 - ปรับ `should_exit` เพิ่ม Momentum exit logic (Patch D.10)
+
+## 2025-06-30
+- เพิ่ม Early Profit Lock ใน `should_exit` และบันทึก debug ถือครองสั้น (Patch D.12)
