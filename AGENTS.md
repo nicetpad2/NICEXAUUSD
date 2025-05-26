@@ -138,3 +138,6 @@
 ### 2025-06-25
 - เพิ่มฟังก์ชัน `auto_entry_config` และเชื่อมเข้ากับ `run_auto_wfv`
 - ผ่อนปรน RSI เป็น 51/49 และเพิ่มตรรกะ relax filter เมื่อไม่มีเทรด
+### 2025-06-26
+- ปรับปรุง `generate_signals` ด้วย Momentum Rebalance Filter และตัวแปร `volatility_thresh`
+- เพิ่ม unit test ตรวจสอบการทำงานของตัวกรองความผันผวน

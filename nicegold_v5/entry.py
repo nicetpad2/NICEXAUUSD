@@ -18,13 +18,16 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
     df["entry_signal"] = None
     df["entry_blocked_reason"] = None
 
-    # --- Core Indicator ---
+    # --- Indicators ---
     df["ema_fast"] = df["close"].ewm(span=15, adjust=False).mean()
     df["ema_slow"] = df["close"].ewm(span=50, adjust=False).mean()
-    df["rsi"] = rsi(df["close"], 14)
-    df["atr"] = (df["high"] - df["low"]).rolling(14).mean()
-    df["atr_ma"] = df["atr"].rolling(50).mean()
     df["ema_slope"] = df["ema_fast"].diff()
+    df["atr"] = (df["high"] - df["low"]).rolling(14).mean()
+    atr_ma_calc = df["atr"].rolling(50).mean()
+    if "atr_ma" in df.columns:
+        df["atr_ma"] = atr_ma_calc.fillna(df["atr_ma"])
+    else:
+        df["atr_ma"] = atr_ma_calc
 
     # --- Patch C.1: Fallback gain_z ---
     gainz = df["gain_z"] if "gain_z" in df.columns else pd.Series(1.0, index=df.index)
@@ -44,13 +47,25 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
     recovery_block = gainz_guard | ema_flat | ~time_gap_ok
     df.loc[recovery_block, "entry_blocked_reason"] = "Recovery Filter Blocked"
 
-    # --- Trend Logic ---
-    trend_up = (df["ema_fast"] > df["ema_slow"]) & (df["rsi"] > 51)
-    trend_dn = (df["ema_fast"] < df["ema_slow"]) & (df["rsi"] < 49)
+    # --- Momentum Rebalance Filter ---
+    gainz_thresh = config.get("gain_z_thresh", -0.1) if config else -0.1
+    ema_slope_min = config.get("ema_slope_min", 0.0) if config else 0.0
+    volatility_ratio = config.get("volatility_thresh", 0.8) if config else 0.8
+
+    buy_cond = (
+        (df["ema_slope"] > ema_slope_min)
+        & (gainz > gainz_thresh)
+        & (df["atr"] > df["atr_ma"] * volatility_ratio)
+    )
+    sell_cond = (
+        (df["ema_slope"] < -ema_slope_min)
+        & (gainz > gainz_thresh)
+        & (df["atr"] > df["atr_ma"] * volatility_ratio)
+    )
 
     # --- Final Entry Assignment ---
-    df.loc[trend_up & df["entry_blocked_reason"].isnull(), "entry_signal"] = "buy"
-    df.loc[trend_dn & df["entry_blocked_reason"].isnull(), "entry_signal"] = "sell"
+    df.loc[buy_cond & df["entry_blocked_reason"].isnull(), "entry_signal"] = "buy"
+    df.loc[sell_cond & df["entry_blocked_reason"].isnull(), "entry_signal"] = "sell"
 
     # --- Logging QA Summary ---
     blocked_pct = df["entry_signal"].isnull().mean() * 100

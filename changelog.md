@@ -110,3 +110,7 @@
 - เพิ่มฟังก์ชัน `auto_entry_config` เพื่อคำนวณ threshold อัตโนมัติ
 - ปรับ `run_auto_wfv` ให้ใช้ฟังก์ชันใหม่นี้และผ่อนปรนตัวกรองเมื่อไม่มีเทรด
 - ลดเงื่อนไข RSI ใน `generate_signals` (51/49)
+
+## 2025-06-26
+- ปรับ `generate_signals` ให้ใช้ Momentum Rebalance Filter และตัวแปร `volatility_thresh`
+- เพิ่มการทดสอบ `test_generate_signals_volatility_filter`
