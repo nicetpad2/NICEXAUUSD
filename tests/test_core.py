@@ -1,5 +1,6 @@
 import pandas as pd
-from nicegold_v5.entry import generate_signals, rsi
+import numpy as np
+from nicegold_v5.entry import generate_signals, rsi, generate_signals_qa_clean
 from nicegold_v5.risk import (
     calc_lot,
     kill_switch,
@@ -43,6 +44,21 @@ def sample_wfv_df():
 # New helper with lowercase 'open'
 def sample_wfv_df_lower():
     df = sample_wfv_df().rename(columns={'Open': 'open'})
+    return df
+
+
+def sample_qa_df():
+    dates = pd.date_range('2024-01-01 09:00', periods=100, freq='h')
+    thai_dates = [f"{dt.year + 543}{dt.strftime('%m%d')}" for dt in dates]
+    close = np.linspace(100, 110, 100)
+    df = pd.DataFrame({
+        'Date': thai_dates,
+        'Timestamp': dates.strftime('%H:%M:%S'),
+        'open': close,
+        'high': close + 1,
+        'low': close - 1,
+        'close': close,
+    })
     return df
 
 
@@ -93,6 +109,13 @@ def test_generate_signals_session_filter():
     df_out['timestamp'] = ts_out
     out_out = generate_signals(df_out)
     assert out_out['entry_signal'].notnull().sum() == 0
+
+
+def test_generate_signals_qa_clean():
+    df = sample_qa_df()
+    out = generate_signals_qa_clean(df)
+    assert 'entry_signal' in out.columns
+    assert out['entry_signal'].notnull().any()
 
 
 def test_auto_entry_config():

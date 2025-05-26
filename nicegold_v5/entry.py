@@ -76,3 +76,41 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
     print(f"[Patch D.2] Entry Signal Blocked: {blocked_pct:.2f}%")
 
     return df
+
+
+def generate_signals_qa_clean(df: pd.DataFrame) -> pd.DataFrame:
+    """สร้างสัญญาณแบบย่อสำหรับชุดข้อมูล QA"""
+    df = df.copy()
+
+    if "timestamp" not in df.columns and {"Date", "Timestamp"}.issubset(df.columns):
+        df["year"] = df["Date"].astype(str).str[:4].astype(int) - 543
+        df["month"] = df["Date"].astype(str).str[4:6]
+        df["day"] = df["Date"].astype(str).str[6:8]
+        df["datetime_str"] = (
+            df["year"].astype(str)
+            + "-"
+            + df["month"]
+            + "-"
+            + df["day"]
+            + " "
+            + df["Timestamp"]
+        )
+        df["timestamp"] = pd.to_datetime(df["datetime_str"])
+
+    df["ema_fast"] = df["close"].ewm(span=15).mean()
+    df["ema_slow"] = df["close"].ewm(span=50).mean()
+    df["ema_slope"] = df["ema_fast"].diff()
+    df["atr"] = (df["high"] - df["low"]).rolling(14).mean()
+    df["atr_ma"] = df["atr"].rolling(50).mean()
+    gain = df["close"].diff()
+    df["gain_z"] = (gain - gain.rolling(20).mean()) / (gain.rolling(20).std() + 1e-9)
+
+    df["entry_signal"] = None
+    trend = df["ema_fast"] > df["ema_slow"]
+    envelope = df["close"] > df["ema_slow"] + 0.1
+    volatility = df["atr"] > df["atr_ma"] * 0.85
+    momentum = df["gain_z"] > -0.15
+    time_ok = df["timestamp"].dt.hour.between(9, 21)
+
+    df.loc[trend & envelope & volatility & momentum & time_ok, "entry_signal"] = "buy"
+    return df

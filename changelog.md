@@ -114,4 +114,8 @@
 ## 2025-06-26
 - ปรับ `generate_signals` ให้ใช้ Momentum Rebalance Filter และตัวแปร `volatility_thresh`
 - เพิ่มการทดสอบ `test_generate_signals_volatility_filter`
-\n## 2025-06-27\n- เพิ่มตัวกรอง session, envelope และ momentum ใน generate_signals\n
+
+## 2025-06-27
+- เพิ่มตัวกรอง session, envelope และ momentum ใน generate_signals
+## 2025-06-28
+- เพิ่มฟังก์ชัน `generate_signals_qa_clean` และ unit test ตัวอย่าง
