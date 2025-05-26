@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 from nicegold_v5.entry import generate_signals
 from nicegold_v5.backtester import run_backtest
+from nicegold_v5.config import ENTRY_CONFIG_PER_FOLD
 
 
 def print_qa_summary(trades: pd.DataFrame, equity: pd.DataFrame) -> dict:
@@ -181,11 +182,14 @@ def run_auto_wfv(df: pd.DataFrame, outdir: str, n_folds: int = 5) -> pd.DataFram
     summary = []
 
     for i, fold_df in enumerate(folds):
-        print(f"\n[WFV] Fold {i + 1}/{n_folds}")
-        fold_df = generate_signals(fold_df)
+        fold_id = i + 1
+        print(f"\n[WFV] Fold {fold_id}/{n_folds}")
+
+        config = ENTRY_CONFIG_PER_FOLD.get(fold_id, {})
+        fold_df = generate_signals(fold_df, config=config)
         trades, equity = run_backtest(fold_df)
         metrics = summarize_results(trades, equity)
-        metrics["fold"] = i + 1
+        metrics["fold"] = fold_id
         summary.append(metrics)
 
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")

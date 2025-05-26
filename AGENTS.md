@@ -124,3 +124,9 @@
 - เพิ่ม MAX_RAM_MODE ปิด GC ใน main.py และ backtester
 - เพิ่มเงื่อนไข MAX_HOLD_MINUTES และ timeout_exit ใน should_exit
 - อัพเดต export_chatgpt_ready_logs ให้เติมคอลัมน์ meta
+
+### 2025-06-23
+- เพิ่มไฟล์ `config.py` สำหรับปรับ threshold ราย fold
+- แก้ `generate_signals` ให้รับพารามิเตอร์ config และพิมพ์ผลแบบ Patch D.2
+- ปรับ should_exit ด้วยตรรกะ atr fading ใหม่ (Patch D.1)
+- อัพเดต `run_auto_wfv` ให้ส่ง config เข้าฟังก์ชัน generate_signals

@@ -57,6 +57,14 @@ def test_generate_signals():
     assert 'entry_blocked_reason' in out.columns
 
 
+def test_generate_signals_with_config():
+    df = sample_df()
+    df['gain_z'] = -0.15
+    out_default = generate_signals(df)
+    out_cfg = generate_signals(df, config={'gain_z_thresh': -0.2})
+    assert out_default['entry_signal'].notnull().sum() < out_cfg['entry_signal'].notnull().sum()
+
+
 def test_calc_lot():
     lot = calc_lot(100)
     assert lot >= 0.01
@@ -92,7 +100,7 @@ def test_should_exit():
         'entry_time': pd.Timestamp('2025-01-01 00:00:00')
     }
     row = {
-        'close': 101,
+        'close': 101.5,
         'gain_z': -1,
         'atr': 1.0,
         'atr_ma': 1.5,

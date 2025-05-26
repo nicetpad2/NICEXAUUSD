@@ -15,3 +15,4 @@ from .wfv import (
     streak_summary,
     build_trade_log,
 )
+from .config import ENTRY_CONFIG_PER_FOLD
