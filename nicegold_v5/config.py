@@ -91,3 +91,13 @@ SNIPER_CONFIG_DIAGNOSTIC = {
     "tp1_rr_ratio": 1.0,             # [Patch QA-P11] กำหนด TP1 ชัดเจน
     "volume_ratio": 0.1,             # [Patch QA-P11] ลดเกณฑ์ Volume ลงต่ำสุด
 }
+
+# [Patch v8.1.9] Relaxed AutoGain สำหรับ fallback ขั้นสุดท้าย
+SNIPER_CONFIG_RELAXED_AUTOGAIN = {
+    "gain_z_thresh": -0.5,
+    "ema_slope_min": -0.05,
+    "atr_thresh": 0.05,
+    "sniper_risk_score_min": 0.0,
+    "tp_rr_ratio": 3.0,
+    "volume_ratio": 0.1,
+}

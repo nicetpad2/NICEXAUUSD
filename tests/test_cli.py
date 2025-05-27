@@ -66,7 +66,7 @@ def test_manual_backtest_ultra_fallback(monkeypatch, capsys, tmp_path):
 
     def fake_generate(df, config=None):
         call['n'] += 1
-        if call['n'] == 1:
+        if call['n'] <= 4:
             return df.assign(entry_signal=None)
         return df.assign(entry_signal='sell')
 
@@ -85,4 +85,4 @@ def test_manual_backtest_ultra_fallback(monkeypatch, capsys, tmp_path):
 
     main.welcome()
     output = capsys.readouterr().out
-    assert "SNIPER_CONFIG_RELAXED" in output
+    assert "Relaxed AutoGain fallback" in output

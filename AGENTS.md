@@ -255,3 +255,5 @@
 - เพิ่มคำเตือนสำคัญเรื่อง News Filter ใน main.py (Patch QA-P8)
 ### 2025-08-04
 - เพิ่ม SNIPER_CONFIG_DIAGNOSTIC และปรับ fallback หลายขั้นใน main.py (Patch QA-P11)
+### 2025-08-05
+- เพิ่ม SNIPER_CONFIG_RELAXED_AUTOGAIN และ fallback สุดท้ายใน main.py (Patch v8.1.9)
