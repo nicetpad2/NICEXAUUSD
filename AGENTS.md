@@ -238,3 +238,5 @@
 - เพิ่ม SNIPER_CONFIG_RELAXED และ fallback ใน main.py เมื่อไม่มีสัญญาณ (Patch v8.1.6)
 ### 2025-07-29
 - ปรับ confirm_zone ผ่อนปรน และเพิ่ม SNIPER_CONFIG_OVERRIDE สำหรับ fallback (Patch v8.1.7)
+### 2025-07-30
+- แก้ fallback ใน main.py ให้ใช้ SNIPER_CONFIG_OVERRIDE (Patch v8.1.7.1)
