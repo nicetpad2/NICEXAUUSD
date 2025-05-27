@@ -63,7 +63,7 @@ def test_manual_backtest_diagnostic(monkeypatch, capsys, tmp_path):
     }))
 
     monkeypatch.setattr(
-        'nicegold_v5.entry.generate_signals_v8_0',
+        'nicegold_v5.entry.generate_signals_unblock_v9_1',
         lambda df, config=None: df.assign(entry_signal='sell'),
     )
 
@@ -80,4 +80,4 @@ def test_manual_backtest_diagnostic(monkeypatch, capsys, tmp_path):
 
     main.welcome()
     output = capsys.readouterr().out
-    assert "Injecting Q3 Tuned Config" in output
+    assert "Injecting Unblock Config" in output

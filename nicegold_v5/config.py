@@ -102,6 +102,15 @@ SNIPER_CONFIG_RELAXED_AUTOGAIN = {
     "volume_ratio": 0.1,
 }
 
+SNIPER_CONFIG_UNBLOCK = {
+    "gain_z_thresh": -0.2,
+    "ema_slope_min": -0.01,
+    "atr_thresh": 0.0,
+    "sniper_risk_score_min": 2.0,
+    "tp_rr_ratio": 4.0,
+    "volume_ratio": 0.0,
+}  # [Patch v9.1] โหมดปลดล็อกออเดอร์ พร้อมรับ market ทุกภาวะ
+
 # Meta ML Feature Config
 META_CLASSIFIER_FEATURES = [
     'Gain_Z', 'MACD_hist', 'Candle_Speed', 'Candle_Ratio', 'Signal_Score', 'Wick_Ratio', 'Pattern_Label'

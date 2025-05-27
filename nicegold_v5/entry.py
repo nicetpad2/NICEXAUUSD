@@ -169,6 +169,52 @@ def generate_signals_v9_0(df: pd.DataFrame, config: dict | None = None) -> pd.Da
     return generate_signals_v8_0(df, config=config)
 
 
+def generate_signals_unblock_v9_1(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
+    """[Patch v9.1] ปลดล็อกทุกชั้น ใช้ gain_z + sniper_score เป็นหลัก"""
+    df = df.copy()
+    config = config or {}
+
+    # --- Setup params ---
+    gain_z_thresh = config.get("gain_z_thresh", -0.2)
+    ema_slope_min = config.get("ema_slope_min", -0.01)
+    atr_thresh = config.get("atr_thresh", 0.0)
+    sniper_score_min = config.get("sniper_risk_score_min", 2.0)
+    tp_rr_ratio = config.get("tp_rr_ratio", 4.0)
+
+    # --- Indicator ---
+    df["ema_15"] = df["close"].ewm(span=15).mean()
+    df["ema_50"] = df["close"].ewm(span=50).mean()
+    df["ema_slope"] = df["ema_15"].diff()
+    df["atr"] = (df["high"] - df["low"]).rolling(14).mean()
+    df["atr_ma"] = df["atr"].rolling(50).mean()
+    df["gain"] = df["close"].diff()
+    df["gain_z"] = (df["gain"] - df["gain"].rolling(20).mean()) / (df["gain"].rolling(20).std() + 1e-9)
+
+    # --- Score ---
+    df["sniper_score"] = (
+        df["gain_z"].clip(0, 2) * 2.5 +
+        df["ema_slope"].clip(0, 2) * 2.0 +
+        (df["atr"] / df["atr_ma"]).clip(0.5, 1.5) * 1.5
+    )
+    df["tp_rr_ratio"] = tp_rr_ratio
+
+    # --- Filter ---
+    valid = (
+        (df["gain_z"] > gain_z_thresh) &
+        (df["ema_slope"] > ema_slope_min) &
+        (df["atr"] > atr_thresh) &
+        (df["sniper_score"] >= sniper_score_min)
+    )
+    df["entry_signal"] = None
+    df.loc[valid & (df["ema_15"] > df["ema_50"]), "entry_signal"] = "buy"
+    df.loc[valid & (df["ema_15"] < df["ema_50"]), "entry_signal"] = "sell"
+
+    # --- Logging ---
+    blocked_pct = df["entry_signal"].isnull().mean() * 100
+    print(f"[Patch v9.1] Entry Signal Blocked: {blocked_pct:.2f}%")
+    return df
+
+
 def generate_signals_qa_clean(df: pd.DataFrame) -> pd.DataFrame:
     """สร้างสัญญาณแบบย่อสำหรับชุดข้อมูล QA"""
     df = df.copy()
