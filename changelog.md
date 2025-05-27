@@ -215,3 +215,5 @@
 - ปรับ confirm_zone และคะแนน Sniper ให้ผ่อนปรน พร้อม config override (Patch v8.1.7)
 ## 2025-07-30
 - แก้ fallback ใน main.py ให้ใช้ SNIPER_CONFIG_OVERRIDE (Patch v8.1.7.1)
+## 2025-07-31
+- เพิ่ม SNIPER_CONFIG_ULTRA_OVERRIDE และปรับ fallback ใน main.py ให้ใช้ config ใหม่นี้ (Patch v8.1.8)
