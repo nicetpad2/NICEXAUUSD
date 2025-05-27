@@ -258,7 +258,7 @@ def welcome():
 
         from nicegold_v5.entry import (
             generate_signals_v8_0 as generate_signals
-        )  # [Patch v8.1.3] แทนที่ logic v4.1 ด้วย sniper entry v8.0
+        )  # [Patch v8.1.3] เปลี่ยนจาก logic v4.1 เป็น v8.0 ที่เจ้านายระบุ
         from nicegold_v5.backtester import run_backtest
         from nicegold_v5.utils import (
             print_qa_summary,
