@@ -259,3 +259,6 @@
 - เพิ่ม SNIPER_CONFIG_RELAXED_AUTOGAIN และ fallback สุดท้ายใน main.py (Patch v8.1.9)
 ### 2025-08-06
 - ปรับ PNL_MULTIPLIER ใน backtester ให้เฉลี่ยกำไรต่อไม้มากกว่า 1 USD และเพิ่ม unit test
+### 2025-08-07
+- เพิ่มสคริปต์ `diagnostic_backtest.py` รัน backtest แบบแบ่ง batch ด้วย SNIPER_CONFIG_DIAGNOSTIC
+- คอมเมนต์ `os.makedirs` ใน utils เพื่อลดปัญหา directory permission
