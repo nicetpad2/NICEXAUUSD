@@ -257,3 +257,5 @@
 - เพิ่ม SNIPER_CONFIG_DIAGNOSTIC และปรับ fallback หลายขั้นใน main.py (Patch QA-P11)
 ### 2025-08-05
 - เพิ่ม SNIPER_CONFIG_RELAXED_AUTOGAIN และ fallback สุดท้ายใน main.py (Patch v8.1.9)
+### 2025-08-06
+- ปรับ PNL_MULTIPLIER ใน backtester ให้เฉลี่ยกำไรต่อไม้มากกว่า 1 USD และเพิ่ม unit test
