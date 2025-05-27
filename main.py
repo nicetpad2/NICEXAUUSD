@@ -272,10 +272,10 @@ def welcome():
         # [Patch] Inject signal + run with updated SL/TP1/TP2/BE
         df = generate_signals(df, config=SNIPER_CONFIG_DEFAULT)  # [Patch v8.1.5] ส่ง config sniper entry แบบกำไรจริง
 
-        # [Patch v8.1.6] Fallback เมื่อไม่มี entry_signal เลย
+        # [Patch v8.1.6 + v8.1.7.1] Fallback เมื่อไม่มี entry_signal เลย
         if df["entry_signal"].isnull().mean() == 1.0:
             print("⚠️ [Patch v8.1.6] No signals found – applying relaxed sniper config...")
-            from nicegold_v5.config import SNIPER_CONFIG_OVERRIDE  # [Patch v8.1.7]
+            from nicegold_v5.config import SNIPER_CONFIG_OVERRIDE  # [Patch v8.1.7.1]
             df = generate_signals(df, config=SNIPER_CONFIG_OVERRIDE)
         start = time.time()
         trades, equity = run_backtest(df)
