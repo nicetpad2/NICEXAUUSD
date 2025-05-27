@@ -262,3 +262,5 @@
 ### 2025-08-07
 - เพิ่มสคริปต์ `diagnostic_backtest.py` รัน backtest แบบแบ่ง batch ด้วย SNIPER_CONFIG_DIAGNOSTIC
 - คอมเมนต์ `os.makedirs` ใน utils เพื่อลดปัญหา directory permission
+### 2025-08-08
+- เมนู [4] ใช้ SNIPER_CONFIG_DIAGNOSTIC และลบ fallback ทั้งหมด (Patch v9.0)

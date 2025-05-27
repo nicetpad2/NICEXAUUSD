@@ -260,7 +260,7 @@ def welcome():
         from nicegold_v5.entry import (
             generate_signals_v8_0 as generate_signals
         )  # [Patch v8.1.3] เปลี่ยนจาก logic v4.1 เป็น v8.0 ที่เจ้านายระบุ
-        from nicegold_v5.config import SNIPER_CONFIG_AUTO_GAIN
+        from nicegold_v5.config import SNIPER_CONFIG_DIAGNOSTIC  # [Patch v9.0]
         from nicegold_v5.backtester import run_backtest
         from nicegold_v5.utils import (
             print_qa_summary,
@@ -270,7 +270,8 @@ def welcome():
         import time
 
         # [Patch] Inject signal + run with updated SL/TP1/TP2/BE
-        df = generate_signals(df, config=SNIPER_CONFIG_AUTO_GAIN)
+        print("\U0001F9E0 [UltraFix] Injecting Diagnostic Config for entry_signal...")
+        df = generate_signals(df, config=SNIPER_CONFIG_DIAGNOSTIC)
         if "entry_tier" in df.columns:
             print("[Patch] Removing weak 'C' tier signals.")
             df = df[df["entry_tier"] != "C"]
@@ -280,33 +281,6 @@ def welcome():
         # การไม่ปฏิบัติตามอาจส่งผลให้ระบบทำงานผิดพลาดหรือขาดทุนสูงกว่าที่คาดการณ์!
 
 
-        # [Patch v8.1.6 + v8.1.7.1 + v8.1.8] Fallback เมื่อไม่มี entry_signal เลย
-        if df["entry_signal"].isnull().mean() == 1.0:
-            print("⚠️ [Patch] No signals – trying SNIPER_CONFIG_RELAXED...")
-            from nicegold_v5.config import SNIPER_CONFIG_RELAXED
-            df = generate_signals(df, config=SNIPER_CONFIG_RELAXED)
-            if "entry_tier" in df.columns:
-                df = df[df["entry_tier"] != "C"]  # remove weak tier
-
-        # [Patch QA-P11] เพิ่ม Fallback ขั้นต่อไป
-        if df["entry_signal"].isnull().mean() == 1.0:
-            print("⚠️ [Patch] No signals – trying SNIPER_CONFIG_OVERRIDE...")
-            from nicegold_v5.config import SNIPER_CONFIG_OVERRIDE
-            df = generate_signals(df, config=SNIPER_CONFIG_OVERRIDE)
-            if "entry_tier" in df.columns:
-                df = df[df["entry_tier"] != "C"]  # remove weak tier
-
-        # [Patch QA-P11] เพิ่ม Fallback สุดท้ายไปยัง Diagnostic Config เพื่อให้แน่ใจว่ามี Signal
-        if df["entry_signal"].isnull().mean() == 1.0:
-            print("⚠️ [Patch QA-P11] Still no signals – FORCING SNIPER_CONFIG_DIAGNOSTIC...")
-            from nicegold_v5.config import SNIPER_CONFIG_DIAGNOSTIC
-            df = generate_signals(df, config=SNIPER_CONFIG_DIAGNOSTIC)
-
-        # [Patch v8.1.9] Fallback ปลดบล็อกสัญญาณขั้นสุดท้าย
-        if df["entry_signal"].isnull().mean() == 1.0:
-            print("⚠️ [Patch] FINAL: Relaxed AutoGain fallback applied...")
-            from nicegold_v5.config import SNIPER_CONFIG_RELAXED_AUTOGAIN
-            df = generate_signals(df, config=SNIPER_CONFIG_RELAXED_AUTOGAIN)
         start = time.time()
         trades, equity = run_backtest(df)
         end = time.time()

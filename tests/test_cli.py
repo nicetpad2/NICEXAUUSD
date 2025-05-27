@@ -49,7 +49,7 @@ def test_welcome_manual_backtest(monkeypatch, capsys, tmp_path):
     assert "Export Completed" in output
 
 
-def test_manual_backtest_ultra_fallback(monkeypatch, capsys, tmp_path):
+def test_manual_backtest_diagnostic(monkeypatch, capsys, tmp_path):
     inputs = iter(['4'])
     monkeypatch.setattr(builtins, "input", lambda prompt='': next(inputs))
     main = importlib.import_module('main')
@@ -62,15 +62,10 @@ def test_manual_backtest_ultra_fallback(monkeypatch, capsys, tmp_path):
         'close': [1]*10,
     }))
 
-    call = {'n': 0}
-
-    def fake_generate(df, config=None):
-        call['n'] += 1
-        if call['n'] <= 4:
-            return df.assign(entry_signal=None)
-        return df.assign(entry_signal='sell')
-
-    monkeypatch.setattr('nicegold_v5.entry.generate_signals_v8_0', fake_generate)
+    monkeypatch.setattr(
+        'nicegold_v5.entry.generate_signals_v8_0',
+        lambda df, config=None: df.assign(entry_signal='sell'),
+    )
 
     monkeypatch.setattr(
         'nicegold_v5.backtester.run_backtest',
@@ -85,4 +80,4 @@ def test_manual_backtest_ultra_fallback(monkeypatch, capsys, tmp_path):
 
     main.welcome()
     output = capsys.readouterr().out
-    assert "Relaxed AutoGain fallback" in output
+    assert "Injecting Diagnostic Config" in output
