@@ -17,3 +17,13 @@ SNIPER_CONFIG_DEFAULT = {
     "tp_rr_ratio": 6.0,
     "volume_ratio": 0.8,
 }
+
+# [Patch v8.1.6] Relaxed sniper config สำหรับ fallback
+SNIPER_CONFIG_RELAXED = {
+    "gain_z_thresh": -0.3,
+    "ema_slope_min": -0.01,
+    "atr_thresh": 0.3,
+    "sniper_risk_score_min": 4.5,
+    "tp_rr_ratio": 5.0,
+    "volume_ratio": 0.6,
+}
