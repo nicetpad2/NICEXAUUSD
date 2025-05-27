@@ -49,7 +49,7 @@ def test_welcome_manual_backtest(monkeypatch, capsys, tmp_path):
     assert "Export Completed" in output
 
 
-def test_manual_backtest_relaxed_fallback(monkeypatch, capsys, tmp_path):
+def test_manual_backtest_ultra_fallback(monkeypatch, capsys, tmp_path):
     inputs = iter(['4'])
     monkeypatch.setattr(builtins, "input", lambda prompt='': next(inputs))
     main = importlib.import_module('main')
@@ -85,4 +85,4 @@ def test_manual_backtest_relaxed_fallback(monkeypatch, capsys, tmp_path):
 
     main.welcome()
     output = capsys.readouterr().out
-    assert "relaxed sniper config" in output
+    assert "ultra config" in output

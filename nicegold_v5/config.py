@@ -37,3 +37,13 @@ SNIPER_CONFIG_OVERRIDE = {
     "tp_rr_ratio": 4.5,
     "volume_ratio": 0.4,
 }
+
+# [Patch v8.1.8] Ultra override config สำหรับ fallback แบบสุดขีด
+SNIPER_CONFIG_ULTRA_OVERRIDE = {
+    "gain_z_thresh": -9.9,
+    "ema_slope_min": -9.9,
+    "atr_thresh": 0.0,
+    "sniper_risk_score_min": -1.0,
+    "tp_rr_ratio": 3.5,
+    "volume_ratio": 0.0,
+}
