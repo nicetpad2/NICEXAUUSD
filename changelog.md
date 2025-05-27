@@ -255,4 +255,6 @@
 ## 2025-08-13
 - เพิ่มโหมด Profit Mode ใน entry.py (generate_signals_profit_v10) และ config.py
 - main.py ปรับให้ใช้ฟังก์ชันและคอนฟิกใหม่ (Patch v10.0)
+## 2025-08-14
+- เพิ่ม generate_signals_v11_scalper_m1 โลจิก QM + Inside Bar + RSI + Fractal (Patch v10.1)
 
