@@ -16,6 +16,14 @@ def rsi(series: pd.Series, period: int = 14) -> pd.Series:
 def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
     """Patch VBTB+ UltraFix v4.1 – QA Enterprise Ready"""
     df = df.copy()
+
+    config = config or {}
+    gain_z_thresh = config.get("gain_z_thresh", 0.25)
+    ema_slope_min = config.get("ema_slope_min", 0.2)
+    atr_thresh_val = config.get("atr_thresh", 1.0)
+    sniper_risk_score_min = config.get("sniper_risk_score_min", 6.0)
+    tp_rr_ratio_cfg = config.get("tp_rr_ratio", 4.8)
+    volume_ratio = config.get("volume_ratio", 1.0)
     df["entry_signal"] = None
     df["entry_blocked_reason"] = None
     df["lot_suggested"] = 0.05
@@ -62,14 +70,8 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
     volatility_ok = df["atr"] > df["atr_ma"] * 0.85
     momentum_thresh = np.where(df["session_name"] == "Asia", 0.0, 0.4)
     momentum_ok = df["gain_z"] > momentum_thresh  # [Patch v7.7]
-    volume_mult = np.where(df["session_name"] == "Asia", 0.80, 1.0)
-    volume_ok = df["volume"] > df["volume_ma"] * volume_mult  # [Patch v7.7]
-    atr_thresh = np.where(
-        df["session_name"] == "NY",
-        0.7,
-        np.where(df["session_name"] == "Asia", 0.5, 1.1),
-    )
-    atr_enough = df["atr"] > atr_thresh  # [Patch v7.4 & v7.7]
+    volume_ok = df["volume"] > df["volume_ma"] * volume_ratio  # [Patch v8.1.1]
+    atr_enough = df["atr"] > atr_thresh_val
 
     df["sniper_risk_score"] = (
         df["gain_z"].clip(0, 2) * 2.5
@@ -77,12 +79,12 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
         + (df["atr"] / df["atr_ma"]).clip(0.5, 1.5) * 2.0
         + (df["volume"] / df["volume_ma"]).clip(0.8, 1.5) * 3.5
     )
-    df["sniper_risk_score"].fillna(0, inplace=True)
+    df["sniper_risk_score"] = df["sniper_risk_score"].fillna(0)  # [Patch v8.1.1]
 
     # --- Entry Score + TP Ratio ---
     df["entry_score"] = df["gain_z"] * df["atr"] / (df["atr_ma"] + 1e-9)
     df["entry_score"] = df["entry_score"].fillna(0)
-    df["tp_rr_ratio"] = 3.5
+    df["tp_rr_ratio"] = tp_rr_ratio_cfg
     df["use_be"] = True  # ✅ ใช้ Break-even
     df["use_tsl"] = True  # ✅ ใช้ Trailing SL
     df["tp1_rr_ratio"] = 2.0  # เพิ่ม TP1 ระยะ
@@ -106,8 +108,16 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
          ((df["entry_tier"].isin(["A", "B"])) & (df["rsi_14"] < 49) & (df["entry_score"] > 0)))
     )  # [Patch v7.9]
 
-    sniper_zone = (df["sniper_risk_score"] >= 6.0) & df["confirm_zone"]
-    sniper_zone |= (df["sniper_risk_score"] >= 6.5) & (df["entry_tier"] == "B")  # [Patch v8.0] ยิงได้เพิ่ม
+    sniper_zone = (
+        (df["sniper_risk_score"] >= sniper_risk_score_min)
+        & (df["gain_z"] > gain_z_thresh)
+        & (df["ema_slope"] > ema_slope_min)
+        & df["confirm_zone"]
+    )
+    sniper_zone |= (
+        (df["sniper_risk_score"] >= sniper_risk_score_min + 0.5)
+        & (df["entry_tier"] == "B")
+    )  # [Patch v8.0]
 
     buy_cond = (
         sniper_zone

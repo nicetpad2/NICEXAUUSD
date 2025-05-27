@@ -33,6 +33,10 @@ def run_backtest(df: pd.DataFrame):
     recovery_mode = False  # เริ่มแบบปกติ
     start = time.time()
 
+    if df["entry_signal"].isnull().mean() == 1.0:
+        print("⚠️ All signals blocked. Skipping backtest.")
+        return pd.DataFrame(), pd.DataFrame()
+
     if MAX_RAM_MODE:
         df = df.astype({col: np.float32 for col in df.select_dtypes(include="number").columns})
 
