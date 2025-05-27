@@ -3,6 +3,7 @@ from .entry import (
     generate_signals_v9_0,
     generate_signals_unblock_v9_1,
     generate_signals_profit_v10,
+    generate_signals_v11_scalper_m1,
     generate_signals,
 )  # [Patch v10.0] expose latest logic
 from .risk import calc_lot

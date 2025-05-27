@@ -260,6 +260,84 @@ def generate_signals_profit_v10(df: pd.DataFrame, config: dict | None = None) ->
     return df
 
 
+def generate_signals_v11_scalper_m1(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
+    """[Patch v10.1] QM + Inside Bar + RSI + Fractal สำหรับ M1 Scalper."""
+    import numpy as np
+    df = df.copy()
+    config = config or {}
+
+    gain_z_thresh = config.get("gain_z_thresh", -0.05)
+    ema_slope_min = config.get("ema_slope_min", 0.01)
+    atr_thresh = config.get("atr_thresh", 0.15)
+    sniper_score_min = config.get("sniper_risk_score_min", 3.0)
+    tp_rr_ratio = config.get("tp_rr_ratio", 5.5)
+
+    # --- Indicators ---
+    df["ema_fast"] = df["close"].ewm(span=15).mean()
+    df["ema_slow"] = df["close"].ewm(span=50).mean()
+    df["ema_slope"] = df["ema_fast"].diff()
+    df["atr"] = (df["high"] - df["low"]).rolling(14).mean()
+    df["atr_ma"] = df["atr"].rolling(50).mean()
+    df["gain"] = df["close"].diff()
+    df["gain_z"] = (df["gain"] - df["gain"].rolling(20).mean()) / (df["gain"].rolling(20).std() + 1e-9)
+    df["gain_z_slope"] = df["gain_z"].diff()
+    df["atr_slope"] = df["atr"].diff()
+    df["rsi"] = 100 - (100 / (1 + (
+        df["close"].diff().clip(lower=0).rolling(14).mean() /
+        (-df["close"].diff().clip(upper=0).rolling(14).mean() + 1e-9)
+    )))
+
+    df["entry_signal"] = None
+    df["tp_rr_ratio"] = tp_rr_ratio
+
+    confirm_zone = (
+        (df["gain_z"] > gain_z_thresh)
+        & (df["ema_slope"] > ema_slope_min)
+        & (df["atr"] > atr_thresh)
+        & (df["gain_z_slope"] > 0)
+        & (df["atr_slope"] > 0)
+    )
+
+    df["qml_zone"] = (
+        (df["high"] > df["high"].shift(1))
+        & (df["low"] < df["low"].shift(1))
+        & (df["close"] < df["close"].shift(1))
+    )
+
+    df["inside_bar"] = (df["high"] < df["high"].shift(1)) & (df["low"] > df["low"].shift(1))
+    df["break_up"] = df["high"] > df["high"].shift(1)
+    df["break_down"] = df["low"] < df["low"].shift(1)
+
+    df["fractal_high"] = (df["high"] > df["high"].shift(1)) & (df["high"] > df["high"].shift(-1))
+    df["fractal_low"] = (df["low"] < df["low"].shift(1)) & (df["low"] < df["low"].shift(-1))
+
+    rsi_buy = df["rsi"] < 30
+    rsi_sell = df["rsi"] > 70
+
+    buy_cond = (
+        (
+            (df["qml_zone"] & df["fractal_low"] & df["inside_bar"] & df["break_up"])
+            | (df["inside_bar"] & df["break_up"] & rsi_buy)
+            | (df["fractal_low"] & rsi_buy)
+        )
+        & confirm_zone
+    )
+
+    sell_cond = (
+        (
+            (df["qml_zone"] & df["fractal_high"] & df["inside_bar"] & df["break_down"])
+            | (df["inside_bar"] & df["break_down"] & rsi_sell)
+            | (df["fractal_high"] & rsi_sell)
+        )
+        & confirm_zone
+    )
+
+    df.loc[buy_cond, "entry_signal"] = "buy"
+    df.loc[sell_cond, "entry_signal"] = "sell"
+    print("[Patch v10.1] Entry Signal Activated: QM + InsideBar + RSI + Fractal")
+    return df
+
+
 def generate_signals_qa_clean(df: pd.DataFrame) -> pd.DataFrame:
     """สร้างสัญญาณแบบย่อสำหรับชุดข้อมูล QA"""
     df = df.copy()

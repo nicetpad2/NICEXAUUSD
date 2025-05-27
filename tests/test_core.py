@@ -182,6 +182,14 @@ def test_generate_signals_profit_v10():
     assert 'sniper_score' in out.columns
 
 
+def test_generate_signals_v11_scalper_m1():
+    from nicegold_v5.entry import generate_signals_v11_scalper_m1
+    df = sample_df()
+    out = generate_signals_v11_scalper_m1(df)
+    assert 'entry_signal' in out.columns
+    assert 'tp_rr_ratio' in out.columns
+
+
 def test_auto_entry_config():
     df = sample_df()
     df = df.assign(ema_fast=1.0, gain_z=0.0, atr=1.0)
