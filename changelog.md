@@ -249,3 +249,6 @@
 ## 2025-08-11
 - เพิ่ม NICEGOLD-UNBLOCK™ Mode ใน entry.py และ config.py (Patch v9.1)
 - main.py เรียกใช้ generate_signals_unblock_v9_1 และ SNIPER_CONFIG_UNBLOCK
+## 2025-08-12
+- แก้คำเตือน pandas ใช้ freq="h" ใน split_by_session
+
