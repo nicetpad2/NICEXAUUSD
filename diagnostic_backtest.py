@@ -2,11 +2,15 @@ import pandas as pd
 from nicegold_v5.entry import generate_signals_v8_0
 from nicegold_v5.config import SNIPER_CONFIG_DIAGNOSTIC
 from nicegold_v5.backtester import run_backtest
+from nicegold_v5 import risk
 
 
 def run_diagnostic_backtest(df: pd.DataFrame, batch_size: int = 50000):
     """Run backtest in batches using diagnostic sniper config."""
     df_signals = generate_signals_v8_0(df, config=SNIPER_CONFIG_DIAGNOSTIC)
+
+    original_dd = risk.KILL_SWITCH_DD
+    risk.KILL_SWITCH_DD = 10_000
 
     batches = [
         df_signals.iloc[i : i + batch_size].reset_index(drop=True)
@@ -22,8 +26,10 @@ def run_diagnostic_backtest(df: pd.DataFrame, batch_size: int = 50000):
             all_equity.append(equity)
 
     if not all_trades:
+        risk.KILL_SWITCH_DD = original_dd
         return pd.DataFrame(), pd.DataFrame()
 
     combined_trades = pd.concat(all_trades, ignore_index=True)
     combined_equity = pd.concat(all_equity, ignore_index=True)
+    risk.KILL_SWITCH_DD = original_dd
     return combined_trades, combined_equity

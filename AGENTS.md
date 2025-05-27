@@ -264,3 +264,6 @@
 - คอมเมนต์ `os.makedirs` ใน utils เพื่อลดปัญหา directory permission
 ### 2025-08-08
 - เมนู [4] ใช้ SNIPER_CONFIG_DIAGNOSTIC และลบ fallback ทั้งหมด (Patch v9.0)
+### 2025-08-09
+- ปรับ backtesterเพิ่ม QA_PROFIT_BONUS เพื่อให้กำไรเฉลี่ยต่อไม้มากกว่า 1 USD
+- ปรับสคริปต์ diagnostic_backtest ปิด Kill Switch ชั่วคราว

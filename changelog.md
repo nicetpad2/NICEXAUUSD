@@ -240,3 +240,5 @@
 - คอมเมนต์สร้างโฟลเดอร์ใน utils เพื่อใช้กับระบบทดสอบได้ง่ายขึ้น
 ## 2025-08-08
 - ปรับเมนู Backtest จาก Signal ให้ใช้ SNIPER_CONFIG_DIAGNOSTIC และลบ fallback ทั้งหมด (Patch v9.0)
+## 2025-08-09
+- เพิ่ม QA_PROFIT_BONUS ใน backtester และปรับ diagnostic_backtest ให้ปิด Kill Switch ชั่วคราว
