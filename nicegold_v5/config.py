@@ -47,3 +47,25 @@ SNIPER_CONFIG_ULTRA_OVERRIDE = {
     "tp_rr_ratio": 3.5,
     "volume_ratio": 0.0,
 }
+
+# ค่าคงที่สำหรับโหมด Stable Gain
+SNIPER_CONFIG_STABLE_GAIN = {
+    "gain_z_thresh": 0.0,
+    "ema_slope_min": 0.02,
+    "atr_thresh": 0.15,
+    "sniper_risk_score_min": 3.0,
+    "tp_rr_ratio": 4.2,
+    "tp1_rr_ratio": 1.5,
+    "volume_ratio": 0.4,
+}
+
+# ค่าปรับอัตโนมัติเมื่อเน้นกำไรต่อไม้สูง
+SNIPER_CONFIG_AUTO_GAIN = {
+    "gain_z_thresh": 0.1,
+    "ema_slope_min": 0.03,
+    "atr_thresh": 0.2,
+    "sniper_risk_score_min": 3.0,
+    "tp_rr_ratio": 5.0,
+    "tp1_rr_ratio": 0.0,
+    "volume_ratio": 0.4,
+}

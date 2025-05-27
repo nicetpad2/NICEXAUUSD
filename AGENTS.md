@@ -242,3 +242,7 @@
 - แก้ fallback ใน main.py ให้ใช้ SNIPER_CONFIG_OVERRIDE (Patch v8.1.7.1)
 ### 2025-07-31
 - เพิ่ม SNIPER_CONFIG_ULTRA_OVERRIDE และปรับ fallback ใน main.py ให้ใช้ config ใหม่นี้ (Patch v8.1.8)
+### 2025-08-01
+- เพิ่ม SNIPER_CONFIG_STABLE_GAIN และ SNIPER_CONFIG_AUTO_GAIN ใน config.py
+- ปรับ confirm_zone ใน generate_signals_v8_0 ให้เข้มงวดขึ้น
+- เมนู [4] เรียกใช้ SNIPER_CONFIG_AUTO_GAIN และ fallback เป็น STABLE_GAIN
