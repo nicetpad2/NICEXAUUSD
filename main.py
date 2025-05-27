@@ -22,8 +22,8 @@ run_walkforward_backtest = raw_run
 from multiprocessing import cpu_count, get_context
 import numpy as np
 from nicegold_v5.utils import run_auto_wfv, split_by_session
-from nicegold_v5.entry import generate_signals_unblock_v9_1 as generate_signals  # [Patch v9.1] ปลดล็อกทุกชั้น เปิดให้เทรดได้จริง
-from nicegold_v5.config import SNIPER_CONFIG_UNBLOCK  # [Patch v9.1] ปรับเกณฑ์ให้อ่อนเพื่อไม่ block signal
+from nicegold_v5.entry import generate_signals_profit_v10 as generate_signals  # [Patch v10.0] Profit logic พร้อม slope filter
+from nicegold_v5.config import SNIPER_CONFIG_PROFIT  # [Patch v10.0] ใช้ RR/Filter กำไรจริง
 
 # --- Advanced Risk Management (Patch C) ---
 KILL_SWITCH_DD = 25  # %
@@ -258,9 +258,9 @@ def welcome():
         df = df.sort_values("timestamp")
 
         from nicegold_v5.entry import (
-            generate_signals_unblock_v9_1 as generate_signals
-        )  # [Patch v9.1] เรียกใช้ logic ปลดล็อก
-        from nicegold_v5.config import SNIPER_CONFIG_UNBLOCK  # [Patch v9.1]
+            generate_signals_profit_v10 as generate_signals
+        )  # [Patch v10.0] Profit logic พร้อม slope filter
+        from nicegold_v5.config import SNIPER_CONFIG_PROFIT  # [Patch v10.0]
         from nicegold_v5.backtester import run_backtest
         from nicegold_v5.utils import (
             print_qa_summary,
@@ -270,8 +270,8 @@ def welcome():
         import time
 
         # [Patch] Inject signal + run with updated SL/TP1/TP2/BE
-        print("\U0001F9E0 [UltraFix] Injecting Unblock Config for entry_signal...")
-        df = generate_signals(df, config=SNIPER_CONFIG_UNBLOCK)
+        print("\U0001F9E0 [UltraFix] Injecting Profit Config for entry_signal...")
+        df = generate_signals(df, config=SNIPER_CONFIG_PROFIT)
         if "entry_tier" in df.columns:
             print("[Patch] Removing weak 'C' tier signals.")
             df = df[df["entry_tier"] != "C"]

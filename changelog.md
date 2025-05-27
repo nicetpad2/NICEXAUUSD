@@ -252,3 +252,7 @@
 ## 2025-08-12
 - แก้คำเตือน pandas ใช้ freq="h" ใน split_by_session
 
+## 2025-08-13
+- เพิ่มโหมด Profit Mode ใน entry.py (generate_signals_profit_v10) และ config.py
+- main.py ปรับให้ใช้ฟังก์ชันและคอนฟิกใหม่ (Patch v10.0)
+

@@ -111,6 +111,15 @@ SNIPER_CONFIG_UNBLOCK = {
     "volume_ratio": 0.0,
 }  # [Patch v9.1] โหมดปลดล็อกออเดอร์ พร้อมรับ market ทุกภาวะ
 
+SNIPER_CONFIG_PROFIT = {
+    "gain_z_thresh": -0.05,
+    "ema_slope_min": 0.01,
+    "atr_thresh": 0.15,
+    "sniper_risk_score_min": 3.0,
+    "tp_rr_ratio": 5.5,
+    "volume_ratio": 0.5,
+}  # [Patch v10.0] Profit Mode RR + filter slope logic
+
 # Meta ML Feature Config
 META_CLASSIFIER_FEATURES = [
     'Gain_Z', 'MACD_hist', 'Candle_Speed', 'Candle_Ratio', 'Signal_Score', 'Wick_Ratio', 'Pattern_Label'
