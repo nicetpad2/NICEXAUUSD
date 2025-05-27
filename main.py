@@ -279,13 +279,28 @@ def welcome():
         # ในช่วงข่าว High-Impact (NFP, FOMC, CPI) ตามผลการทดสอบ Stress Test!
         # การไม่ปฏิบัติตามอาจส่งผลให้ระบบทำงานผิดพลาดหรือขาดทุนสูงกว่าที่คาดการณ์!
 
+
         # [Patch v8.1.6 + v8.1.7.1 + v8.1.8] Fallback เมื่อไม่มี entry_signal เลย
         if df["entry_signal"].isnull().mean() == 1.0:
-            print("⚠️ [Patch] No signals – using STABLE_GAIN config")
-            from nicegold_v5.config import SNIPER_CONFIG_STABLE_GAIN
-            df = generate_signals(df, config=SNIPER_CONFIG_STABLE_GAIN)
+            print("⚠️ [Patch] No signals – trying SNIPER_CONFIG_RELAXED...")
+            from nicegold_v5.config import SNIPER_CONFIG_RELAXED
+            df = generate_signals(df, config=SNIPER_CONFIG_RELAXED)
             if "entry_tier" in df.columns:
                 df = df[df["entry_tier"] != "C"]  # remove weak tier
+
+        # [Patch QA-P11] เพิ่ม Fallback ขั้นต่อไป
+        if df["entry_signal"].isnull().mean() == 1.0:
+            print("⚠️ [Patch] No signals – trying SNIPER_CONFIG_OVERRIDE...")
+            from nicegold_v5.config import SNIPER_CONFIG_OVERRIDE
+            df = generate_signals(df, config=SNIPER_CONFIG_OVERRIDE)
+            if "entry_tier" in df.columns:
+                df = df[df["entry_tier"] != "C"]  # remove weak tier
+
+        # [Patch QA-P11] เพิ่ม Fallback สุดท้ายไปยัง Diagnostic Config เพื่อให้แน่ใจว่ามี Signal
+        if df["entry_signal"].isnull().mean() == 1.0:
+            print("⚠️ [Patch QA-P11] Still no signals – FORCING SNIPER_CONFIG_DIAGNOSTIC...")
+            from nicegold_v5.config import SNIPER_CONFIG_DIAGNOSTIC
+            df = generate_signals(df, config=SNIPER_CONFIG_DIAGNOSTIC)
         start = time.time()
         trades, equity = run_backtest(df)
         end = time.time()

@@ -80,3 +80,14 @@ SNIPER_CONFIG_Q3_TUNED = {
     "tp1_rr_ratio": 1.5,             # [Patch QA-P7] กำหนด TP1 ชัดเจน (ถ้าใช้)
     "volume_ratio": 0.5,             # [Patch QA-P7] เพิ่มเกณฑ์ Volume
 }
+
+# [Patch QA-P11] Config สำหรับวินิจฉัย - ผ่อนปรนสูงสุดเพื่อแก้ปัญหา Signal Blocked 100%
+SNIPER_CONFIG_DIAGNOSTIC = {
+    "gain_z_thresh": -1.0,           # [Patch QA-P11] ยอมรับ Momentum เกือบทุกรูปแบบ
+    "ema_slope_min": -0.1,           # [Patch QA-P11] ยอมรับ Trend เกือบทุกรูปแบบ
+    "atr_thresh": 0.1,               # [Patch QA-P11] ยอมรับ Volatility เกือบทุกรูปแบบ
+    "sniper_risk_score_min": 0.5,    # [Patch QA-P11] ลดเกณฑ์ Risk Score ลงต่ำสุด
+    "tp_rr_ratio": 3.0,              # [Patch QA-P11] ลด TP เพื่อให้มีโอกาสชน TP ง่ายขึ้น
+    "tp1_rr_ratio": 1.0,             # [Patch QA-P11] กำหนด TP1 ชัดเจน
+    "volume_ratio": 0.1,             # [Patch QA-P11] ลดเกณฑ์ Volume ลงต่ำสุด
+}

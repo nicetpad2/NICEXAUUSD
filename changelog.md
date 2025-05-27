@@ -228,3 +228,5 @@
 - เพิ่ม SNIPER_CONFIG_Q3_TUNED สำหรับค่าปรับจูนหลัง Q3
 - ปรับค่าเริ่มต้น TSL_TRIGGER_GAIN และ MIN_HOLD_MINUTES ใน should_exit
 - เสริมคำเตือนให้ปิดระบบช่วงข่าวสำคัญใน main.py
+## 2025-08-04
+- เพิ่ม SNIPER_CONFIG_DIAGNOSTIC และเพิ่ม fallback หลายขั้นใน main.py สำหรับตรวจสอบสัญญาณ (Patch QA-P11)
