@@ -61,7 +61,7 @@ def print_qa_summary(trades: pd.DataFrame, equity: pd.DataFrame) -> dict:
 
 # ✅ Fixed Paths for Colab
 TRADE_DIR = "/content/drive/MyDrive/NICEGOLD/logs"
-os.makedirs(TRADE_DIR, exist_ok=True)
+# os.makedirs(TRADE_DIR, exist_ok=True)  # handled externally
 M1_PATH = "/content/drive/MyDrive/NICEGOLD/XAUUSD_M1.csv"
 M15_PATH = "/content/drive/MyDrive/NICEGOLD/XAUUSD_M15.csv"
 
