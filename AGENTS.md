@@ -213,3 +213,8 @@
 - ปรับ sniper_zone ใช้ confirm_zone และเพิ่ม tp1_rr_ratio, use_dynamic_tsl (Patch v8.0)
 - breakout_up ดีเลย์ 2 แท่ง (Patch v8.0)
 
+### 2025-07-23
+- แก้คำเตือน fillna ใน sniper_risk_score และเพิ่ม config ให้ generate_signals (Patch v8.1.1)
+- เพิ่มเงื่อนไขข้าม backtest หากสัญญาณถูกบล็อกทั้งหมด
+- เพิ่มฟังก์ชัน objective() และ start_optimization สำหรับ Optuna
+

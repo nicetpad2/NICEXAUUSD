@@ -396,3 +396,17 @@ def test_print_qa_summary_and_export(tmp_path):
     export_chatgpt_ready_logs(trades, equity, summary, outdir=str(tmp_path))
     files = list(tmp_path.iterdir())
     assert len(files) == 3
+
+
+def test_backtest_skip_all_blocked():
+    df = sample_df()
+    df["entry_signal"] = None
+    trades, equity = run_backtest(df)
+    assert trades.empty and equity.empty
+
+
+def test_optuna_objective():
+    import optuna_tuner as tuner
+    df = sample_df()
+    study = tuner.start_optimization(df, n_trials=1)
+    assert len(study.trials) == 1
