@@ -253,3 +253,5 @@
 - เพิ่ม SNIPER_CONFIG_Q3_TUNED ใน config.py สำหรับ Q3 Re-Optimize
 - ปรับค่า TSL_TRIGGER_GAIN และ MIN_HOLD_MINUTES ใน should_exit (Patch QA-P7)
 - เพิ่มคำเตือนสำคัญเรื่อง News Filter ใน main.py (Patch QA-P8)
+### 2025-08-04
+- เพิ่ม SNIPER_CONFIG_DIAGNOSTIC และปรับ fallback หลายขั้นใน main.py (Patch QA-P11)
