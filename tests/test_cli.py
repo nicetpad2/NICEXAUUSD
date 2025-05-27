@@ -85,4 +85,4 @@ def test_manual_backtest_ultra_fallback(monkeypatch, capsys, tmp_path):
 
     main.welcome()
     output = capsys.readouterr().out
-    assert "ultra config" in output
+    assert "STABLE_GAIN" in output

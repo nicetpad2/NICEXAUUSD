@@ -260,7 +260,7 @@ def welcome():
         from nicegold_v5.entry import (
             generate_signals_v8_0 as generate_signals
         )  # [Patch v8.1.3] เปลี่ยนจาก logic v4.1 เป็น v8.0 ที่เจ้านายระบุ
-        from nicegold_v5.config import SNIPER_CONFIG_DEFAULT  # [Patch v8.1.5]
+        from nicegold_v5.config import SNIPER_CONFIG_AUTO_GAIN
         from nicegold_v5.backtester import run_backtest
         from nicegold_v5.utils import (
             print_qa_summary,
@@ -270,13 +270,17 @@ def welcome():
         import time
 
         # [Patch] Inject signal + run with updated SL/TP1/TP2/BE
-        df = generate_signals(df, config=SNIPER_CONFIG_DEFAULT)  # [Patch v8.1.5] ส่ง config sniper entry แบบกำไรจริง
+        df = generate_signals(df, config=SNIPER_CONFIG_AUTO_GAIN)
+        if "entry_tier" in df.columns:
+            df = df[df["entry_tier"] != "C"]
 
         # [Patch v8.1.6 + v8.1.7.1 + v8.1.8] Fallback เมื่อไม่มี entry_signal เลย
         if df["entry_signal"].isnull().mean() == 1.0:
-            print("⚠️ [Patch v8.1.6] No signals found – applying ultra config...")
-            from nicegold_v5.config import SNIPER_CONFIG_ULTRA_OVERRIDE  # [Patch v8.1.8]
-            df = generate_signals(df, config=SNIPER_CONFIG_ULTRA_OVERRIDE)
+            print("⚠️ [Patch] No signals – using STABLE_GAIN config")
+            from nicegold_v5.config import SNIPER_CONFIG_STABLE_GAIN
+            df = generate_signals(df, config=SNIPER_CONFIG_STABLE_GAIN)
+            if "entry_tier" in df.columns:
+                df = df[df["entry_tier"] != "C"]  # remove weak tier
         start = time.time()
         trades, equity = run_backtest(df)
         end = time.time()

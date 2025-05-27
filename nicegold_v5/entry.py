@@ -100,12 +100,12 @@ def generate_signals_v8_0(df: pd.DataFrame, config: dict | None = None) -> pd.Da
         df["entry_score"].rank(method="first"), q=3, labels=["C", "B", "A"], duplicates="drop"
     )
     df["confirm_zone"] = (
-        (df["gain_z"] > -0.15) &
-        (df["ema_slope"] > -0.01) &
-        ((df["atr"] > 0.2) | ((df["atr"] / df["atr_ma"]) > 0.75)) &
-        ((df["volume"] > df["volume_ma"] * 0.4) | (df["volume"].isna())) &
-        (df["entry_score"] > 0)
-    )  # [Patch v8.1.7] Adaptive ConfirmZone
+        (df["gain_z"] > 0.0)
+        & (df["ema_slope"] > 0.02)
+        & ((df["atr"] > 0.15) | ((df["atr"] / df["atr_ma"]) > 0.8))
+        & ((df["volume"] > df["volume_ma"] * 0.4) | df["volume"].isna())
+        & (df["entry_score"] > 0)
+    )  # [Patch] ปรับ ConfirmZone ให้เข้มงวดขึ้น
 
     sniper_zone = (
         (df["sniper_risk_score"] >= sniper_risk_score_min)
