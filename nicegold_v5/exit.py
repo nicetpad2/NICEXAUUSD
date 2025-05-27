@@ -1,11 +1,11 @@
 import logging
 from datetime import timedelta
 
-TSL_TRIGGER_GAIN = 3.0  # [Patch QA-P1] เพิ่มระยะก่อน TSL ทำงาน ให้มีโอกาสถึง TP2
-MIN_HOLD_MINUTES = 10
+TSL_TRIGGER_GAIN = 2.5  # [Patch QA-P7] ปรับค่าเริ่มต้น (ควรพิจารณาใช้ Dynamic TSL based on ATR)
+MIN_HOLD_MINUTES = 15   # [Patch QA-P7] เพิ่มเวลาถือขั้นต่ำ ลดผลกระทบ Spike ระยะสั้น
 MAX_HOLD_MINUTES = 360
-MIN_PROFIT_TRIGGER = 0.5  # [Patch QA-P1] เพิ่มเกณฑ์ขั้นต่ำสำหรับการออกด้วย Volatility
-MICRO_LOCK_THRESHOLD = 0.3  # [Patch QA-P1] เพิ่มเกณฑ์ขั้นต่ำสำหรับการล็อคกำไรเล็กน้อย
+MIN_PROFIT_TRIGGER = 0.5
+MICRO_LOCK_THRESHOLD = 0.3
 
 
 def _rget(row, key, default=None):
@@ -36,6 +36,10 @@ def should_exit(trade, row):
     sl_threshold = atr * 1.2
     be_trigger = sl_threshold * 1.2
 
+    # [Patch QA-P7] หมายเหตุ: ควรพิจารณาเพิ่ม Logic การคำนวณ TSL แบบ Dynamic โดยใช้ ATR ณ ปัจจุบัน
+    # TSL_ATR_FACTOR = 1.5 # ตัวอย่างค่าคงที่สำหรับ Dynamic TSL
+    tsl_gain_trigger = atr * TSL_TRIGGER_GAIN
+
     now = _rget(row, "timestamp")
     entry_time = trade["entry_time"]
     holding_min = (now - entry_time).total_seconds() / 60
@@ -52,7 +56,7 @@ def should_exit(trade, row):
         logging.info(f"[{recovery_prefix.upper()}SL] Hit @ {price_now:.2f}")
         return True, f"{recovery_prefix}sl"
 
-    if gain >= TSL_TRIGGER_GAIN * atr and not trade.get("tsl_activated"):
+    if gain >= tsl_gain_trigger and not trade.get("tsl_activated"):
         trade["tsl_activated"] = True
         trade["trailing_sl"] = entry
         logging.info(f"[{recovery_prefix.upper()}TSL] Activated")
@@ -74,13 +78,13 @@ def should_exit(trade, row):
         atr_fading = atr < 0.8 * atr_ma
         if atr_fading and gain_z < -0.3:
             logging.info("[Patch D.14] Exit: ATR fading + gain_z drop")
-            # return True, "atr_fade_gain_z_drop" # [Patch QA-P1] ลดการออกเร็วเกินไป
+            # return True, "atr_fade_gain_z_drop" # [Patch QA-P7] ทบทวน Logic การออกเร็ว
 
-        if gain_z < -0.5: # [Patch QA-P1] ลดความไวต่อ Momentum Reversal เพื่อให้ถึง TP2
+        if gain_z < -0.6: # [Patch QA-P7] ปรับเกณฑ์ Momentum Reversal ให้เข้มงวดขึ้น
             logging.info("[Patch D.14] Exit: gain_z reversal after profit")
             return True, "gain_z_reverse"
 
-    # if gain > atr * 0.5 and gain_z < 0: # [Patch QA-P1] ปิดใช้งาน Early Profit Lock เพื่อให้ถึง TP2
+    # if gain > atr * 0.5 and gain_z < 0: # [Patch QA-P7] ยังคงปิดใช้งาน Early Profit Lock
     #     logging.info("[Patch D.14] Exit: early profit lock before gain_z turns negative")
     #     return True, "early_profit_lock"
 

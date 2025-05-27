@@ -69,3 +69,14 @@ SNIPER_CONFIG_AUTO_GAIN = {
     "tp1_rr_ratio": 0.0,
     "volume_ratio": 0.4,
 }
+
+# [Patch QA-P7] Config ใหม่จากการ Re-Optimize หลัง Q3 เพื่อเพิ่มความทนทาน
+SNIPER_CONFIG_Q3_TUNED = {
+    "gain_z_thresh": -0.1,           # [Patch QA-P7] ปรับเกณฑ์ Momentum ให้ยืดหยุ่นขึ้น
+    "ema_slope_min": 0.04,           # [Patch QA-P7] กรองสภาวะ Sideways เข้มขึ้น
+    "atr_thresh": 0.3,               # [Patch QA-P7] กรอง Spike และ Volatility ต่ำ
+    "sniper_risk_score_min": 3.5,    # [Patch QA-P7] เลือกเฉพาะเทรดคุณภาพสูงขึ้น
+    "tp_rr_ratio": 5.5,              # [Patch QA-P7] ลด TP ลงเล็กน้อย เพิ่ม Win Rate
+    "tp1_rr_ratio": 1.5,             # [Patch QA-P7] กำหนด TP1 ชัดเจน (ถ้าใช้)
+    "volume_ratio": 0.5,             # [Patch QA-P7] เพิ่มเกณฑ์ Volume
+}
