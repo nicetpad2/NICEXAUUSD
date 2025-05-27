@@ -230,3 +230,5 @@
 - เสริมคำเตือนให้ปิดระบบช่วงข่าวสำคัญใน main.py
 ## 2025-08-04
 - เพิ่ม SNIPER_CONFIG_DIAGNOSTIC และเพิ่ม fallback หลายขั้นใน main.py สำหรับตรวจสอบสัญญาณ (Patch QA-P11)
+## 2025-08-05
+- เพิ่ม SNIPER_CONFIG_RELAXED_AUTOGAIN และ fallback ขั้นสุดท้ายใน main.py (Patch v8.1.9)

@@ -301,6 +301,12 @@ def welcome():
             print("⚠️ [Patch QA-P11] Still no signals – FORCING SNIPER_CONFIG_DIAGNOSTIC...")
             from nicegold_v5.config import SNIPER_CONFIG_DIAGNOSTIC
             df = generate_signals(df, config=SNIPER_CONFIG_DIAGNOSTIC)
+
+        # [Patch v8.1.9] Fallback ปลดบล็อกสัญญาณขั้นสุดท้าย
+        if df["entry_signal"].isnull().mean() == 1.0:
+            print("⚠️ [Patch] FINAL: Relaxed AutoGain fallback applied...")
+            from nicegold_v5.config import SNIPER_CONFIG_RELAXED_AUTOGAIN
+            df = generate_signals(df, config=SNIPER_CONFIG_RELAXED_AUTOGAIN)
         start = time.time()
         trades, equity = run_backtest(df)
         end = time.time()
