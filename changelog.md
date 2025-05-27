@@ -257,4 +257,6 @@
 - main.py ปรับให้ใช้ฟังก์ชันและคอนฟิกใหม่ (Patch v10.0)
 ## 2025-08-14
 - เพิ่ม generate_signals_v11_scalper_m1 โลจิก QM + Inside Bar + RSI + Fractal (Patch v10.1)
+## 2025-08-15
+- ปรับ main.py ให้เรียกใช้ generate_signals_v11_scalper_m1 และ SNIPER_CONFIG_PROFIT
 

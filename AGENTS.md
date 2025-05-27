@@ -281,4 +281,6 @@
 - เพิ่ม generate_signals_profit_v10 และ SNIPER_CONFIG_PROFIT ใช้โหมด Profit Mode (Patch v10.0)
 ### 2025-08-14
 - เพิ่ม generate_signals_v11_scalper_m1 สำหรับกลยุทธ์ QM + Inside Bar + RSI + Fractal (Patch v10.1)
+### 2025-08-15
+- ปรับ main.py ให้เรียกใช้ generate_signals_v11_scalper_m1 และคอนฟิก SNIPER_CONFIG_PROFIT (Patch v10.1)
 
