@@ -80,4 +80,4 @@ def test_manual_backtest_diagnostic(monkeypatch, capsys, tmp_path):
 
     main.welcome()
     output = capsys.readouterr().out
-    assert "Injecting Diagnostic Config" in output
+    assert "Injecting Q3 Tuned Config" in output

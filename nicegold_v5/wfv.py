@@ -15,6 +15,30 @@ DEFAULT_RISK_PER_TRADE = 0.01
 INITIAL_CAPITAL = 10000.0
 
 
+def auto_entry_config(fold_df: pd.DataFrame) -> dict:
+    """Generate entry config based on fold volatility (used in v3.5.3)"""
+    atr_std = fold_df["atr"].std()
+    ema_slope_mean = fold_df["ema_fast"].diff().mean()
+    gainz_std = fold_df["gain_z"].std() if "gain_z" in fold_df.columns else 0.1
+
+    return {
+        "gain_z_thresh": -0.05 if gainz_std > 0.2 else -0.1 if gainz_std > 0.1 else -0.2,
+        "ema_slope_min": -0.005 if ema_slope_mean < 0 else 0.0,
+    }
+
+
+def split_by_session(df: pd.DataFrame) -> dict:
+    """Split dataframe into session-based subsets"""
+    df = df.copy()
+    df["timestamp"] = pd.to_datetime(df.get("timestamp", pd.date_range("2000-01-01", periods=len(df), freq="h")))
+    df["hour"] = df["timestamp"].dt.hour
+    df = df.set_index("timestamp")
+    asia_df = df[df["hour"].between(3, 7)]
+    london_df = df[df["hour"].between(8, 14)]
+    ny_df = df[df["hour"].between(15, 23)]
+    return {"Asia": asia_df, "London": london_df, "NY": ny_df}
+
+
 def apply_order_costs(entry, sl, tp1, tp2, lot, direction):
     spread_half = SPREAD_VALUE / 2
     slippage = np.random.uniform(-SLIPPAGE, SLIPPAGE)

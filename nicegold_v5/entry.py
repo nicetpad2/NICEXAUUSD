@@ -164,6 +164,11 @@ def generate_signals_v8_0(df: pd.DataFrame, config: dict | None = None) -> pd.Da
     return df
 
 
+def generate_signals_v9_0(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
+    """[Patch v9.0] Gold AI v3.5.3 Signal Generator wrapper."""
+    return generate_signals_v8_0(df, config=config)
+
+
 def generate_signals_qa_clean(df: pd.DataFrame) -> pd.DataFrame:
     """สร้างสัญญาณแบบย่อสำหรับชุดข้อมูล QA"""
     df = df.copy()
