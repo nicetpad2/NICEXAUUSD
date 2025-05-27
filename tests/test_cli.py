@@ -28,7 +28,10 @@ def test_welcome_manual_backtest(monkeypatch, capsys, tmp_path):
         'close': [1]*10
     }))
 
-    monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df: df.assign(entry_signal='buy'))
+    monkeypatch.setattr(
+        'nicegold_v5.entry.generate_signals_v8_0',
+        lambda df: df.assign(entry_signal='buy'),
+    )
 
     def fake_run_backtest(df):
         return (
