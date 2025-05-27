@@ -215,6 +215,51 @@ def generate_signals_unblock_v9_1(df: pd.DataFrame, config: dict | None = None) 
     return df
 
 
+def generate_signals_profit_v10(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
+    """[Patch v10.0] Entry logic เต็มระบบ: gain_z slope, atr slope, confirm zone, dynamic RR"""
+    df = df.copy()
+    config = config or {}
+    gain_z_thresh = config.get("gain_z_thresh", -0.05)
+    ema_slope_min = config.get("ema_slope_min", 0.01)
+    atr_thresh = config.get("atr_thresh", 0.15)
+    sniper_score_min = config.get("sniper_risk_score_min", 3.0)
+    tp_rr_ratio = config.get("tp_rr_ratio", 5.5)
+
+    # Indicators
+    df["ema_fast"] = df["close"].ewm(span=15).mean()
+    df["ema_slow"] = df["close"].ewm(span=50).mean()
+    df["ema_slope"] = df["ema_fast"].diff()
+    df["atr"] = (df["high"] - df["low"]).rolling(14).mean()
+    df["atr_ma"] = df["atr"].rolling(50).mean()
+    df["gain"] = df["close"].diff()
+    df["gain_z"] = (df["gain"] - df["gain"].rolling(20).mean()) / (df["gain"].rolling(20).std() + 1e-9)
+    df["gain_z_slope"] = df["gain_z"].diff()
+    df["atr_slope"] = df["atr"].diff()
+    df["tp_rr_ratio"] = tp_rr_ratio
+
+    df["sniper_score"] = (
+        df["gain_z"].clip(0, 2) * 2.5 +
+        df["ema_slope"].clip(0, 2) * 2.0 +
+        (df["atr"] / df["atr_ma"]).clip(0.5, 1.5) * 2.0
+    )
+
+    # Confirm Zone
+    confirm = (
+        (df["gain_z"] > gain_z_thresh) &
+        (df["ema_slope"] > ema_slope_min) &
+        (df["atr"] > atr_thresh) &
+        (df["sniper_score"] >= sniper_score_min) &
+        (df["gain_z_slope"] > 0) & (df["atr_slope"] > 0)
+    )
+
+    df["entry_signal"] = None
+    df.loc[confirm & (df["ema_fast"] > df["ema_slow"]), "entry_signal"] = "buy"
+    df.loc[confirm & (df["ema_fast"] < df["ema_slow"]), "entry_signal"] = "sell"
+    blocked_pct = df["entry_signal"].isnull().mean() * 100
+    print(f"[Patch v10.0] Entry Signal Blocked: {blocked_pct:.2f}%")
+    return df
+
+
 def generate_signals_qa_clean(df: pd.DataFrame) -> pd.DataFrame:
     """สร้างสัญญาณแบบย่อสำหรับชุดข้อมูล QA"""
     df = df.copy()

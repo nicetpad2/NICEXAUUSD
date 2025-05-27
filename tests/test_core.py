@@ -174,10 +174,10 @@ def test_generate_signals_v8_0():
     assert 'use_dynamic_tsl' in out.columns
 
 
-def test_generate_signals_unblock_v9_1():
-    from nicegold_v5.entry import generate_signals_unblock_v9_1
+def test_generate_signals_profit_v10():
+    from nicegold_v5.entry import generate_signals_profit_v10
     df = sample_df()
-    out = generate_signals_unblock_v9_1(df)
+    out = generate_signals_profit_v10(df)
     assert 'entry_signal' in out.columns
     assert 'sniper_score' in out.columns
 

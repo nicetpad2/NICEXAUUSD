@@ -277,3 +277,6 @@
 ### 2025-08-12
 - แก้คำเตือน pandas ใน utils.split_by_session ใช้ freq="h"
 
+### 2025-08-13
+- เพิ่ม generate_signals_profit_v10 และ SNIPER_CONFIG_PROFIT ใช้โหมด Profit Mode (Patch v10.0)
+

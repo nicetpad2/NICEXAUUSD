@@ -2,8 +2,9 @@ from .entry import (
     generate_signals_v8_0,
     generate_signals_v9_0,
     generate_signals_unblock_v9_1,
+    generate_signals_profit_v10,
     generate_signals,
-)  # [Patch v9.1] expose latest logic
+)  # [Patch v10.0] expose latest logic
 from .risk import calc_lot
 from .exit import should_exit
 from .backtester import run_backtest
