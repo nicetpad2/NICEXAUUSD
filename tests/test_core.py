@@ -166,6 +166,14 @@ def test_generate_signals_v7_1_tp_ratio():
     assert out['tp_rr_ratio'].iloc[0] == 4.8
 
 
+def test_generate_signals_v8_0():
+    from nicegold_v5.entry import generate_signals_v8_0
+    df = sample_df()
+    out = generate_signals_v8_0(df)
+    assert 'tp1_rr_ratio' in out.columns
+    assert 'use_dynamic_tsl' in out.columns
+
+
 def test_auto_entry_config():
     df = sample_df()
     df = df.assign(ema_fast=1.0, gain_z=0.0, atr=1.0)

@@ -22,7 +22,7 @@ run_walkforward_backtest = raw_run
 from multiprocessing import cpu_count, get_context
 import numpy as np
 from nicegold_v5.utils import run_auto_wfv, split_by_session
-from nicegold_v5.entry import generate_signals_v7_1 as generate_signals
+from nicegold_v5.entry import generate_signals_v8_0 as generate_signals  # [Patch v8.1.2] ใช้ logic sniper + TP1/TSL แบบล่าสุด
 
 # --- Advanced Risk Management (Patch C) ---
 KILL_SWITCH_DD = 25  # %

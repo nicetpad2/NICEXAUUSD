@@ -194,3 +194,7 @@
 - แก้คำเตือน fillna ใน sniper_risk_score และเพิ่มพารามิเตอร์ config ให้ generate_signals (Patch v8.1.1)
 - เพิ่มฟังก์ชัน objective() สำหรับ Optuna และเงื่อนไข skip backtest หากไม่มีสัญญาณ
 
+## 2025-07-24
+- เปลี่ยน main.py ให้เรียกใช้ generate_signals_v8_0 (Patch v8.1.2)
+- เพิ่ม wrapper generate_signals_v8_0 ใน entry.py และทดสอบฟังก์ชันใหม่
+

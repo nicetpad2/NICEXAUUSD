@@ -218,3 +218,7 @@
 - เพิ่มเงื่อนไขข้าม backtest หากสัญญาณถูกบล็อกทั้งหมด
 - เพิ่มฟังก์ชัน objective() และ start_optimization สำหรับ Optuna
 
+### 2025-07-24
+- เปลี่ยน main.py ให้เรียก generate_signals_v8_0 (Patch v8.1.2)
+- เพิ่ม wrapper ฟังก์ชัน generate_signals_v8_0 และอัพเดตชุดทดสอบ
+

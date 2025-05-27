@@ -318,3 +318,12 @@ def generate_signals_v7_1(df: pd.DataFrame, config: dict | None = None) -> pd.Da
     df.loc[sniper_boost, "tp_rr_ratio"] = 7.5
     return df
 
+
+# --- Patch v8.0 ---
+
+
+def generate_signals_v8_0(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
+    """ใช้ logic sniper + TP1/TSL แบบล่าสุด (Patch v8.0)."""
+    return generate_signals(df, config=config)
+
+
