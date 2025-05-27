@@ -7,3 +7,13 @@ ENTRY_CONFIG_PER_FOLD = {
     4: {"gain_z_thresh": -0.05, "ema_slope_min": 0.01},
     5: {"gain_z_thresh": -0.15, "ema_slope_min": 0.001},
 }
+
+# [Patch v8.1.5] Default Sniper Config สำหรับใช้ใน main.py menu 4
+SNIPER_CONFIG_DEFAULT = {
+    "gain_z_thresh": -0.05,
+    "ema_slope_min": 0.05,
+    "atr_thresh": 0.5,
+    "sniper_risk_score_min": 5.5,
+    "tp_rr_ratio": 6.0,
+    "volume_ratio": 0.8,
+}

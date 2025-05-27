@@ -23,6 +23,7 @@ from multiprocessing import cpu_count, get_context
 import numpy as np
 from nicegold_v5.utils import run_auto_wfv, split_by_session
 from nicegold_v5.entry import generate_signals_v8_0 as generate_signals  # [Patch v8.1.2] ใช้ logic sniper + TP1/TSL แบบล่าสุด
+from nicegold_v5.config import SNIPER_CONFIG_DEFAULT  # [Patch v8.1.5]
 
 # --- Advanced Risk Management (Patch C) ---
 KILL_SWITCH_DD = 25  # %
@@ -259,6 +260,7 @@ def welcome():
         from nicegold_v5.entry import (
             generate_signals_v8_0 as generate_signals
         )  # [Patch v8.1.3] เปลี่ยนจาก logic v4.1 เป็น v8.0 ที่เจ้านายระบุ
+        from nicegold_v5.config import SNIPER_CONFIG_DEFAULT  # [Patch v8.1.5]
         from nicegold_v5.backtester import run_backtest
         from nicegold_v5.utils import (
             print_qa_summary,
@@ -268,7 +270,7 @@ def welcome():
         import time
 
         # [Patch] Inject signal + run with updated SL/TP1/TP2/BE
-        df = generate_signals(df)
+        df = generate_signals(df, config=SNIPER_CONFIG_DEFAULT)  # [Patch v8.1.5] ส่ง config sniper entry แบบกำไรจริง
         start = time.time()
         trades, equity = run_backtest(df)
         end = time.time()

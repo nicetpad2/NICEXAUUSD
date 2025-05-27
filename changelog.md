@@ -207,3 +207,5 @@
 
 ## 2025-07-26
 - ยกเลิก fallback UltraFix และให้ generate_signals เรียกใช้ generate_signals_v8_0 (Patch v8.1.4)
+## 2025-07-27
+- เพิ่ม SNIPER_CONFIG_DEFAULT ใน config.py และส่งให้ main.py เมนู 4 (Patch v8.1.5)
