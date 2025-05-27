@@ -234,3 +234,5 @@
 - ยกเลิก fallback UltraFix และให้ generate_signals เรียกใช้ logic sniper v8.0 (Patch v8.1.4)
 ### 2025-07-27
 - เพิ่ม SNIPER_CONFIG_DEFAULT ใน config.py และส่งไป main.py เมนู [4] (Patch v8.1.5)
+### 2025-07-28
+- เพิ่ม SNIPER_CONFIG_RELAXED และ fallback ใน main.py เมื่อไม่มีสัญญาณ (Patch v8.1.6)

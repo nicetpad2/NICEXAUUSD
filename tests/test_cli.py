@@ -47,3 +47,42 @@ def test_welcome_manual_backtest(monkeypatch, capsys, tmp_path):
     output = capsys.readouterr().out
     assert "Backtest จาก Signal" in output
     assert "Export Completed" in output
+
+
+def test_manual_backtest_relaxed_fallback(monkeypatch, capsys, tmp_path):
+    inputs = iter(['4'])
+    monkeypatch.setattr(builtins, "input", lambda prompt='': next(inputs))
+    main = importlib.import_module('main')
+    monkeypatch.setattr(main, "TRADE_DIR", str(tmp_path))
+    monkeypatch.setattr(main, "load_csv_safe", lambda path: pd.DataFrame({
+        'timestamp': pd.date_range('2024-01-01', periods=10, freq='h'),
+        'open': [1]*10,
+        'high': [1]*10,
+        'low': [1]*10,
+        'close': [1]*10,
+    }))
+
+    call = {'n': 0}
+
+    def fake_generate(df, config=None):
+        call['n'] += 1
+        if call['n'] == 1:
+            return df.assign(entry_signal=None)
+        return df.assign(entry_signal='sell')
+
+    monkeypatch.setattr('nicegold_v5.entry.generate_signals_v8_0', fake_generate)
+
+    monkeypatch.setattr(
+        'nicegold_v5.backtester.run_backtest',
+        lambda df: (
+            pd.DataFrame({'pnl': [1]}),
+            pd.DataFrame({'timestamp': [pd.Timestamp('2024-01-01')], 'equity': [100]})
+        ),
+    )
+    monkeypatch.setattr('nicegold_v5.utils.print_qa_summary', lambda *a, **kw: {})
+    monkeypatch.setattr('nicegold_v5.utils.create_summary_dict', lambda *a, **kw: {})
+    monkeypatch.setattr('nicegold_v5.utils.export_chatgpt_ready_logs', lambda *a, **kw: None)
+
+    main.welcome()
+    output = capsys.readouterr().out
+    assert "relaxed sniper config" in output
