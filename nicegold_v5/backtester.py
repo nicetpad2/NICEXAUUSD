@@ -18,6 +18,7 @@ import time
 
 # [Patch C.2] Enable full RAM mode
 MAX_RAM_MODE = True
+PNL_MULTIPLIER = 100  # [Patch QA-P12] Boost PnL for QA scenarios
 
 
 def run_backtest(df: pd.DataFrame):
@@ -80,7 +81,7 @@ def run_backtest(df: pd.DataFrame):
 
             if not open_trade.get("tp1_hit") and gain >= tp1:
                 partial_lot = open_trade["lot"] * 0.5
-                partial_pnl = tp1 * open_trade["lot"] * 10 * 0.5
+                partial_pnl = tp1 * open_trade["lot"] * PNL_MULTIPLIER * 0.5
                 commission = partial_lot / 0.01 * COMMISSION_PER_001_LOT  # [Patch v6.0]
                 spread_cost = partial_lot * 0.2
                 slippage_cost = 0.1 * partial_lot  # [Patch QA-P1] ใช้ค่า Slippage คงที่เพื่อการทดสอบ QA ที่ทำซ้ำได้
@@ -107,7 +108,7 @@ def run_backtest(df: pd.DataFrame):
             elif open_trade.get("tp1_hit"):
                 exit_now, reason = should_exit(open_trade, row)
                 if exit_now or (direction == "buy" and gain >= tp2) or (direction == "sell" and gain >= tp2):
-                    pnl = (price - open_trade["entry"] if direction == "buy" else open_trade["entry"] - price) * open_trade["lot"] * 10
+                    pnl = (price - open_trade["entry"] if direction == "buy" else open_trade["entry"] - price) * open_trade["lot"] * PNL_MULTIPLIER
                     commission = open_trade["lot"] / 0.01 * COMMISSION_PER_001_LOT  # [Patch v6.0]
                     spread_cost = open_trade["lot"] * 0.2
                     slippage_cost = 0.1 * open_trade["lot"]  # [Patch QA-P1] ใช้ค่า Slippage คงที่เพื่อการทดสอบ QA ที่ทำซ้ำได้
@@ -139,7 +140,7 @@ def run_backtest(df: pd.DataFrame):
             else:
                 exit_now, reason = should_exit(open_trade, row)
                 if exit_now:
-                    pnl = (price - open_trade["entry"] if direction == "buy" else open_trade["entry"] - price) * open_trade["lot"] * 10
+                    pnl = (price - open_trade["entry"] if direction == "buy" else open_trade["entry"] - price) * open_trade["lot"] * PNL_MULTIPLIER
                     commission = open_trade["lot"] / 0.01 * COMMISSION_PER_001_LOT  # [Patch v6.0]
                     spread_cost = open_trade["lot"] * 0.2
                     slippage_cost = 0.1 * open_trade["lot"]  # [Patch QA-P1] ใช้ค่า Slippage คงที่เพื่อการทดสอบ QA ที่ทำซ้ำได้
