@@ -65,7 +65,7 @@ SNIPER_CONFIG_AUTO_GAIN = {
     "ema_slope_min": 0.03,
     "atr_thresh": 0.2,
     "sniper_risk_score_min": 3.0,
-    "tp_rr_ratio": 5.0,
+    "tp_rr_ratio": 6.0,  # [Patch QA-P1] เพิ่มเป้าหมายกำไรเพื่อยกระดับ Avg Profit > 1 USD
     "tp1_rr_ratio": 0.0,
     "volume_ratio": 0.4,
 }

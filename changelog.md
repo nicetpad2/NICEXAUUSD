@@ -221,3 +221,6 @@
 - เพิ่ม config STABLE_GAIN และ AUTO_GAIN
 - ปรับ confirm_zone ให้ละเอียดกว่าเดิม
 - เมนู [4] ใช้ AUTO_GAIN และ fallback เป็น STABLE_GAIN
+## 2025-08-02
+- ปรับ tp_rr_ratio ใน SNIPER_CONFIG_AUTO_GAIN เป็น 6.0 และแก้เงื่อนไข exit
+- ใช้ slippage_cost คงที่ใน backtester เพื่อความ reproducible
