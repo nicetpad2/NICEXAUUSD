@@ -229,3 +229,6 @@
 ### 2025-07-25
 - ปรับคอมเมนต์ Patch v8.1.3 ในเมนู [4] ให้ตรงตามดีฟ
 
+
+### 2025-07-26
+- ยกเลิก fallback UltraFix และให้ generate_signals เรียกใช้ logic sniper v8.0 (Patch v8.1.4)

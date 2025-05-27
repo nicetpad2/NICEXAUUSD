@@ -13,8 +13,8 @@ def rsi(series: pd.Series, period: int = 14) -> pd.Series:
     return 100 - (100 / (1 + rs))
 
 
-def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
-    """Patch VBTB+ UltraFix v4.1 – QA Enterprise Ready"""
+def generate_signals_v8_0(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
+    """ใช้ logic sniper + TP1/TSL แบบล่าสุด (Patch v8.0)."""
     df = df.copy()
 
     config = config or {}
@@ -161,8 +161,7 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
     )
     df.loc[df["entry_signal"].notnull(), "entry_blocked_reason"] = None
     blocked_pct = df["entry_signal"].isnull().mean() * 100
-    print(f"[Patch VBTB+ UltraFix v4.1] Entry Signal Blocked: {blocked_pct:.2f}%")
-
+    print(f"[Patch v8.0] Entry Signal Blocked: {blocked_pct:.2f}%")
     return df
 
 
@@ -319,11 +318,11 @@ def generate_signals_v7_1(df: pd.DataFrame, config: dict | None = None) -> pd.Da
     return df
 
 
-# --- Patch v8.0 ---
+# --- Patch v8.1.4 ---
 
 
-def generate_signals_v8_0(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
-    """ใช้ logic sniper + TP1/TSL แบบล่าสุด (Patch v8.0)."""
-    return generate_signals(df, config=config)
+def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
+    """[Patch v8.1.4] Fallback ถูกยกเลิก — forward ไปยัง logic sniper v8.0"""
+    return generate_signals_v8_0(df, config=config)  # ใช้ sniper confirm zone, risk score, delay, TP boost เท่านั้น
 
 
