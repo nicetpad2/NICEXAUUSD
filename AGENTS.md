@@ -271,3 +271,6 @@
 - ปรับ main.py ให้เรียก generate_signals_v9_0 และใช้ SNIPER_CONFIG_Q3_TUNED
 - เพิ่มตัวแปร META_CLASSIFIER_FEATURES และ toggles ใน config.py
 - เพิ่ม generate_signals_v9_0 (wrapper) และฟังก์ชัน helper ใน wfv.py (Patch v9.0)
+### 2025-08-11
+- เพิ่มโหมด NICEGOLD-UNBLOCK™ ใน entry.py (generate_signals_unblock_v9_1)
+- เพิ่ม SNIPER_CONFIG_UNBLOCK และแก้ main.py ให้เรียกใช้ config ใหม่นี้
