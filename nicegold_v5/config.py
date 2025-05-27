@@ -70,15 +70,15 @@ SNIPER_CONFIG_AUTO_GAIN = {
     "volume_ratio": 0.4,
 }
 
-# [Patch QA-P7] Config ใหม่จากการ Re-Optimize หลัง Q3 เพื่อเพิ่มความทนทาน
+# [Patch v9.0] Config ใหม่จากการ Re-Optimize หลัง Q3 เพื่อเพิ่มความทนทาน
 SNIPER_CONFIG_Q3_TUNED = {
-    "gain_z_thresh": -0.1,           # [Patch QA-P7] ปรับเกณฑ์ Momentum ให้ยืดหยุ่นขึ้น
-    "ema_slope_min": 0.04,           # [Patch QA-P7] กรองสภาวะ Sideways เข้มขึ้น
-    "atr_thresh": 0.3,               # [Patch QA-P7] กรอง Spike และ Volatility ต่ำ
-    "sniper_risk_score_min": 3.5,    # [Patch QA-P7] เลือกเฉพาะเทรดคุณภาพสูงขึ้น
-    "tp_rr_ratio": 5.5,              # [Patch QA-P7] ลด TP ลงเล็กน้อย เพิ่ม Win Rate
-    "tp1_rr_ratio": 1.5,             # [Patch QA-P7] กำหนด TP1 ชัดเจน (ถ้าใช้)
-    "volume_ratio": 0.5,             # [Patch QA-P7] เพิ่มเกณฑ์ Volume
+    "gain_z_thresh": -0.1,           # [Patch v9.0] ปรับเกณฑ์ Momentum ให้ยืดหยุ่นขึ้น
+    "ema_slope_min": 0.04,           # [Patch v9.0] กรองสภาวะ Sideways เข้มขึ้น
+    "atr_thresh": 0.3,               # [Patch v9.0] กรอง Spike และ Volatility ต่ำ
+    "sniper_risk_score_min": 3.5,    # [Patch v9.0] เลือกเฉพาะเทรดคุณภาพสูงขึ้น
+    "tp_rr_ratio": 5.5,              # [Patch v9.0] ลด TP ลงเล็กน้อย เพิ่ม Win Rate
+    "tp1_rr_ratio": 1.5,             # [Patch v9.0] กำหนด TP1 ชัดเจน (ถ้าใช้)
+    "volume_ratio": 0.5,             # [Patch v9.0] เพิ่มเกณฑ์ Volume
 }
 
 # [Patch QA-P11] Config สำหรับวินิจฉัย - ผ่อนปรนสูงสุดเพื่อแก้ปัญหา Signal Blocked 100%
@@ -101,3 +101,18 @@ SNIPER_CONFIG_RELAXED_AUTOGAIN = {
     "tp_rr_ratio": 3.0,
     "volume_ratio": 0.1,
 }
+
+# Meta ML Feature Config
+META_CLASSIFIER_FEATURES = [
+    'Gain_Z', 'MACD_hist', 'Candle_Speed', 'Candle_Ratio', 'Signal_Score', 'Wick_Ratio', 'Pattern_Label'
+]
+META_META_CLASSIFIER_FEATURES = [
+    'meta_proba_tp', 'Signal_Score', 'Pattern_Label', 'tp_distance', 'sl_distance'
+]
+
+# ML Toggle Configs
+USE_META_CLASSIFIER = True  # [Patch v9.0]
+USE_META_META_CLASSIFIER = True  # [Patch v9.0]
+FOLD_SPECIFIC_THRESHOLD_TUNING = True
+ENABLE_AUTO_THRESHOLD_TUNING = True
+TUNE_L2_THRESHOLD = True

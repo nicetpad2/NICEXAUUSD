@@ -242,3 +242,7 @@
 - ปรับเมนู Backtest จาก Signal ให้ใช้ SNIPER_CONFIG_DIAGNOSTIC และลบ fallback ทั้งหมด (Patch v9.0)
 ## 2025-08-09
 - เพิ่ม QA_PROFIT_BONUS ใน backtester และปรับ diagnostic_backtest ให้ปิด Kill Switch ชั่วคราว
+## 2025-08-10
+- ปรับ main.py ให้ใช้งาน generate_signals_v9_0 และ SNIPER_CONFIG_Q3_TUNED
+- เพิ่ม META_CLASSIFIER_FEATURES และตัวแปร toggle ใน config.py
+- เพิ่ม generate_signals_v9_0 wrapper และ helper ใหม่ใน wfv.py (Patch v9.0)

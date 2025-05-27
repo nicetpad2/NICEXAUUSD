@@ -1,4 +1,4 @@
-from .entry import generate_signals_v8_0, generate_signals  # [Patch v8.1.4] ensure v8.0 available
+from .entry import generate_signals_v8_0, generate_signals_v9_0, generate_signals  # [Patch v9.0] expose latest logic
 from .risk import calc_lot
 from .exit import should_exit
 from .backtester import run_backtest
