@@ -22,8 +22,10 @@ run_walkforward_backtest = raw_run
 from multiprocessing import cpu_count, get_context
 import numpy as np
 from nicegold_v5.utils import run_auto_wfv, split_by_session
-from nicegold_v5.entry import generate_signals_profit_v10 as generate_signals  # [Patch v10.0] Profit logic พร้อม slope filter
-from nicegold_v5.config import SNIPER_CONFIG_PROFIT  # [Patch v10.0] ใช้ RR/Filter กำไรจริง
+from nicegold_v5.entry import generate_signals_v11_scalper_m1 as generate_signals  # [Patch v10.1] Scalper Boost: QM + RSI + Fractal + InsideBar
+from nicegold_v5.config import SNIPER_CONFIG_PROFIT  # [Patch v10.1] ใช้ config เดิมร่วมได้
+# User-provided custom instructions
+# *สนทนาภาษาไทยเท่านั้น
 
 # --- Advanced Risk Management (Patch C) ---
 KILL_SWITCH_DD = 25  # %
@@ -258,9 +260,9 @@ def welcome():
         df = df.sort_values("timestamp")
 
         from nicegold_v5.entry import (
-            generate_signals_profit_v10 as generate_signals
-        )  # [Patch v10.0] Profit logic พร้อม slope filter
-        from nicegold_v5.config import SNIPER_CONFIG_PROFIT  # [Patch v10.0]
+            generate_signals_v11_scalper_m1 as generate_signals
+        )  # [Patch v10.1] Scalper Boost: QM + RSI + Fractal + InsideBar
+        from nicegold_v5.config import SNIPER_CONFIG_PROFIT  # [Patch v10.1]
         from nicegold_v5.backtester import run_backtest
         from nicegold_v5.utils import (
             print_qa_summary,
