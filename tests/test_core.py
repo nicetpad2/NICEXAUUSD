@@ -85,6 +85,15 @@ def test_generate_signals():
     assert 'use_tsl' in out.columns and out['use_tsl'].all()
 
 
+
+def test_generate_signals_confirm_zone():
+    df = sample_df()
+    out = generate_signals(df)
+    assert "confirm_zone" in out.columns
+    assert "rsi_14" in out.columns
+    assert "tp1_rr_ratio" in out.columns
+    assert "use_dynamic_tsl" in out.columns
+
 def test_generate_signals_with_config():
     df = sample_df()
     df['timestamp'] = df['timestamp'] + pd.Timedelta(hours=14)

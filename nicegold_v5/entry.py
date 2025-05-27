@@ -46,12 +46,16 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
     df["ema_fast"] = df["ema_15"]
     df["ema_slow"] = df["ema_50"]
     df["ema_slope"] = df["ema_fast"].diff()
+    df["rsi_14"] = 100 - (100 / (1 + (
+        df["close"].diff().clip(lower=0).rolling(14).mean() /
+        (-df["close"].diff().clip(upper=0).rolling(14).mean() + 1e-9)
+    )))  # [Patch v7.9] RSI Confirm
 
     # --- Entry Conditions v4 ---
     trend_up = df["ema_15"] > df["ema_50"]
     trend_dn = df["ema_15"] < df["ema_50"]
     breakout_margin = 0.25
-    breakout_up = df["close"].shift(1) > df["ema_50"].shift(1) + breakout_margin  # [Patch v7.2]
+    breakout_up = df["close"].shift(2) > df["ema_50"].shift(2) + breakout_margin  # [Patch v8.0] เพิ่ม delay
     breakout_up_asia = df["close"].shift(1) > df["ema_50"].shift(1)
     breakout_up = breakout_up.where(df["session_name"] != "Asia", breakout_up_asia)  # [Patch v7.6]
     breakout_dn = df["close"].shift(1) < df["ema_50"].shift(1) - breakout_margin  # [Patch v7.2]
@@ -81,6 +85,8 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
     df["tp_rr_ratio"] = 3.5
     df["use_be"] = True  # ✅ ใช้ Break-even
     df["use_tsl"] = True  # ✅ ใช้ Trailing SL
+    df["tp1_rr_ratio"] = 2.0  # เพิ่ม TP1 ระยะ
+    df["use_dynamic_tsl"] = True  # TSL เฉพาะเมื่อ RR ≥ 1.0
 
     # --- Risk Level by score ---
     df["risk_level"] = "low"
@@ -91,16 +97,17 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
     df["entry_tier"] = pd.qcut(
         df["entry_score"].rank(method="first"), q=3, labels=["C", "B", "A"], duplicates="drop"
     )
+    df["confirm_zone"] = (
+        (df["gain_z"] > 0.0) &
+        (df["ema_slope"] > 0.15) &
+        ((df["atr"] > 0.8) | ((df["atr"] / df["atr_ma"]) > 0.95)) &
+        (df["volume"] > df["volume_ma"]) &
+        (((df["entry_tier"].isin(["A", "B"])) & (df["rsi_14"] > 51) & (df["entry_score"] > 0)) |
+         ((df["entry_tier"].isin(["A", "B"])) & (df["rsi_14"] < 49) & (df["entry_score"] > 0)))
+    )  # [Patch v7.9]
 
-    sniper_zone = (
-        (df["session_name"] == "Asia")
-        & (df["sniper_risk_score"] >= 6.0)
-        & df["entry_tier"].isin(["A", "B"])
-    ) | (
-        (df["session_name"] != "Asia")
-        & (df["sniper_risk_score"] >= 7.5)
-        & (df["entry_tier"] == "A")
-    )  # [Patch v7.5 & v7.7]
+    sniper_zone = (df["sniper_risk_score"] >= 6.0) & df["confirm_zone"]
+    sniper_zone |= (df["sniper_risk_score"] >= 6.5) & (df["entry_tier"] == "B")  # [Patch v8.0] ยิงได้เพิ่ม
 
     buy_cond = (
         sniper_zone
@@ -224,9 +231,9 @@ def generate_signals_v6_5(df: pd.DataFrame, fold_id: int) -> pd.DataFrame:
     trend_up = df["ema_15"] > df["ema_50"]
     trend_dn = df["ema_15"] < df["ema_50"]
     trend_bypass = fold_id == 4  # [Patch v6.5]
-    breakout_up = df["close"].shift(1) > df["ema_50"].shift(1) + breakout_margin  # [Patch v7.2]
-    breakout_dn = df["close"].shift(1) < df["ema_50"].shift(1) - breakout_margin  # [Patch v7.2]
+    breakout_up = df["close"].shift(2) > df["ema_50"].shift(2) + breakout_margin  # [Patch v8.0] เพิ่ม delay
     volatility_ok = df["atr"] > df["atr_ma"] * 0.85
+    breakout_dn = df["close"].shift(1) < df["ema_50"].shift(1) - breakout_margin  # [Patch v7.2]
     momentum_ok = df["gain_z"] > gain_z_thresh  # [Patch v6.3]
     volume_ok = df["volume"] > df["volume_ma"] * 1.0
     atr_enough = df["atr"] > atr_thresh  # [Patch v6.3]

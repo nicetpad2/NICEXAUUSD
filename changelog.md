@@ -184,3 +184,9 @@
 - ปรับ breakout ช่วง Asia ไม่ใช้ margin (Patch v7.6)
 - ผ่อนปรนเกณฑ์ momentum, volume และคะแนน Sniper สำหรับ Asia (Patch v7.7)
 
+
+## 2025-07-22
+- เพิ่มคอลัมน์ rsi_14 และ confirm_zone ใน generate_signals (Patch v7.9)
+- ปรับ sniper_zone ใช้ confirm_zone และเพิ่ม tp1_rr_ratio, use_dynamic_tsl (Patch v8.0)
+- breakout_up ใช้ delay 2 แท่ง (Patch v8.0)
+
