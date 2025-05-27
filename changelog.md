@@ -204,3 +204,6 @@
 ## 2025-07-25
 - ปรับคอมเมนต์เมนู [4] สำหรับ Patch v8.1.3 ให้ตรงตามดีฟ
 
+
+## 2025-07-26
+- ยกเลิก fallback UltraFix และให้ generate_signals เรียกใช้ generate_signals_v8_0 (Patch v8.1.4)
