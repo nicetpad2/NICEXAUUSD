@@ -1,4 +1,4 @@
-from .entry import generate_signals
+from .entry import generate_signals, generate_signals_v8_0
 from .risk import calc_lot
 from .exit import should_exit
 from .backtester import run_backtest
