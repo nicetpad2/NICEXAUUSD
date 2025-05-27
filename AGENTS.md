@@ -246,3 +246,6 @@
 - เพิ่ม SNIPER_CONFIG_STABLE_GAIN และ SNIPER_CONFIG_AUTO_GAIN ใน config.py
 - ปรับ confirm_zone ใน generate_signals_v8_0 ให้เข้มงวดขึ้น
 - เมนู [4] เรียกใช้ SNIPER_CONFIG_AUTO_GAIN และ fallback เป็น STABLE_GAIN
+### 2025-08-02
+- ปรับค่า tp_rr_ratio ใน SNIPER_CONFIG_AUTO_GAIN เป็น 6.0
+- ปรับเงื่อนไข should_exit และ slippage_cost ใน backtester (Patch QA-P1)

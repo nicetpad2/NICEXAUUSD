@@ -83,7 +83,7 @@ def run_backtest(df: pd.DataFrame):
                 partial_pnl = tp1 * open_trade["lot"] * 10 * 0.5
                 commission = partial_lot / 0.01 * COMMISSION_PER_001_LOT  # [Patch v6.0]
                 spread_cost = partial_lot * 0.2
-                slippage_cost = abs(random.uniform(-0.3, 0.3)) * partial_lot
+                slippage_cost = 0.1 * partial_lot  # [Patch QA-P1] ใช้ค่า Slippage คงที่เพื่อการทดสอบ QA ที่ทำซ้ำได้
                 capital += partial_pnl - commission - spread_cost - slippage_cost
                 trades.append({
                     "entry_time": open_trade["entry_time"],
@@ -110,7 +110,7 @@ def run_backtest(df: pd.DataFrame):
                     pnl = (price - open_trade["entry"] if direction == "buy" else open_trade["entry"] - price) * open_trade["lot"] * 10
                     commission = open_trade["lot"] / 0.01 * COMMISSION_PER_001_LOT  # [Patch v6.0]
                     spread_cost = open_trade["lot"] * 0.2
-                    slippage_cost = abs(random.uniform(-0.3, 0.3)) * open_trade["lot"]
+                    slippage_cost = 0.1 * open_trade["lot"]  # [Patch QA-P1] ใช้ค่า Slippage คงที่เพื่อการทดสอบ QA ที่ทำซ้ำได้
                     capital += pnl - commission - spread_cost - slippage_cost
                     trades.append({
                         "entry_time": open_trade["entry_time"],
@@ -142,7 +142,7 @@ def run_backtest(df: pd.DataFrame):
                     pnl = (price - open_trade["entry"] if direction == "buy" else open_trade["entry"] - price) * open_trade["lot"] * 10
                     commission = open_trade["lot"] / 0.01 * COMMISSION_PER_001_LOT  # [Patch v6.0]
                     spread_cost = open_trade["lot"] * 0.2
-                    slippage_cost = abs(random.uniform(-0.3, 0.3)) * open_trade["lot"]
+                    slippage_cost = 0.1 * open_trade["lot"]  # [Patch QA-P1] ใช้ค่า Slippage คงที่เพื่อการทดสอบ QA ที่ทำซ้ำได้
                     capital += pnl - commission - spread_cost - slippage_cost
                     trades.append({
                         "entry_time": open_trade["entry_time"],

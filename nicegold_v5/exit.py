@@ -1,11 +1,11 @@
 import logging
 from datetime import timedelta
 
-TSL_TRIGGER_GAIN = 2.0
+TSL_TRIGGER_GAIN = 3.0  # [Patch QA-P1] เพิ่มระยะก่อน TSL ทำงาน ให้มีโอกาสถึง TP2
 MIN_HOLD_MINUTES = 10
 MAX_HOLD_MINUTES = 360
-MIN_PROFIT_TRIGGER = 0.3
-MICRO_LOCK_THRESHOLD = 0.2
+MIN_PROFIT_TRIGGER = 0.5  # [Patch QA-P1] เพิ่มเกณฑ์ขั้นต่ำสำหรับการออกด้วย Volatility
+MICRO_LOCK_THRESHOLD = 0.3  # [Patch QA-P1] เพิ่มเกณฑ์ขั้นต่ำสำหรับการล็อคกำไรเล็กน้อย
 
 
 def _rget(row, key, default=None):
@@ -74,15 +74,15 @@ def should_exit(trade, row):
         atr_fading = atr < 0.8 * atr_ma
         if atr_fading and gain_z < -0.3:
             logging.info("[Patch D.14] Exit: ATR fading + gain_z drop")
-            return True, "atr_fade_gain_z_drop"
+            # return True, "atr_fade_gain_z_drop" # [Patch QA-P1] ลดการออกเร็วเกินไป
 
-        if gain_z < -0.3:
+        if gain_z < -0.5: # [Patch QA-P1] ลดความไวต่อ Momentum Reversal เพื่อให้ถึง TP2
             logging.info("[Patch D.14] Exit: gain_z reversal after profit")
             return True, "gain_z_reverse"
 
-    if gain > atr * 0.5 and gain_z < 0:
-        logging.info("[Patch D.14] Exit: early profit lock before gain_z turns negative")
-        return True, "early_profit_lock"
+    # if gain > atr * 0.5 and gain_z < 0: # [Patch QA-P1] ปิดใช้งาน Early Profit Lock เพื่อให้ถึง TP2
+    #     logging.info("[Patch D.14] Exit: early profit lock before gain_z turns negative")
+    #     return True, "early_profit_lock"
 
     if gain > atr * MIN_PROFIT_TRIGGER and atr_ma < atr * 0.75:
         logging.info("[Patch D.14] Exit: volatility contraction after profit")
