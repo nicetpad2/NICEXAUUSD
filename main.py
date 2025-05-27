@@ -275,8 +275,8 @@ def welcome():
         # [Patch v8.1.6] Fallback เมื่อไม่มี entry_signal เลย
         if df["entry_signal"].isnull().mean() == 1.0:
             print("⚠️ [Patch v8.1.6] No signals found – applying relaxed sniper config...")
-            from nicegold_v5.config import SNIPER_CONFIG_RELAXED
-            df = generate_signals(df, config=SNIPER_CONFIG_RELAXED)
+            from nicegold_v5.config import SNIPER_CONFIG_OVERRIDE  # [Patch v8.1.7]
+            df = generate_signals(df, config=SNIPER_CONFIG_OVERRIDE)
         start = time.time()
         trades, equity = run_backtest(df)
         end = time.time()
