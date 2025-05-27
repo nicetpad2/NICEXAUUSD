@@ -197,4 +197,7 @@
 ## 2025-07-24
 - เปลี่ยน main.py ให้เรียกใช้ generate_signals_v8_0 (Patch v8.1.2)
 - เพิ่ม wrapper generate_signals_v8_0 ใน entry.py และทดสอบฟังก์ชันใหม่
+## 2025-07-24
+- เมนู [4] ใช้ generate_signals_v8_0 ผ่าน alias (Patch v8.1.3)
+- แก้ unit test ให้ตรงกับฟังก์ชันใหม่นี้
 

@@ -221,4 +221,8 @@
 ### 2025-07-24
 - เปลี่ยน main.py ให้เรียก generate_signals_v8_0 (Patch v8.1.2)
 - เพิ่ม wrapper ฟังก์ชัน generate_signals_v8_0 และอัพเดตชุดทดสอบ
+### 2025-07-24
+- เมนู [4] ใช้ generate_signals_v8_0 ผ่าน alias (Patch v8.1.3)
+- ป้องกัน fallback ไปยัง UltraFix v4.1 ที่ block signal 100%
+- อัพเดต unit test ให้ patch ฟังก์ชันใหม่
 

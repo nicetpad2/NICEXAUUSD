@@ -256,7 +256,9 @@ def welcome():
         )
         df = df.sort_values("timestamp")
 
-        from nicegold_v5.entry import generate_signals
+        from nicegold_v5.entry import (
+            generate_signals_v8_0 as generate_signals
+        )  # [Patch v8.1.3] แทนที่ logic v4.1 ด้วย sniper entry v8.0
         from nicegold_v5.backtester import run_backtest
         from nicegold_v5.utils import (
             print_qa_summary,
