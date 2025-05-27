@@ -27,3 +27,13 @@ SNIPER_CONFIG_RELAXED = {
     "tp_rr_ratio": 5.0,
     "volume_ratio": 0.6,
 }
+
+# [Patch v8.1.7] Override sniper config สำหรับ fallback กรณีบล็อกสัญญาณ 100%
+SNIPER_CONFIG_OVERRIDE = {
+    "gain_z_thresh": -0.3,
+    "ema_slope_min": -0.01,
+    "atr_thresh": 0.2,
+    "sniper_risk_score_min": 2.5,
+    "tp_rr_ratio": 4.5,
+    "volume_ratio": 0.4,
+}

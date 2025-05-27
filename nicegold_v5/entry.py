@@ -21,7 +21,7 @@ def generate_signals_v8_0(df: pd.DataFrame, config: dict | None = None) -> pd.Da
     gain_z_thresh = config.get("gain_z_thresh", 0.25)
     ema_slope_min = config.get("ema_slope_min", 0.2)
     atr_thresh_val = config.get("atr_thresh", 1.0)
-    sniper_risk_score_min = config.get("sniper_risk_score_min", 6.0)
+    sniper_risk_score_min = config.get("sniper_risk_score_min", 2.5)  # [Patch v8.1.7]
     tp_rr_ratio_cfg = config.get("tp_rr_ratio", 4.8)
     volume_ratio = config.get("volume_ratio", 1.0)
     df["entry_signal"] = None
@@ -100,13 +100,12 @@ def generate_signals_v8_0(df: pd.DataFrame, config: dict | None = None) -> pd.Da
         df["entry_score"].rank(method="first"), q=3, labels=["C", "B", "A"], duplicates="drop"
     )
     df["confirm_zone"] = (
-        (df["gain_z"] > 0.0) &
-        (df["ema_slope"] > 0.15) &
-        ((df["atr"] > 0.8) | ((df["atr"] / df["atr_ma"]) > 0.95)) &
-        (df["volume"] > df["volume_ma"]) &
-        (((df["entry_tier"].isin(["A", "B"])) & (df["rsi_14"] > 51) & (df["entry_score"] > 0)) |
-         ((df["entry_tier"].isin(["A", "B"])) & (df["rsi_14"] < 49) & (df["entry_score"] > 0)))
-    )  # [Patch v7.9]
+        (df["gain_z"] > -0.15) &
+        (df["ema_slope"] > -0.01) &
+        ((df["atr"] > 0.2) | ((df["atr"] / df["atr_ma"]) > 0.75)) &
+        ((df["volume"] > df["volume_ma"] * 0.4) | (df["volume"].isna())) &
+        (df["entry_score"] > 0)
+    )  # [Patch v8.1.7] Adaptive ConfirmZone
 
     sniper_zone = (
         (df["sniper_risk_score"] >= sniper_risk_score_min)

@@ -211,3 +211,5 @@
 - เพิ่ม SNIPER_CONFIG_DEFAULT ใน config.py และส่งให้ main.py เมนู 4 (Patch v8.1.5)
 ## 2025-07-28
 - เพิ่ม SNIPER_CONFIG_RELAXED และ fallback ใน main.py เมื่อไม่มีสัญญาณ (Patch v8.1.6)
+## 2025-07-29
+- ปรับ confirm_zone และคะแนน Sniper ให้ผ่อนปรน พร้อม config override (Patch v8.1.7)
