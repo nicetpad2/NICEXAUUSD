@@ -224,3 +224,7 @@
 ## 2025-08-02
 - ปรับ tp_rr_ratio ใน SNIPER_CONFIG_AUTO_GAIN เป็น 6.0 และแก้เงื่อนไข exit
 - ใช้ slippage_cost คงที่ใน backtester เพื่อความ reproducible
+## 2025-08-03
+- เพิ่ม SNIPER_CONFIG_Q3_TUNED สำหรับค่าปรับจูนหลัง Q3
+- ปรับค่าเริ่มต้น TSL_TRIGGER_GAIN และ MIN_HOLD_MINUTES ใน should_exit
+- เสริมคำเตือนให้ปิดระบบช่วงข่าวสำคัญใน main.py

@@ -272,7 +272,12 @@ def welcome():
         # [Patch] Inject signal + run with updated SL/TP1/TP2/BE
         df = generate_signals(df, config=SNIPER_CONFIG_AUTO_GAIN)
         if "entry_tier" in df.columns:
+            print("[Patch] Removing weak 'C' tier signals.")
             df = df[df["entry_tier"] != "C"]
+
+        # [Patch QA-P8] คำเตือนสำคัญ: ต้องปิดระบบด้วยตนเองหรือใช้ News Filter
+        # ในช่วงข่าว High-Impact (NFP, FOMC, CPI) ตามผลการทดสอบ Stress Test!
+        # การไม่ปฏิบัติตามอาจส่งผลให้ระบบทำงานผิดพลาดหรือขาดทุนสูงกว่าที่คาดการณ์!
 
         # [Patch v8.1.6 + v8.1.7.1 + v8.1.8] Fallback เมื่อไม่มี entry_signal เลย
         if df["entry_signal"].isnull().mean() == 1.0:

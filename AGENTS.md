@@ -249,3 +249,7 @@
 ### 2025-08-02
 - ปรับค่า tp_rr_ratio ใน SNIPER_CONFIG_AUTO_GAIN เป็น 6.0
 - ปรับเงื่อนไข should_exit และ slippage_cost ใน backtester (Patch QA-P1)
+### 2025-08-03
+- เพิ่ม SNIPER_CONFIG_Q3_TUNED ใน config.py สำหรับ Q3 Re-Optimize
+- ปรับค่า TSL_TRIGGER_GAIN และ MIN_HOLD_MINUTES ใน should_exit (Patch QA-P7)
+- เพิ่มคำเตือนสำคัญเรื่อง News Filter ใน main.py (Patch QA-P8)
