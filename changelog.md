@@ -260,3 +260,6 @@
 ## 2025-08-15
 - ปรับ main.py ให้เรียกใช้ generate_signals_v11_scalper_m1 และ SNIPER_CONFIG_PROFIT
 
+## 2025-08-16
+- เพิ่มฟังก์ชัน `run_clean_backtest` ใน main.py ใช้ exit จริงและป้องกัน Data Leakage (Patch v11.0)
+
