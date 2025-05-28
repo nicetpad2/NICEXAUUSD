@@ -404,3 +404,5 @@
 - แก้ run_clean_backtest ให้ตรวจสอบคอลัมน์ entry_time หลัง generate_signals และเติมค่าที่ขาด (Patch v12.0.2)
 ### 2025-10-07
 - ปรับ run_clean_backtest ตรวจสอบและสร้าง entry_time หากขาด พร้อมบล็อกเมื่อไม่มีสัญญาณ และ export QA log (Patch v12.0.3)
+### 2025-10-08
+- แก้ welcome() สร้าง entry_time อัตโนมัติจาก timestamp ป้องกัน KeyError (Patch CLI)
