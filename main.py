@@ -160,13 +160,17 @@ def load_csv_safe(path, lowercase=True):
 def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
     """Run backtest with cleaned signals and real exit logic."""
     df = df.copy()
+
+    # Ensure timestamp is datetime BEFORE signal generation
+    df["timestamp"] = pd.to_datetime(df["timestamp"], format=DATETIME_FORMAT, errors="coerce")
+
     from nicegold_v5.config import RELAX_CONFIG_Q3
     df = generate_signals(df, config=SNIPER_CONFIG_Q3_TUNED)
-    if df["entry_signal"].isnull().mean() == 1.0:
-        print("[Patch v11.9.13] ❗ ไม่พบสัญญาณใน Q3_TUNED – ใช้ fallback RELAX_CONFIG_Q3")
+    if "entry_signal" not in df.columns or df["entry_signal"].isnull().mean() == 1.0:
+        print("[Patch v11.9.14] ❗ ไม่พบสัญญาณใน Q3_TUNED – ใช้ fallback RELAX_CONFIG_Q3")
         df = generate_signals(df, config=RELAX_CONFIG_Q3)
 
-    print(f"[Patch v11.9.13] ✅ Entry Signal Coverage: {(df['entry_signal'].notna().mean() * 100):.2f}%")
+    print(f"[Patch v11.9.14] ✅ Entry Signal Coverage: {(df['entry_signal'].notna().mean() * 100):.2f}%")
 
     # Ensure timestamps are valid and use them for entry_time
     df["timestamp"] = pd.to_datetime(df["timestamp"], format=DATETIME_FORMAT)

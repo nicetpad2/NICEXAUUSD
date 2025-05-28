@@ -371,3 +371,6 @@
 - ปรับปรุง `validate_indicator_inputs` ให้แทนค่า inf/-inf ด้วย NaN และแสดงตัวอย่างข้อมูลเมื่อจำนวนน้อย (Patch v11.9.11)
 ### 2025-09-22
 - ปรับ `run_clean_backtest` ให้ fallback ไปยัง RELAX_CONFIG_Q3 หาก Q3_TUNED ไม่พบสัญญาณ พร้อมแสดงเปอร์เซ็นต์สัญญาณ (Patch v11.9.13)
+
+### 2025-09-23
+- ปรับ run_clean_backtest แปลง timestamp ก่อนสร้างสัญญาณและเช็คคอลัมน์ entry_signal (Patch v11.9.14)
