@@ -309,3 +309,5 @@
 - ย้าย simulate_tp_exit ไป utils.py และลบไฟล์ patch_j_tp1tp2_simulation (Patch J.1)
 ## 2025-09-05
 - ระบุรูปแบบ DATETIME_FORMAT ใน main.py เพื่อป้องกันคำเตือนการแปลงเวลา และเพิ่ม unit test ตรวจสอบ
+## 2025-09-06
+- ลบไฟล์ที่ไม่ได้ใช้ m.ainmain.py และ XAUUSD_M1.csv
