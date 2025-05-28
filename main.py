@@ -172,10 +172,17 @@ def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
 
     from nicegold_v5.entry import sanitize_price_columns, validate_indicator_inputs
 
-    # ✅ [Patch v11.9.18] รองรับ Date พ.ศ. ก่อนแปลง timestamp
-    df = convert_thai_datetime(df)
-    # ✅ [Patch v11.9.16] – Convert timestamp and sanitize before validation
-    df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
+    # ✅ [Patch v11.9.22] รองรับทั้ง Date/Timestamp และ date+timestamp
+    if {"Date", "Timestamp"}.issubset(df.columns):
+        df = convert_thai_datetime(df)
+        df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
+    elif {"date", "timestamp"}.issubset(df.columns):
+        df["timestamp"] = df["date"].astype(str) + " " + df["timestamp"].astype(str)
+        df["timestamp"] = df["timestamp"].str.replace("/", "-", regex=False)
+        df["timestamp"] = df["timestamp"].str.replace(r"^25", "20", regex=True)
+        df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
+    else:
+        df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
     df = df.dropna(subset=["timestamp"])
     df = df.sort_values("timestamp")
     df = sanitize_price_columns(df)

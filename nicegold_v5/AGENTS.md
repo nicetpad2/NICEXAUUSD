@@ -388,3 +388,5 @@
 ### 2025-09-29
 - ปรับปรุง `parse_timestamp_safe` ให้ log จำนวนแถวที่แปลงได้และ NaT และรองรับ Series ที่ไม่ใช่ string (Patch v11.9.21)
 - แก้ส่วน `__main__` ไม่แปลง timestamp ซ้ำและ dropna เพียงครั้งเดียว
+### 2025-09-30
+- ปรับ `run_clean_backtest` ให้รวมคอลัมน์ `date` กับ `timestamp` และแก้ปี พ.ศ. อัตโนมัติ (Patch v11.9.22)
