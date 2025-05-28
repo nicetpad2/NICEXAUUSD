@@ -270,10 +270,26 @@ def welcome():
                 "[Patch QA] ⚠️ entry_signal ทั้งหมดถูกบล็อก – รัน fallback relaxed config"
             )
             df = generate_signals(df, config=RELAX_CONFIG_Q3)
+
             if df["entry_signal"].isnull().all():
-                raise RuntimeError(
-                    "[Patch QA] ❌ Fallback strategy ยังล้มเหลว – ไม่มี entry_signal ให้ simulate"
-                )
+                print("[Patch QA] ⚠️ fallback relaxed config ยังล้มเหลว – รัน diagnostic fallback")
+                from nicegold_v5.config import SNIPER_CONFIG_DIAGNOSTIC
+                df = generate_signals(df, config=SNIPER_CONFIG_DIAGNOSTIC)
+                sig_count = df["entry_signal"].notnull().sum()
+                gainz_std = df["gain_z"].std()
+                atr_avg = df["atr"].mean()
+                vol_ma = df["volume_ma"].mean()
+                print(f"[Patch QA] ✅ Diagnostic Signal Count: {sig_count}")
+                print(f"   ▸ gain_z std  : {gainz_std:.4f}")
+                print(f"   ▸ ATR avg     : {atr_avg:.4f}")
+                print(f"   ▸ Volume MA   : {vol_ma:.2f}")
+
+
+                if sig_count == 0:
+                    raise RuntimeError("[Patch QA] ❌ แม้ใช้ diagnostic แล้ว ยังไม่มี entry_signal – โปรดตรวจสอบข้อมูลหรือปรับ logic")
+
+        if df["entry_signal"].isnull().all():
+            raise RuntimeError("[Patch QA] ❌ ทุก config ล้มเหลว – ไม่มี entry_signal ให้ simulate")
 
     show_progress_bar("🧪 ตรวจสอบความสมบูรณ์ของข้อมูล", steps=1)
     validate_for_simulation(df)

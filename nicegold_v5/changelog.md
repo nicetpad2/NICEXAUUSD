@@ -333,3 +333,5 @@
 - ตรวจสอบความยาว reason_string และ raise ValueError หากไม่ตรงกับ df ใน generate_signals_v8_0 (Patch v11.9.5)
 ## 2025-09-16
 - แก้บั๊ก assign entry_blocked_reason ล้มเหลวเมื่อ DataFrame ว่าง (Patch v11.9.6)
+## 2025-09-17
+- ปรับ welcome() ให้มี diagnostic fallback เมื่อ RELAX_CONFIG_Q3 ยังไม่สร้างสัญญาณ (Patch v11.9.7)

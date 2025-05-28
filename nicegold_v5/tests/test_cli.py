@@ -89,3 +89,41 @@ def test_autorun_relax_fallback(monkeypatch, capsys, tmp_path):
     output = capsys.readouterr().out
     assert 'fallback relaxed config' in output
 
+
+def test_autorun_diagnostic_fallback(monkeypatch, capsys, tmp_path):
+    main = importlib.import_module('main')
+    monkeypatch.setattr(main, "TRADE_DIR", str(tmp_path))
+
+    monkeypatch.setattr(
+        main,
+        "load_csv_safe",
+        lambda path: pd.DataFrame({
+            'timestamp': pd.date_range('2024-01-01', periods=2, freq='h'),
+            'entry_time': pd.date_range('2024-01-01', periods=2, freq='h'),
+        })
+    )
+
+    from nicegold_v5 import config as cfg
+
+    def fake_generate(df, config=None):
+        if config == main.SNIPER_CONFIG_Q3_TUNED:
+            return df.assign(entry_signal=[None, None])
+        elif config == main.RELAX_CONFIG_Q3:
+            return df.assign(entry_signal=[None, None])
+        elif config == cfg.SNIPER_CONFIG_DIAGNOSTIC:
+            return df.assign(entry_signal=['long', 'short'], gain_z=[0.1, 0.2], atr=[1, 1], volume_ma=[100, 100])
+        else:
+            raise AssertionError("Unexpected config")
+
+    monkeypatch.setattr(main, 'generate_signals', fake_generate)
+    monkeypatch.setattr('nicegold_v5.entry.generate_signals', fake_generate)
+    monkeypatch.setattr(
+        'nicegold_v5.entry.simulate_trades_with_tp',
+        lambda df: ([{'exit_reason': 'tp1'}], [])
+    )
+    monkeypatch.setattr(main, 'safe_calculate_net_change', lambda df: 2.0)
+
+    main.welcome()
+    output = capsys.readouterr().out
+    assert 'diagnostic fallback' in output
+
