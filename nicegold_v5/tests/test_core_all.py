@@ -929,3 +929,16 @@ def test_simulate_trades_with_tp():
     trade = trades[0]
     assert trade['tp1_price'] > trade['entry_price']
     assert trade['tp2_price'] > trade['tp1_price']
+
+
+def test_parse_timestamp_safe_fallback(capsys):
+    from nicegold_v5.utils import parse_timestamp_safe
+
+    series = pd.Series([
+        'bad',
+        '2025-01-01 00:00:00',
+        '2025/01/01 01:00:00'
+    ])
+    result = parse_timestamp_safe(series, '%Y-%m-%d %H:%M:%S')
+    assert result.notna().sum() == 2
+    assert 'retry without format' in capsys.readouterr().out.lower()
