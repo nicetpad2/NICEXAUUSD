@@ -385,3 +385,6 @@
 ### 2025-09-28
 - เพิ่ม fallback ใน `load_csv_safe` ให้ค้นหาไฟล์ในไดเรกทอรี `nicegold_v5` หาก path หลักไม่พบ
 - กำหนดตัวแปร M1_PATH/M15_PATH ให้ใช้ค่าใน environment ได้ (Patch v11.9.20)
+### 2025-09-29
+- ปรับปรุง `parse_timestamp_safe` ให้ log จำนวนแถวที่แปลงได้และ NaT และรองรับ Series ที่ไม่ใช่ string (Patch v11.9.21)
+- แก้ส่วน `__main__` ไม่แปลง timestamp ซ้ำและ dropna เพียงครั้งเดียว

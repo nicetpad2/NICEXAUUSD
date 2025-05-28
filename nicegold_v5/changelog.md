@@ -359,3 +359,6 @@
 - เพิ่มฟังก์ชัน `parse_timestamp_safe` เพื่อแปลง timestamp อย่างยืดหยุ่นและ fallback หากรูปแบบไม่ตรง พร้อมปรับ main.py ใช้ฟังก์ชันนี้ (Patch v11.9.19)
 ## 2025-09-28
 - ปรับ `load_csv_safe` ให้ค้นหาไฟล์ในไดเรกทอรี `nicegold_v5` เมื่อ path หลักไม่พบ และรองรับตัวแปรสภาพแวดล้อม `M1_PATH`/`M15_PATH` (Patch v11.9.20)
+## 2025-09-29
+- ปรับปรุง `parse_timestamp_safe` ให้บันทึก log และแปลง Series ที่ไม่ใช่ string อัตโนมัติ (Patch v11.9.21)
+- แก้โค้ดส่วน `__main__` ให้แปลง timestamp เพียงครั้งเดียวและ dropna หนึ่งรอบ

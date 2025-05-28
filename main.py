@@ -497,7 +497,6 @@ if __name__ == "__main__":
         # ✅ [Patch v11.9.18] รองรับ Date แบบพุทธศักราช
         df = convert_thai_datetime(df)
 
-        df.dropna(subset=["timestamp"], inplace=True)
         df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
         df = df.dropna(subset=["timestamp"])
         run_clean_backtest(df)
