@@ -253,7 +253,9 @@ def welcome():
     print("📊 [Patch v11.7] เริ่ม Fail-Proof TP1/TP2 Simulation...")
     df = load_csv_safe(M1_PATH)
     show_progress_bar("🧼 แปลง timestamp", steps=1)
-    df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
+    df["timestamp"] = pd.to_datetime(
+        df["timestamp"], format=DATETIME_FORMAT, errors="coerce"
+    )
     df = df.dropna(subset=["timestamp"])
     df = df.sort_values("timestamp")
 

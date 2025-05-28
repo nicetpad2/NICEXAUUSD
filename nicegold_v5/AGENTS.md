@@ -341,3 +341,6 @@
 - ปรับ welcome ให้ตรวจสอบคอลัมน์และสร้างสัญญาณอัตโนมัติ พร้อม progress bar และ RAM optimization (Patch v11.7)
 ### 2025-09-09
 - เพิ่ม fallback กลยุทธ์ RELAX_CONFIG_Q3 ใน main.py เมื่อไม่มีสัญญาณ (Patch v11.8)
+
+### 2025-09-10
+- ระบุ DATETIME_FORMAT ในขั้นตอนแปลง timestamp ใน welcome() และเพิ่ม unit test ไม่เกิดคำเตือน
