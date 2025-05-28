@@ -44,7 +44,9 @@ def run_qa_guard(trades: pd.DataFrame, df_features: pd.DataFrame) -> None:
     """Print QA guard information about overfitting, noise and leakage."""
     print("\n🔎 [Patch G] QA Guard – วิเคราะห์ Overfitting / Noise / Data Leak")
     print("\n📊 Overfitting Score:")
-    print(detect_overfit_bias(trades))
+    score = detect_overfit_bias(trades)
+    score_clean = {k: float(v) for k, v in score.items()}
+    print(score_clean)
 
     print("\n⚠️ Noise Exit Suspicion:")
     noisy = detect_noise_exit(trades)
