@@ -1,5 +1,5 @@
 import pandas as pd
-from nicegold_v5.patch_j_tp1tp2_simulation import simulate_tp_exit
+from nicegold_v5.utils import simulate_tp_exit
 
 
 def test_simulate_tp_exit():

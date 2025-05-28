@@ -329,3 +329,5 @@
 
 ### 2025-09-03
 - เพิ่มฟังก์ชัน simulate_tp_exit ตรวจราคา TP1/TP2/SL ในหน้าต่างเวลา (Patch J)
+### 2025-09-04
+- รวม simulate_tp_exit เข้า utils.py และลบไฟล์ patch_j_tp1tp2_simulation (Patch J.1)
