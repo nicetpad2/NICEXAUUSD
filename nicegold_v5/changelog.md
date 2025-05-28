@@ -320,3 +320,4 @@
 
 ## 2025-09-10
 - ระบุ DATETIME_FORMAT ในขั้นตอนแปลง timestamp ใน welcome() และเพิ่มชุดทดสอบตรวจสอบคำเตือน
+- แก้คำเตือน fallback datetime ใน welcome() และเพิ่มข้อความแจ้งเตือนใหม่ (Patch v11.9)

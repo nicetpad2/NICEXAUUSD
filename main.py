@@ -254,7 +254,7 @@ def welcome():
     df = load_csv_safe(M1_PATH)
     show_progress_bar("🧼 แปลง timestamp", steps=1)
     df["timestamp"] = pd.to_datetime(
-        df["timestamp"], format=DATETIME_FORMAT, errors="coerce"
+        df["timestamp"], format="%Y-%m-%d %H:%M:%S", errors="coerce"
     )
     df = df.dropna(subset=["timestamp"])
     df = df.sort_values("timestamp")
@@ -264,13 +264,15 @@ def welcome():
         print("[Patch] 🧠 Auto-generating signals using v11 config...")
         df = generate_signals(df, config=SNIPER_CONFIG_Q3_TUNED)
 
-        # [Patch v11.8] Relax fallback strategy if all signals are blocked
+        # [Patch v11.8-fix] Retry relaxed strategy if v11 signal fully blocked
         if df["entry_signal"].isnull().all():
-            print("[Patch QA] ⚠️ ไม่มีสัญญาณเข้าเหลือ – fallback to relaxed strategy")
+            print(
+                "[Patch QA] ⚠️ entry_signal ทั้งหมดถูกบล็อก – รัน fallback relaxed config"
+            )
             df = generate_signals(df, config=RELAX_CONFIG_Q3)
             if df["entry_signal"].isnull().all():
                 raise RuntimeError(
-                    "[Patch QA] ❌ แม้ fallback แล้ว ยังไม่มี entry_signal เลย – ตรวจกลยุทธ์หรือข้อมูล"
+                    "[Patch QA] ❌ Fallback strategy ยังล้มเหลว – ไม่มี entry_signal ให้ simulate"
                 )
 
     show_progress_bar("🧪 ตรวจสอบความสมบูรณ์ของข้อมูล", steps=1)

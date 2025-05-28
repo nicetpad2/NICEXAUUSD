@@ -344,3 +344,4 @@
 
 ### 2025-09-10
 - ระบุ DATETIME_FORMAT ในขั้นตอนแปลง timestamp ใน welcome() และเพิ่ม unit test ไม่เกิดคำเตือน
+- แก้คำเตือน timestamp และ fallback ใน welcome() (Patch v11.9)
