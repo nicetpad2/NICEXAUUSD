@@ -14,6 +14,7 @@ from .entry import (
 from .risk import calc_lot
 from .exit import should_exit
 from .backtester import run_backtest
+from .patch_j_tp1tp2_simulation import simulate_tp_exit
 from .utils import (
     summarize_results,
     run_auto_wfv,
@@ -23,6 +24,7 @@ from .utils import (
     create_summary_dict,
     safe_calculate_net_change,
     convert_thai_datetime,
+    
 )
 from .wfv import (
     run_walkforward_backtest,
