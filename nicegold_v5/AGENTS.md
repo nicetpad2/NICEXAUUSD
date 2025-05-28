@@ -353,3 +353,5 @@
 - ปรับปรุงการ assign `entry_blocked_reason` ให้จัดการดัชนีและความยาวอย่างปลอดภัย (Patch v11.9.2)
 ### 2025-09-14
 - ปรับปรุงการ assign `entry_blocked_reason` โดยใช้คอลัมน์ชั่วคราว entry_reason_column เพื่อจัดการดัชนีอย่างปลอดภัย (Patch v11.9.4)
+### 2025-09-15
+- เพิ่มตรวจสอบความยาว reason_string และ throw ValueError หากไม่ตรงกับ df (Patch v11.9.5)

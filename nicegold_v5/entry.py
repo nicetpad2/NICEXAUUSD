@@ -218,20 +218,24 @@ def generate_signals_v8_0(df: pd.DataFrame, config: dict | None = None) -> pd.Da
         "no_breakout": ~(breakout_up | breakout_dn),
     }
 
-    reason_series = []
-    for name, cond in conditions.items():
-        reason_series.append(cond.map({True: name, False: ""}))
+    reason_series = [cond.map({True: name, False: ""}) for name, cond in conditions.items()]
     reason_df = pd.concat(reason_series, axis=1)
     reason_string = reason_df.apply(lambda row: "|".join(filter(None, row)), axis=1)
 
-    # ✅ สร้างคอลัมน์ด้วย index ที่ตรงกับ df เสมอ
+    # ✅ [Patch v11.9.5] Fix index assignment safely
+    reason_string_safe = reason_string.reset_index(drop=True)
     entry_reason_column = pd.Series("N/A", index=df.index)
-    entry_reason_column.loc[reason_string.index] = reason_string
-    entry_reason_column.loc[df["entry_signal"].notnull()] = None
 
+    if len(reason_string_safe) != len(entry_reason_column):
+        raise ValueError(
+            f"[Patch QA] ❌ reason_string length mismatch: {len(reason_string_safe)} vs df: {len(entry_reason_column)}"
+        )
+
+    entry_reason_column[:] = reason_string_safe.values
+    entry_reason_column.loc[df["entry_signal"].notnull()] = None
     df["entry_blocked_reason"] = entry_reason_column
     print(
-        f"[Patch v11.9.4] \u2705 entry_blocked_reason assigned: {df['entry_blocked_reason'].notnull().sum()} rows filled"
+        f"[Patch v11.9.5] \u2705 entry_blocked_reason assigned: {df['entry_blocked_reason'].notnull().sum()} filled"
     )
     blocked_pct = df["entry_signal"].isnull().mean() * 100
     print(f"[Patch v8.0] Entry Signal Blocked: {blocked_pct:.2f}%")

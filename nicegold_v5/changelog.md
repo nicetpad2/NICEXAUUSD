@@ -329,3 +329,5 @@
 - ปรับปรุงการ assign `entry_blocked_reason` ใช้การจัดดัชนีและ reindex เพื่อป้องกันความยาวไม่ตรง (Patch v11.9.2)
 ## 2025-09-14
 - ปรับปรุงการ assign `entry_blocked_reason` ใช้ entry_reason_column เพื่อสร้างคอลัมน์ที่ดัชนีตรงกับ df เสมอ (Patch v11.9.4)
+## 2025-09-15
+- ตรวจสอบความยาว reason_string และ raise ValueError หากไม่ตรงกับ df ใน generate_signals_v8_0 (Patch v11.9.5)
