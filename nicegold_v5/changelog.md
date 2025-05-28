@@ -298,3 +298,6 @@
 ## 2025-08-31
 - เพิ่มฟังก์ชัน safe_calculate_net_change ป้องกันค่า NaN ในการสรุปผลกำไร (Patch I)
 
+## 2025-09-01
+- รวม patch_v11x และ patch_i_tp1tp2_fix เข้ากับโมดูลหลัก และลบไฟล์ patch
+
