@@ -247,3 +247,31 @@ def safe_calculate_net_change(trade_df: pd.DataFrame) -> float:
     net_change = trade_df["exit_price"].sub(trade_df["entry_price"]).sum()
     return round(net_change, 4)
 
+
+def convert_thai_datetime(
+    df: pd.DataFrame, date_col: str = "Date", time_col: str = "Timestamp"
+) -> pd.DataFrame:
+    """Convert Thai Buddhist Era date with time columns to a timestamp column."""
+
+    df = df.copy()
+    try:
+        be_year = df[date_col].astype(str).str[:4].astype(int)
+        ce_year = be_year - 543
+        df["datetime"] = (
+            ce_year.astype(str)
+            + "-"
+            + df[date_col].astype(str).str[4:6]
+            + "-"
+            + df[date_col].astype(str).str[6:8]
+            + " "
+            + df[time_col].astype(str)
+        )
+        df["timestamp"] = pd.to_datetime(
+            df["datetime"], format="%Y-%m-%d %H:%M:%S", errors="coerce"
+        )
+        df.drop(columns=["datetime"], inplace=True)
+    except Exception as e:
+        print("❌ Failed to convert Thai datetime:", e)
+        df["timestamp"] = pd.NaT
+    return df
+

@@ -300,4 +300,6 @@
 
 ## 2025-09-01
 - รวม patch_v11x และ patch_i_tp1tp2_fix เข้ากับโมดูลหลัก และลบไฟล์ patch
+## 2025-09-02
+- เพิ่มฟังก์ชัน convert_thai_datetime แปลงวันที่ พ.ศ. และเวลาเป็น timestamp (Patch I.1)
 
