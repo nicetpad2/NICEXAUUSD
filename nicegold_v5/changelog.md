@@ -315,3 +315,5 @@
 - welcome() รัน simulate_trades_with_tp อัตโนมัติ (Patch v11.6)
 ## 2025-09-08
 - ปรับ welcome() ให้ตรวจสอบ timestamp, entry_signal, entry_time และสร้างสัญญาณอัตโนมัติ (Patch v11.7)
+## 2025-09-09
+- เพิ่ม RELAX_CONFIG_Q3 และ fallback ใน main.py หากสัญญาณถูกบล็อกทั้งหมด (Patch v11.8)
