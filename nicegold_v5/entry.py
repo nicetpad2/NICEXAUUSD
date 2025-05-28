@@ -156,9 +156,16 @@ def generate_signals_v8_0(df: pd.DataFrame, config: dict | None = None) -> pd.Da
     df.loc[df["entry_score"] > 4.0, "risk_level"] = "high"
 
     # --- Entry Tier (Quantile Classifier) ---
-    df["entry_tier"] = pd.qcut(
-        df["entry_score"].rank(method="first"), q=3, labels=["C", "B", "A"], duplicates="drop"
-    )
+    ranks = df["entry_score"].rank(method="first")
+    try:
+        if ranks.notna().sum() >= 3:
+            df["entry_tier"] = pd.qcut(
+                ranks, q=3, labels=["C", "B", "A"], duplicates="drop"
+            )
+        else:
+            raise ValueError("insufficient data")
+    except ValueError:
+        df["entry_tier"] = "C"
     df["confirm_zone"] = (
         (df["gain_z"] > 0.0)
         & (df["ema_slope"] > 0.02)
