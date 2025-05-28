@@ -339,3 +339,5 @@
 - ปรับ welcome ให้รัน simulate_trades_with_tp อัตโนมัติเมื่อเริ่มต้น (Patch v11.6)
 ### 2025-09-08
 - ปรับ welcome ให้ตรวจสอบคอลัมน์และสร้างสัญญาณอัตโนมัติ พร้อม progress bar และ RAM optimization (Patch v11.7)
+### 2025-09-09
+- เพิ่ม fallback กลยุทธ์ RELAX_CONFIG_Q3 ใน main.py เมื่อไม่มีสัญญาณ (Patch v11.8)

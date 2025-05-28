@@ -81,6 +81,17 @@ SNIPER_CONFIG_Q3_TUNED = {
     "volume_ratio": 0.5,             # [Patch v9.0] เพิ่มเกณฑ์ Volume
 }
 
+# [Patch v11.8] Relaxed fallback config หลัง Q3 ปรับลดเงื่อนไขให้ค้นหาสัญญาณได้กว้างขึ้น
+RELAX_CONFIG_Q3 = {
+    "gain_z_thresh": -0.3,
+    "ema_slope_min": -0.02,
+    "atr_thresh": 0.2,
+    "sniper_risk_score_min": 2.0,
+    "tp_rr_ratio": 4.5,
+    "tp1_rr_ratio": 1.2,
+    "volume_ratio": 0.4,
+}
+
 # [Patch QA-P11] Config สำหรับวินิจฉัย - ผ่อนปรนสูงสุดเพื่อแก้ปัญหา Signal Blocked 100%
 SNIPER_CONFIG_DIAGNOSTIC = {
     "gain_z_thresh": -1.0,           # [Patch QA-P11] ยอมรับ Momentum เกือบทุกรูปแบบ

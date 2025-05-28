@@ -28,6 +28,7 @@ from nicegold_v5.entry import (
 from nicegold_v5.config import (
     SNIPER_CONFIG_PROFIT,
     SNIPER_CONFIG_Q3_TUNED,
+    RELAX_CONFIG_Q3,
 )
 from nicegold_v5.patch_phase3_qa_guard import run_qa_guard
 from nicegold_v5.patch_g5_auto_qa import auto_qa_after_backtest
@@ -260,6 +261,15 @@ def welcome():
     if "entry_signal" not in df.columns:
         print("[Patch] 🧠 Auto-generating signals using v11 config...")
         df = generate_signals(df, config=SNIPER_CONFIG_Q3_TUNED)
+
+        # [Patch v11.8] Relax fallback strategy if all signals are blocked
+        if df["entry_signal"].isnull().all():
+            print("[Patch QA] ⚠️ ไม่มีสัญญาณเข้าเหลือ – fallback to relaxed strategy")
+            df = generate_signals(df, config=RELAX_CONFIG_Q3)
+            if df["entry_signal"].isnull().all():
+                raise RuntimeError(
+                    "[Patch QA] ❌ แม้ fallback แล้ว ยังไม่มี entry_signal เลย – ตรวจกลยุทธ์หรือข้อมูล"
+                )
 
     show_progress_bar("🧪 ตรวจสอบความสมบูรณ์ของข้อมูล", steps=1)
     validate_for_simulation(df)

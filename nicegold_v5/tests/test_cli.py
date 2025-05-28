@@ -54,3 +54,38 @@ def test_autorun_missing_entry_time(monkeypatch, tmp_path):
     with pytest.raises(ValueError):
         main.welcome()
 
+
+def test_autorun_relax_fallback(monkeypatch, capsys, tmp_path):
+    main = importlib.import_module('main')
+    monkeypatch.setattr(main, "TRADE_DIR", str(tmp_path))
+
+    # DataFrame without entry_signal column to trigger auto-generation
+    monkeypatch.setattr(
+        main,
+        "load_csv_safe",
+        lambda path: pd.DataFrame({
+            'timestamp': pd.date_range('2024-01-01', periods=2, freq='h'),
+            'entry_time': pd.date_range('2024-01-01', periods=2, freq='h'),
+        })
+    )
+
+    def fake_generate(df, config=None):
+        if config == main.SNIPER_CONFIG_Q3_TUNED:
+            return df.assign(entry_signal=[None, None])
+        elif config == main.RELAX_CONFIG_Q3:
+            return df.assign(entry_signal=['long', 'short'])
+        else:
+            raise AssertionError("Unexpected config")
+
+    monkeypatch.setattr(main, 'generate_signals', fake_generate)
+    monkeypatch.setattr('nicegold_v5.entry.generate_signals', fake_generate)
+    monkeypatch.setattr(
+        'nicegold_v5.entry.simulate_trades_with_tp',
+        lambda df: ([{'exit_reason': 'tp1'}], [])
+    )
+    monkeypatch.setattr(main, 'safe_calculate_net_change', lambda df: 1.0)
+
+    main.welcome()
+    output = capsys.readouterr().out
+    assert 'fallback to relaxed strategy' in output
+
