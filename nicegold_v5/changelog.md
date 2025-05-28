@@ -321,3 +321,5 @@
 ## 2025-09-10
 - ระบุ DATETIME_FORMAT ในขั้นตอนแปลง timestamp ใน welcome() และเพิ่มชุดทดสอบตรวจสอบคำเตือน
 - แก้คำเตือน fallback datetime ใน welcome() และเพิ่มข้อความแจ้งเตือนใหม่ (Patch v11.9)
+## 2025-09-11
+- แก้บั๊ก qcut ใน generate_signals_v8_0 เมื่อจำนวนแถวน้อยกว่า 3 ทำให้เกิด ValueError (Patch v11.9.1)
