@@ -31,7 +31,7 @@ from nicegold_v5.config import (
     RELAX_CONFIG_Q3,
 )
 from nicegold_v5.qa import run_qa_guard, auto_qa_after_backtest
-from nicegold_v5.utils import safe_calculate_net_change
+from nicegold_v5.utils import safe_calculate_net_change, convert_thai_datetime
 # User-provided custom instructions
 # *สนทนาภาษาไทยเท่านั้น
 
@@ -163,6 +163,8 @@ def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
 
     from nicegold_v5.entry import sanitize_price_columns, validate_indicator_inputs
 
+    # ✅ [Patch v11.9.18] รองรับ Date พ.ศ. ก่อนแปลง timestamp
+    df = convert_thai_datetime(df)
     # ✅ [Patch v11.9.16] – Convert timestamp and sanitize before validation
     df["timestamp"] = pd.to_datetime(df["timestamp"], format=DATETIME_FORMAT, errors="coerce")
     df = df.dropna(subset=["timestamp"])
@@ -268,6 +270,9 @@ def welcome():
 
     print("📊 [Patch v11.7] เริ่ม Fail-Proof TP1/TP2 Simulation...")
     df = load_csv_safe(M1_PATH)
+
+    # ✅ [Patch v11.9.18] รองรับ Date แบบพุทธศักราช
+    df = convert_thai_datetime(df)
     show_progress_bar("🧼 แปลง timestamp", steps=1)
     df["timestamp"] = pd.to_datetime(
         df["timestamp"], format="%Y-%m-%d %H:%M:%S", errors="coerce"
@@ -380,6 +385,10 @@ def welcome():
         show_progress_bar("📡 Backtest Signals", steps=3)
         print("\n⚙️ เริ่มรัน Backtest จาก Signal (ไม่ใช้ ML)...")
         df = load_csv_safe(M1_PATH)
+
+        # ✅ [Patch v11.9.18] รองรับ Date แบบพุทธศักราช
+        df = convert_thai_datetime(df)
+
         # [Patch] Apply full datetime and signal generation
         df["timestamp"] = pd.to_datetime(
             df["timestamp"], format="%Y-%m-%d %H:%M:%S", errors="coerce"
@@ -440,6 +449,10 @@ def welcome():
         show_progress_bar("🧪 TP1/TP2 Backtest Mode", steps=3)
         print("\n⚙️ เริ่มรัน simulate_trades_with_tp() จาก UltraFix Patch...")
         df = load_csv_safe(M1_PATH)
+
+        # ✅ [Patch v11.9.18] รองรับ Date แบบพุทธศักราช
+        df = convert_thai_datetime(df)
+
         df["timestamp"] = pd.to_datetime(
             df["timestamp"], format=DATETIME_FORMAT, errors="coerce"
         )
@@ -477,6 +490,10 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "clean":
         print("📥 Loading CSV...")
         df = load_csv_safe(M1_PATH)
+
+        # ✅ [Patch v11.9.18] รองรับ Date แบบพุทธศักราช
+        df = convert_thai_datetime(df)
+
         df.dropna(subset=["timestamp"], inplace=True)
         df["timestamp"] = pd.to_datetime(
             df["timestamp"], format=DATETIME_FORMAT, errors="coerce"

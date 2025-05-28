@@ -378,3 +378,5 @@
 - ปรับ sanitize_price_columns ให้รองรับตัวเลขมี comma และเว้นวรรค (Patch v11.9.15)
 ### 2025-09-25
 - ปรับ run_clean_backtest ให้ sanitize ข้อมูลและ validate ก่อนสร้างสัญญาณ พร้อม log coverage (Patch v11.9.16)
+### 2025-09-26
+- เพิ่ม convert_thai_datetime รองรับ Date+Timestamp แบบ พ.ศ. และเรียกใช้ใน main.py (Patch v11.9.18)
