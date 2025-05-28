@@ -259,6 +259,9 @@ def welcome():
     df = df.dropna(subset=["timestamp"])
     df = df.sort_values("timestamp")
 
+    from nicegold_v5.entry import sanitize_price_columns
+    df = sanitize_price_columns(df)  # [Patch v11.9.10] ✅ Convert string to float + log
+
     from nicegold_v5.entry import validate_indicator_inputs
     validate_indicator_inputs(df)
 
