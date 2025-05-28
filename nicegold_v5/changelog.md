@@ -362,3 +362,5 @@
 ## 2025-09-29
 - ปรับปรุง `parse_timestamp_safe` ให้บันทึก log และแปลง Series ที่ไม่ใช่ string อัตโนมัติ (Patch v11.9.21)
 - แก้โค้ดส่วน `__main__` ให้แปลง timestamp เพียงครั้งเดียวและ dropna หนึ่งรอบ
+## 2025-09-30
+- ปรับ `run_clean_backtest` รองรับคอลัมน์ `date` + `timestamp` และแปลงปี พ.ศ. ให้ถูกต้อง (Patch v11.9.22)
