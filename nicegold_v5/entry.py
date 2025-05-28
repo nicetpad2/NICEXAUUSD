@@ -78,17 +78,26 @@ def validate_indicator_inputs(df: pd.DataFrame, required_cols: list[str] | None 
     if required_cols is None:
         required_cols = ["close", "high", "low", "volume"]
 
+    # Replace inf / -inf → NaN
+    df = df.replace([np.inf, -np.inf], np.nan)
+
     missing_cols = [col for col in required_cols if col not in df.columns]
     if missing_cols:
         raise RuntimeError(f"[Patch v11.9.9] ❌ ขาดคอลัมน์จำเป็น: {missing_cols}")
 
     row_count = df[required_cols].dropna().shape[0]
+
+    print(f"[Patch v11.9.11] ✅ ตรวจข้อมูลก่อนเข้า indicator: เหลือ {row_count} row หลัง dropna")
+    if row_count < min_rows:
+        print("[🧪 Preview] df.head():")
+        print(df[required_cols].head())
+        print("[🧪 Preview] df.tail():")
+        print(df[required_cols].tail())
+
     if row_count < min_rows:
         raise RuntimeError(
             f"[Patch v11.9.9] ❌ ข้อมูลมีเพียง {row_count} row ที่ใช้ได้ (ต้องการ ≥ {min_rows})"
         )
-
-    print(f"[Patch v11.9.9] ✅ ตรวจผ่าน: มีข้อมูลพร้อมใช้งาน {row_count} row")
 
 
 def sanitize_price_columns(df: pd.DataFrame) -> pd.DataFrame:

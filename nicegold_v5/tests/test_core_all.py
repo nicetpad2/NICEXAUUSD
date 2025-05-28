@@ -723,16 +723,30 @@ def test_validate_inputs_missing_column():
         validate_indicator_inputs(df)
 
 
-def test_validate_inputs_min_rows():
+def test_validate_inputs_min_rows(capsys):
     df = pd.DataFrame({'close': [1, 2], 'high': [1, 2], 'low': [1, 2], 'volume': [1, 2]})
     with pytest.raises(RuntimeError):
         validate_indicator_inputs(df, min_rows=5)
+    out = capsys.readouterr().out
+    assert 'Preview' in out
 
 
 def test_validate_inputs_pass(capsys):
     df = pd.DataFrame({'close': range(5), 'high': range(5), 'low': range(5), 'volume': range(5)})
     validate_indicator_inputs(df, min_rows=5)
-    assert '✅ ตรวจผ่าน' in capsys.readouterr().out
+    assert '✅ ตรวจข้อมูลก่อนเข้า indicator' in capsys.readouterr().out
+
+
+def test_validate_inputs_replace_inf(capsys):
+    df = pd.DataFrame({
+        'close': [1, np.inf, 2],
+        'high': [1, 1, 1],
+        'low': [1, 1, 1],
+        'volume': [1, 1, 1]
+    })
+    validate_indicator_inputs(df, min_rows=2)
+    out = capsys.readouterr().out
+    assert 'เหลือ 2 row' in out
 import pandas as pd
 from nicegold_v5.entry import sanitize_price_columns
 
