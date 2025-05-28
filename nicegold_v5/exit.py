@@ -80,9 +80,10 @@ def should_exit(trade, row):
             logging.info("[Patch D.14] Exit: ATR fading + gain_z drop")
             # return True, "atr_fade_gain_z_drop" # [Patch QA-P7] ทบทวน Logic การออกเร็ว
 
-        if gain_z < -0.6: # [Patch QA-P7] ปรับเกณฑ์ Momentum Reversal ให้เข้มงวดขึ้น
-            logging.info("[Patch D.14] Exit: gain_z reversal after profit")
-            return True, "gain_z_reverse"
+        # [Patch F] ปิดเงื่อนไข gain_z_reverse เพื่อลดการใช้ข้อมูลอนาคต
+        # if gain_z < -0.6:
+        #     logging.info("[Patch D.14] Exit: gain_z reversal after profit")
+        #     return True, "gain_z_reverse"
 
     # if gain > atr * 0.5 and gain_z < 0: # [Patch QA-P7] ยังคงปิดใช้งาน Early Profit Lock
     #     logging.info("[Patch D.14] Exit: early profit lock before gain_z turns negative")
@@ -92,8 +93,9 @@ def should_exit(trade, row):
         logging.info("[Patch D.14] Exit: volatility contraction after profit")
         return True, "atr_contract_exit"
 
-    if gain > MICRO_LOCK_THRESHOLD and gain_z <= 0:
-        logging.info("[Patch D.14] Exit: micro gain locked as momentum decayed")
-        return True, "micro_gain_lock"
+    # [Patch F] ปิด micro_gain_lock เพื่อลดการออกแบบใช้ข้อมูลอนาคต
+    # if gain > MICRO_LOCK_THRESHOLD and gain_z <= 0:
+    #     logging.info("[Patch D.14] Exit: micro gain locked as momentum decayed")
+    #     return True, "micro_gain_lock"
 
     return False, None

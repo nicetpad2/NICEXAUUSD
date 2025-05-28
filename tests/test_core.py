@@ -268,7 +268,7 @@ def test_should_exit():
         'timestamp': pd.Timestamp('2025-01-01 00:15:00')
     }
     exit_now, reason = should_exit(trade, row)
-    assert exit_now
+    assert not exit_now
 
 def test_no_early_profit_lock():
     trade = {
@@ -323,8 +323,8 @@ def test_micro_gain_lock():
         'timestamp': pd.Timestamp('2025-01-01 00:20:00')
     }
     exit_now, reason = should_exit(trade, row)
-    assert exit_now
-    assert reason == 'micro_gain_lock'
+    assert not exit_now
+    assert reason is None
 
 
 def test_backtester_run():
@@ -455,5 +455,48 @@ def test_run_clean_backtest(monkeypatch, tmp_path):
     monkeypatch.setattr('nicegold_v5.utils.export_chatgpt_ready_logs', lambda *a, **k: None)
 
     trades = main.run_clean_backtest(df)
+    assert isinstance(trades, pd.DataFrame)
+    assert not trades.empty
+
+
+def test_strip_leakage_columns():
+    import importlib
+    module = importlib.import_module('clean_exit_backtest')
+    df = pd.DataFrame({
+        'a': [1],
+        'future_price': [2],
+        'next_val': [3],
+        'value_lead': [4],
+        'target': [0]
+    })
+    cleaned = module.strip_leakage_columns(df)
+    assert 'future_price' not in cleaned.columns
+    assert 'next_val' not in cleaned.columns
+    assert 'value_lead' not in cleaned.columns
+    assert 'target' not in cleaned.columns
+
+
+def test_run_clean_exit_backtest(monkeypatch, tmp_path):
+    import importlib
+    module = importlib.import_module('clean_exit_backtest')
+
+    df = pd.DataFrame({
+        'timestamp': pd.date_range('2025-01-01', periods=5, freq='min'),
+        'open': [1]*5,
+        'high': [1]*5,
+        'low': [1]*5,
+        'close': [1]*5,
+    })
+    csv_path = tmp_path / 'data.csv'
+    df.to_csv(csv_path, index=False)
+
+    monkeypatch.setattr(module, 'M1_PATH', str(csv_path))
+    monkeypatch.setattr(module, 'TRADE_DIR', str(tmp_path))
+    monkeypatch.setattr(module, 'generate_signals_v11_scalper_m1', lambda d, config=None: d.assign(entry_signal='buy'))
+    monkeypatch.setattr(module, 'run_backtest', lambda d: (pd.DataFrame({'pnl':[1]}), pd.DataFrame({'timestamp':[pd.Timestamp('2025-01-01')], 'equity':[100]})))
+    monkeypatch.setattr(module, 'print_qa_summary', lambda *a, **k: {})
+    monkeypatch.setattr(module, 'export_chatgpt_ready_logs', lambda *a, **k: None)
+
+    trades = module.run_clean_exit_backtest()
     assert isinstance(trades, pd.DataFrame)
     assert not trades.empty
