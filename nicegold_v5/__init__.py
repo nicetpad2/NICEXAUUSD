@@ -24,12 +24,12 @@ from .wfv import (
     build_trade_log,
 )
 from .config import ENTRY_CONFIG_PER_FOLD
-from optuna_tuner import start_optimization, objective
-from patch_phase3_qa_guard import (
+from .optuna_tuner import start_optimization, objective
+from .patch_phase3_qa_guard import (
     run_qa_guard,
     summarize_fold,
     compute_fold_bias,
     analyze_drawdown,
 )
-from patch_g4_fold_export_drift import export_fold_qa, detect_fold_drift
-from patch_g5_auto_qa import auto_qa_after_backtest
+from .patch_g4_fold_export_drift import export_fold_qa, detect_fold_drift
+from .patch_g5_auto_qa import auto_qa_after_backtest

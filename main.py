@@ -29,8 +29,8 @@ from nicegold_v5.config import (
     SNIPER_CONFIG_PROFIT,
     SNIPER_CONFIG_Q3_TUNED,
 )
-from patch_phase3_qa_guard import run_qa_guard
-from patch_g5_auto_qa import auto_qa_after_backtest
+from nicegold_v5.patch_phase3_qa_guard import run_qa_guard
+from nicegold_v5.patch_g5_auto_qa import auto_qa_after_backtest
 # User-provided custom instructions
 # *สนทนาภาษาไทยเท่านั้น
 
