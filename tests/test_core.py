@@ -434,3 +434,26 @@ def test_optuna_objective():
     df = sample_df()
     study = tuner.start_optimization(df, n_trials=1)
     assert len(study.trials) == 1
+
+
+def test_run_clean_backtest(monkeypatch, tmp_path):
+    import importlib
+    main = importlib.import_module('main')
+
+    df = pd.DataFrame({
+        'timestamp': pd.date_range('2025-01-01', periods=5, freq='min'),
+        'open': [1]*5,
+        'high': [1]*5,
+        'low': [1]*5,
+        'close': [1]*5,
+    })
+
+    monkeypatch.setattr(main, 'TRADE_DIR', str(tmp_path))
+    monkeypatch.setattr(main, 'generate_signals', lambda d, config=None: d.assign(entry_signal='buy'))
+    monkeypatch.setattr('nicegold_v5.backtester.run_backtest', lambda d: (pd.DataFrame({'pnl': [1]}), pd.DataFrame({'timestamp':[pd.Timestamp('2025-01-01')], 'equity':[100]})))
+    monkeypatch.setattr('nicegold_v5.utils.print_qa_summary', lambda *a, **k: {})
+    monkeypatch.setattr('nicegold_v5.utils.export_chatgpt_ready_logs', lambda *a, **k: None)
+
+    trades = main.run_clean_backtest(df)
+    assert isinstance(trades, pd.DataFrame)
+    assert not trades.empty

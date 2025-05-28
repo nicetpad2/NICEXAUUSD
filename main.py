@@ -22,8 +22,13 @@ run_walkforward_backtest = raw_run
 from multiprocessing import cpu_count, get_context
 import numpy as np
 from nicegold_v5.utils import run_auto_wfv, split_by_session
-from nicegold_v5.entry import generate_signals_v11_scalper_m1 as generate_signals  # [Patch v10.1] Scalper Boost: QM + RSI + Fractal + InsideBar
-from nicegold_v5.config import SNIPER_CONFIG_PROFIT  # [Patch v10.1] ใช้ config เดิมร่วมได้
+from nicegold_v5.entry import (
+    generate_signals_v11_scalper_m1 as generate_signals,
+)  # [Patch v10.1] Scalper Boost: QM + RSI + Fractal + InsideBar
+from nicegold_v5.config import (
+    SNIPER_CONFIG_PROFIT,
+    SNIPER_CONFIG_Q3_TUNED,
+)
 # User-provided custom instructions
 # *สนทนาภาษาไทยเท่านั้น
 
@@ -146,6 +151,30 @@ def load_csv_safe(path, lowercase=True):
     except Exception as e:
         print(f"❌ Failed to load {path}: {e}")
         raise
+
+
+def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
+    """Run backtest with cleaned signals and real exit logic."""
+    df = df.copy()
+    df = generate_signals(df, config=SNIPER_CONFIG_Q3_TUNED)
+
+    # Ensure timestamps are valid and use them for entry_time
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
+    df["entry_time"] = df["timestamp"]
+    df["signal_id"] = df["timestamp"].astype(str)
+
+    # Guard against leakage from future columns
+    leak_cols = [c for c in df.columns if "future" in c or "next_" in c or c.endswith("_lead")]
+    df.drop(columns=leak_cols, errors="ignore", inplace=True)
+
+    from nicegold_v5.backtester import run_backtest
+    trades, equity = run_backtest(df)
+
+    from nicegold_v5.utils import print_qa_summary, export_chatgpt_ready_logs
+    metrics = print_qa_summary(trades, equity)
+    export_chatgpt_ready_logs(trades, equity, metrics, outdir=TRADE_DIR)
+
+    return trades
 
 def run_wfv_with_progress(df, features, label_col):
     from nicegold_v5.utils import split_by_session
@@ -312,4 +341,13 @@ def welcome():
         maximize_ram()
 
 if __name__ == "__main__":
-    welcome()
+    if len(sys.argv) > 1 and sys.argv[1] == "clean":
+        print("📥 Loading CSV...")
+        df = load_csv_safe(M1_PATH)
+        df.dropna(subset=["timestamp"], inplace=True)
+        df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
+        df = df.dropna(subset=["timestamp"])
+        run_clean_backtest(df)
+        print("✅ Done: Clean Backtest Completed")
+    else:
+        welcome()
