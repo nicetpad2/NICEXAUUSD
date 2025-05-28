@@ -172,15 +172,22 @@ def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
 
     from nicegold_v5.entry import sanitize_price_columns, validate_indicator_inputs
 
-    # ✅ [Patch v11.9.22] รองรับทั้ง Date/Timestamp และ date+timestamp
+    # ✅ [Patch v11.9.23] Fix Thai Buddhist date (พ.ศ.) + merge date+timestamp
     if {"Date", "Timestamp"}.issubset(df.columns):
         df = convert_thai_datetime(df)
         df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
     elif {"date", "timestamp"}.issubset(df.columns):
-        df["timestamp"] = df["date"].astype(str) + " " + df["timestamp"].astype(str)
-        df["timestamp"] = df["timestamp"].str.replace("/", "-", regex=False)
-        df["timestamp"] = df["timestamp"].str.replace(r"^25", "20", regex=True)
-        df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
+        df["date"] = df["date"].astype(str).str.zfill(8)
+
+        def _th2en(s: str) -> str:
+            y, m, d = int(s[:4]) - 543, s[4:6], s[6:8]
+            return f"{y:04d}-{m}-{d}"
+
+        df["date_gregorian"] = df["date"].apply(_th2en)
+        df["timestamp_full"] = df["date_gregorian"] + " " + df["timestamp"].astype(str)
+        df["timestamp"] = pd.to_datetime(
+            df["timestamp_full"], format="%Y-%m-%d %H:%M:%S", errors="coerce"
+        )
     else:
         df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
     df = df.dropna(subset=["timestamp"])

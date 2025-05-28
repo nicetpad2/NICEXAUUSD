@@ -390,3 +390,5 @@
 - แก้ส่วน `__main__` ไม่แปลง timestamp ซ้ำและ dropna เพียงครั้งเดียว
 ### 2025-09-30
 - ปรับ `run_clean_backtest` ให้รวมคอลัมน์ `date` กับ `timestamp` และแก้ปี พ.ศ. อัตโนมัติ (Patch v11.9.22)
+### 2025-10-01
+- แก้การรวม date+timestamp และแปลงปี พ.ศ. ด้วย pandas (Patch v11.9.23)

@@ -364,3 +364,5 @@
 - แก้โค้ดส่วน `__main__` ให้แปลง timestamp เพียงครั้งเดียวและ dropna หนึ่งรอบ
 ## 2025-09-30
 - ปรับ `run_clean_backtest` รองรับคอลัมน์ `date` + `timestamp` และแปลงปี พ.ศ. ให้ถูกต้อง (Patch v11.9.22)
+## 2025-10-01
+- ปรับฟังก์ชัน run_clean_backtest ใช้ pandas รวม date+timestamp และแปลงปี พ.ศ. (Patch v11.9.23)
