@@ -295,3 +295,6 @@
 - เพิ่ม QA Summary สำหรับ TP1/TP2 ในเมนู [6] พร้อมสรุปกำไรสุทธิ (Patch v11.4)
 ## 2025-08-30
 - เพิ่ม unit test ตรวจสอบ QA_BASE_PATH เป็น absolute path (Patch G.8)
+## 2025-08-31
+- เพิ่มฟังก์ชัน safe_calculate_net_change ป้องกันค่า NaN ในการสรุปผลกำไร (Patch I)
+

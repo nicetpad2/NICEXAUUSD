@@ -31,6 +31,7 @@ from nicegold_v5.config import (
 )
 from nicegold_v5.patch_phase3_qa_guard import run_qa_guard
 from nicegold_v5.patch_g5_auto_qa import auto_qa_after_backtest
+from patch_i_tp1tp2_fix import safe_calculate_net_change
 # User-provided custom instructions
 # *สนทนาภาษาไทยเท่านั้น
 
@@ -365,11 +366,7 @@ def welcome():
             trade_df["exit_reason"].eq("tp2").sum() if "exit_reason" in trade_df.columns else 0
         )
         sl_hits = trade_df["exit_reason"].eq("sl").sum()
-        total_pnl = (
-            trade_df["exit_price"].sub(trade_df["entry_price"]).sum()
-            if "exit_price" in trade_df.columns
-            else 0
-        )
+        total_pnl = safe_calculate_net_change(trade_df)
 
         print("\n📊 QA Summary (TP1/TP2):")
         print(f"   ▸ TP1 Triggered : {tp1_hits}")
