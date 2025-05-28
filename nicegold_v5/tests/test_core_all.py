@@ -459,6 +459,46 @@ def test_run_clean_backtest(monkeypatch, tmp_path):
     assert not trades.empty
 
 
+def test_run_clean_backtest_fallback(monkeypatch, capsys, tmp_path):
+    import importlib
+    main = importlib.import_module('main')
+
+    df = pd.DataFrame({
+        'timestamp': pd.date_range('2025-01-01', periods=2, freq='min'),
+        'open': [1, 1],
+        'high': [1, 1],
+        'low': [1, 1],
+        'close': [1, 1],
+    })
+
+    sentinel = {'relax': True}
+    import nicegold_v5.config as cfg
+    monkeypatch.setattr(cfg, 'RELAX_CONFIG_Q3', sentinel)
+
+    def fake_generate(d, config=None):
+        if config == main.SNIPER_CONFIG_Q3_TUNED:
+            return d.assign(entry_signal=[None] * len(d))
+        elif config is sentinel:
+            return d.assign(entry_signal='buy')
+        else:
+            raise AssertionError('unexpected config')
+
+    monkeypatch.setattr(main, 'generate_signals', fake_generate)
+    monkeypatch.setattr('nicegold_v5.backtester.run_backtest', lambda d: (
+        pd.DataFrame({'pnl': [1]}),
+        pd.DataFrame({'timestamp': [pd.Timestamp('2025-01-01')], 'equity': [100]})
+    ))
+    monkeypatch.setattr('nicegold_v5.utils.print_qa_summary', lambda *a, **k: {})
+    monkeypatch.setattr('nicegold_v5.utils.export_chatgpt_ready_logs', lambda *a, **k: None)
+    monkeypatch.setattr(main, 'TRADE_DIR', str(tmp_path))
+
+    trades = main.run_clean_backtest(df)
+    output = capsys.readouterr().out
+    assert 'fallback RELAX_CONFIG_Q3' in output
+    assert isinstance(trades, pd.DataFrame)
+    assert not trades.empty
+
+
 def test_strip_leakage_columns():
     import importlib
     module = importlib.import_module('nicegold_v5.backtester')
