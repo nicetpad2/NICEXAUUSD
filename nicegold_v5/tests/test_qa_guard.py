@@ -92,3 +92,9 @@ def test_auto_qa_after_backtest(tmp_path, monkeypatch):
     json_files = list(qa_path.glob('fold_qa_x_*.json'))
     assert len(csv_files) == 1
     assert len(json_files) == 1
+
+
+def test_default_qa_base_path():
+    from nicegold_v5.patch_g5_auto_qa import QA_BASE_PATH
+    assert os.path.isabs(QA_BASE_PATH)
+    assert QA_BASE_PATH == "/content/drive/MyDrive/NICEGOLD/logs/qa"

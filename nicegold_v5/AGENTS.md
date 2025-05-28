@@ -317,3 +317,5 @@
 - เพิ่มเมนู [6] รัน simulate_trades_with_tp และบันทึกไฟล์ TP1/TP2 (Patch v11.3)
 ### 2025-08-29
 - เพิ่ม QA Summary สำหรับ TP1/TP2 ในเมนู [6] พร้อมบันทึกผลกำไร (Patch v11.4)
+### 2025-08-30
+- เพิ่ม unit test ตรวจสอบ QA_BASE_PATH เป็น absolute path (Patch G.8)
