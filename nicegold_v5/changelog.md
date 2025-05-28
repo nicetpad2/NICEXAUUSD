@@ -289,3 +289,7 @@
 - เพิ่มฟังก์ชัน apply_tp_logic, generate_entry_signal และ session_filter พร้อม trade_log_fields เพื่อใช้งาน TP1/TP2 และ logging (Patch v11.1)
 ## 2025-08-27
 - เพิ่มฟังก์ชัน simulate_trades_with_tp สำหรับจำลองเทรดพร้อม TP1/TP2 และบันทึกสัญญาณ (Patch v11.1)
+## 2025-08-28
+- เพิ่มเมนู [6] รัน simulate_trades_with_tp และบันทึกไฟล์ TP1/TP2 (Patch v11.3)
+## 2025-08-29
+- เพิ่ม QA Summary สำหรับ TP1/TP2 ในเมนู [6] พร้อมสรุปกำไรสุทธิ (Patch v11.4)
