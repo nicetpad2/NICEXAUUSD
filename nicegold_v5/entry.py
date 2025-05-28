@@ -223,17 +223,22 @@ def generate_signals_v8_0(df: pd.DataFrame, config: dict | None = None) -> pd.Da
         reason_series.append(cond.map({True: name, False: ""}))
     reason_df = pd.concat(reason_series, axis=1)
 
-    # [Patch v11.9] Safe assignment of entry_blocked_reason
+    # [Patch v11.9.2] Safe assignment with aligned index
     reason_series = reason_df.apply(
         lambda row: "|".join(filter(None, row)), axis=1
     )
-    # [Patch QA] ตรวจสอบว่า reason_series ยาวเท่ากับ df หรือไม่
-    if len(reason_series) != len(df):
+    # [Patch QA] ตรวจสอบว่ามีความยาวเท่ากับ reason_df
+    if len(reason_series) != len(reason_df):
         raise ValueError(
-            f"[Patch QA] \u274c Mismatch: entry_blocked_reason has {len(reason_series)} rows, but df has {len(df)} rows"
+            f"[Patch QA] \u274c reason_series length {len(reason_series)} != reason_df {len(reason_df)}"
         )
-    df["entry_blocked_reason"] = reason_series.reset_index(drop=True)
+    # [Patch QA] Force index match and align with df
+    reason_series.index = reason_df.index
+    df["entry_blocked_reason"] = reason_series.reindex(df.index, fill_value="N/A")
     df.loc[df["entry_signal"].notnull(), "entry_blocked_reason"] = None
+    print(
+        f"[Patch v11.9.2] \u2705 entry_blocked_reason assigned: {df['entry_blocked_reason'].notnull().sum()} filled."
+    )
     blocked_pct = df["entry_signal"].isnull().mean() * 100
     print(f"[Patch v8.0] Entry Signal Blocked: {blocked_pct:.2f}%")
     return df
@@ -544,9 +549,11 @@ def generate_signals_v6_5(df: pd.DataFrame, fold_id: int) -> pd.DataFrame:
     for name, cond in conditions.items():
         reason_series.append(cond.map({True: name, False: ""}))
     reason_df = pd.concat(reason_series, axis=1)
-    df["entry_blocked_reason"] = reason_df.apply(
+    reason_series = reason_df.apply(
         lambda row: "|".join(filter(None, row)), axis=1
     )
+    reason_series.index = reason_df.index
+    df["entry_blocked_reason"] = reason_series.reindex(df.index, fill_value="N/A")
     df.loc[df["entry_signal"].notnull(), "entry_blocked_reason"] = None
     blocked_pct = df["entry_signal"].isnull().mean() * 100
     print(f"[Patch v6.5] Entry Signal Blocked: {blocked_pct:.2f}%")

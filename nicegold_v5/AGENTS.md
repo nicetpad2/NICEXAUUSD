@@ -349,3 +349,5 @@
 - แก้ ValueError ใน generate_signals_v8_0 เมื่อข้อมูลมีน้อยกว่า 3 แถว กำหนด entry_tier="C" (Patch v11.9.1)
 ### 2025-09-12
 - แก้บั๊กความยาวคอลัมน์ entry_blocked_reason ไม่ตรงกับ df และเพิ่ม QA check (Patch v11.9.2)
+### 2025-09-13
+- ปรับปรุงการ assign `entry_blocked_reason` ให้จัดการดัชนีและความยาวอย่างปลอดภัย (Patch v11.9.2)
