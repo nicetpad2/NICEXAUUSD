@@ -335,3 +335,5 @@
 - แก้คำเตือน pandas ใน main.py โดยระบุ DATETIME_FORMAT และเพิ่มชุดทดสอบตรวจสอบการแปลง timestamp
 ### 2025-09-06
 - ลบไฟล์ m.ainmain.py และตัวอย่าง XAUUSD_M1.csv ที่ไม่ได้ใช้
+### 2025-09-07
+- ปรับ welcome ให้รัน simulate_trades_with_tp อัตโนมัติเมื่อเริ่มต้น (Patch v11.6)
