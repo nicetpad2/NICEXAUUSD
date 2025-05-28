@@ -348,3 +348,5 @@
 - ปรับ run_clean_backtest ให้ fallback ไปยัง RELAX_CONFIG_Q3 เมื่อไม่มีสัญญาณและพิมพ์ Coverage (Patch v11.9.13)
 ## 2025-09-23
 - ปรับ run_clean_backtest แปลง timestamp ก่อนสร้างสัญญาณ ตรวจสอบคอลัมน์ entry_signal และพิมพ์ Coverage (Patch v11.9.14)
+## 2025-09-24
+- ปรับ sanitize_price_columns ให้รองรับตัวเลขมี comma และเว้นวรรค (Patch v11.9.15)

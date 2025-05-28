@@ -104,9 +104,11 @@ def sanitize_price_columns(df: pd.DataFrame) -> pd.DataFrame:
     """แปลงคอลัมน์ราคาทั้งหมดให้เป็น float และ log รายงาน"""
     for col in ["close", "high", "low", "open", "volume"]:
         if col in df.columns:
-            df[col] = pd.to_numeric(df[col], errors="coerce")
+            series = df[col].astype(str).str.replace(",", "", regex=False).str.strip()
+            df[col] = pd.to_numeric(series, errors="coerce")
+
     missing = df[["close", "high", "low", "volume"]].isnull().sum()
-    print("[Patch v11.9.10] 🧼 Sanitize Columns:")
+    print("[Patch v11.9.15] 🧼 Sanitize Columns:")
     for col, count in missing.items():
         print(f"   ▸ {col}: {count} NaN")
     return df

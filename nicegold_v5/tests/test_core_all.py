@@ -819,6 +819,19 @@ def test_sanitize_nan_count(capsys):
     log = capsys.readouterr().out
     assert 'close: 1 NaN' in log
 
+
+def test_sanitize_handle_commas():
+    df = pd.DataFrame({
+        'close': ['1,000', '2,000'],
+        'high': ['3,000', '4,000'],
+        'low': ['5,000', '6,000'],
+        'open': ['7,000', '8,000'],
+        'volume': ['9,000', '10,000'],
+    })
+    out = sanitize_price_columns(df)
+    assert out['close'].iloc[0] == 1000.0
+    assert out['volume'].iloc[1] == 10000.0
+
 import pandas as pd
 from nicegold_v5.entry import (
     apply_tp_logic,
