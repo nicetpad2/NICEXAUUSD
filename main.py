@@ -259,6 +259,9 @@ def welcome():
     df = df.dropna(subset=["timestamp"])
     df = df.sort_values("timestamp")
 
+    from nicegold_v5.entry import validate_indicator_inputs
+    validate_indicator_inputs(df)
+
     show_progress_bar("⚙️ ตรวจสอบสัญญาณ", steps=1)
     if "entry_signal" not in df.columns:
         print("[Patch] 🧠 Auto-generating signals using v11 config...")

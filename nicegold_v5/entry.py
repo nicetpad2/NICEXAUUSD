@@ -73,6 +73,24 @@ def rsi(series: pd.Series, period: int = 14) -> pd.Series:
     return 100 - (100 / (1 + rs))
 
 
+def validate_indicator_inputs(df: pd.DataFrame, required_cols: list[str] | None = None, min_rows: int = 500) -> None:
+    """ตรวจสอบความพร้อมของข้อมูลก่อน generate_signal"""
+    if required_cols is None:
+        required_cols = ["close", "high", "low", "volume"]
+
+    missing_cols = [col for col in required_cols if col not in df.columns]
+    if missing_cols:
+        raise RuntimeError(f"[Patch v11.9.9] ❌ ขาดคอลัมน์จำเป็น: {missing_cols}")
+
+    row_count = df[required_cols].dropna().shape[0]
+    if row_count < min_rows:
+        raise RuntimeError(
+            f"[Patch v11.9.9] ❌ ข้อมูลมีเพียง {row_count} row ที่ใช้ได้ (ต้องการ ≥ {min_rows})"
+        )
+
+    print(f"[Patch v11.9.9] ✅ ตรวจผ่าน: มีข้อมูลพร้อมใช้งาน {row_count} row")
+
+
 def generate_signals_v8_0(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
     """ใช้ logic sniper + TP1/TSL แบบล่าสุด (Patch v8.0)."""
     df = df.copy()

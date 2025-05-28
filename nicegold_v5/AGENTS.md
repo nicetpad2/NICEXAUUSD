@@ -359,3 +359,5 @@
 - แก้บั๊ก pandas apply คืนค่า DataFrame เมื่อไม่มีแถว ทำให้ assign entry_blocked_reason ล้มเหลว (Patch v11.9.6)
 ### 2025-09-17
 - เพิ่ม diagnostic fallback ใน welcome() หาก RELAX_CONFIG_Q3 ยังล้มเหลว (Patch v11.9.7)
+### 2025-09-18
+- เพิ่มฟังก์ชัน validate_indicator_inputs และเรียกใช้ใน main.py เพื่อตรวจสอบข้อมูลก่อนสร้างสัญญาณ (Patch v11.9.9)

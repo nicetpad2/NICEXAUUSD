@@ -9,8 +9,13 @@ def test_autorun_simulate(monkeypatch, capsys, tmp_path):
     monkeypatch.setattr(main, "load_csv_safe", lambda path: pd.DataFrame({
         'timestamp': pd.date_range('2024-01-01', periods=2, freq='h'),
         'entry_signal': ['long', 'short'],
-        'entry_time': pd.date_range('2024-01-01', periods=2, freq='h')
+        'entry_time': pd.date_range('2024-01-01', periods=2, freq='h'),
+        'close': [1, 1],
+        'high': [1, 1],
+        'low': [1, 1],
+        'volume': [1, 1],
     }))
+    monkeypatch.setattr('nicegold_v5.entry.validate_indicator_inputs', lambda df, required_cols=None, min_rows=500: None)
     monkeypatch.setattr(
         'nicegold_v5.entry.simulate_trades_with_tp',
         lambda df: ([{'exit_reason': 'tp1'}], [])
@@ -28,12 +33,17 @@ def test_autorun_string_timestamp(monkeypatch, capsys, tmp_path):
     monkeypatch.setattr(main, "load_csv_safe", lambda path: pd.DataFrame({
         'timestamp': ['2024-01-01 00:00:00', '2024-01-01 01:00:00'],
         'entry_signal': ['long', 'short'],
-        'entry_time': ['2024-01-01 00:00:00', '2024-01-01 01:00:00']
+        'entry_time': ['2024-01-01 00:00:00', '2024-01-01 01:00:00'],
+        'close': [1, 1],
+        'high': [1, 1],
+        'low': [1, 1],
+        'volume': [1, 1],
     }))
 
     def fake_simulate(df):
         assert pd.api.types.is_datetime64_any_dtype(df['timestamp'])
         return ([{'exit_reason': 'tp2'}], [])
+    monkeypatch.setattr('nicegold_v5.entry.validate_indicator_inputs', lambda df, required_cols=None, min_rows=500: None)
 
     monkeypatch.setattr('nicegold_v5.entry.simulate_trades_with_tp', fake_simulate)
     monkeypatch.setattr(main, 'safe_calculate_net_change', lambda df: 7.0)
@@ -47,8 +57,13 @@ def test_autorun_missing_entry_time(monkeypatch, tmp_path):
     monkeypatch.setattr(main, "TRADE_DIR", str(tmp_path))
     monkeypatch.setattr(main, "load_csv_safe", lambda path: pd.DataFrame({
         'timestamp': pd.date_range('2024-01-01', periods=1, freq='h'),
-        'entry_signal': ['long']
+        'entry_signal': ['long'],
+        'close': [1],
+        'high': [1],
+        'low': [1],
+        'volume': [1],
     }))
+    monkeypatch.setattr('nicegold_v5.entry.validate_indicator_inputs', lambda df, required_cols=None, min_rows=500: None)
 
     monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df, config=None: df)
     with pytest.raises(ValueError):
@@ -66,8 +81,13 @@ def test_autorun_relax_fallback(monkeypatch, capsys, tmp_path):
         lambda path: pd.DataFrame({
             'timestamp': pd.date_range('2024-01-01', periods=2, freq='h'),
             'entry_time': pd.date_range('2024-01-01', periods=2, freq='h'),
+            'close': [1, 1],
+            'high': [1, 1],
+            'low': [1, 1],
+            'volume': [1, 1],
         })
     )
+    monkeypatch.setattr('nicegold_v5.entry.validate_indicator_inputs', lambda df, required_cols=None, min_rows=500: None)
 
     def fake_generate(df, config=None):
         if config == main.SNIPER_CONFIG_Q3_TUNED:
@@ -100,8 +120,13 @@ def test_autorun_diagnostic_fallback(monkeypatch, capsys, tmp_path):
         lambda path: pd.DataFrame({
             'timestamp': pd.date_range('2024-01-01', periods=2, freq='h'),
             'entry_time': pd.date_range('2024-01-01', periods=2, freq='h'),
+            'close': [1, 1],
+            'high': [1, 1],
+            'low': [1, 1],
+            'volume': [1, 1],
         })
     )
+    monkeypatch.setattr("nicegold_v5.entry.validate_indicator_inputs", lambda df, required_cols=None, min_rows=500: None)
 
     from nicegold_v5 import config as cfg
 

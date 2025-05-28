@@ -335,3 +335,5 @@
 - แก้บั๊ก assign entry_blocked_reason ล้มเหลวเมื่อ DataFrame ว่าง (Patch v11.9.6)
 ## 2025-09-17
 - ปรับ welcome() ให้มี diagnostic fallback เมื่อ RELAX_CONFIG_Q3 ยังไม่สร้างสัญญาณ (Patch v11.9.7)
+## 2025-09-18
+- เพิ่ม validate_indicator_inputs สำหรับตรวจสอบคอลัมน์และจำนวนแถว และเรียกใช้ใน welcome() (Patch v11.9.9)
