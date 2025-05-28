@@ -235,19 +235,30 @@ def welcome():
         return
 
     show_progress_bar("📡 เตรียมระบบ", steps=2)
-    print("\n📌 เลือกเมนูที่ต้องการ:")
-    print("  1. รัน Walk-Forward Strategy (ML Based)")
-    print("  2. วิเคราะห์ Session Performance")
-    print("  3. สรุป Drawdown & Win/Loss Streak")
-    print("  4. รัน Backtest จาก Signal (Non-ML)")
-    print("  5. ออกจากระบบ")
-    print("  6. รัน Backtest ด้วย simulate_trades_with_tp (TP1/TP2 Logic)")
+    # [Patch v11.6] Auto-run simulate_trades_with_tp on startup
+    print("🧪 [Patch] ตรวจสอบการทำงานของ TP1/TP2 Simulate Logic")
+    df = load_csv_safe(M1_PATH)
+    df["timestamp"] = pd.to_datetime(df["timestamp"], format=DATETIME_FORMAT, errors="coerce")
+    df = df.sort_values("timestamp")
+    from nicegold_v5.entry import simulate_trades_with_tp
+    trades, logs = simulate_trades_with_tp(df)
+    trade_df = pd.DataFrame(trades)
+    out_path = os.path.join(TRADE_DIR, "trades_v11p_tp1tp2.csv")
+    trade_df.to_csv(out_path, index=False)
+    print(f"[Patch] ✅ บันทึกผล TP1/TP2 Trade log ที่: {out_path}")
 
-    try:
-        choice = int(input("\n🔧 เลือกเมนู [1-6]: "))
-    except:
-        print("❌ ต้องใส่เป็นตัวเลข 1–6")
-        return
+    tp1_hits = trade_df["exit_reason"].eq("tp1").sum() if "exit_reason" in trade_df.columns else 0
+    tp2_hits = trade_df["exit_reason"].eq("tp2").sum() if "exit_reason" in trade_df.columns else 0
+    sl_hits = trade_df["exit_reason"].eq("sl").sum() if "exit_reason" in trade_df.columns else 0
+    total_pnl = safe_calculate_net_change(trade_df)
+
+    print("\n📊 [Patch] QA Summary (TP1/TP2):")
+    print(f"   ▸ TP1 Triggered : {tp1_hits}")
+    print(f"   ▸ TP2 Triggered : {tp2_hits}")
+    print(f"   ▸ SL Count      : {sl_hits}")
+    print(f"   ▸ Net PnL       : {total_pnl:.2f} USD")
+    maximize_ram()
+    return  # Skip menu for automation
 
     if choice == 1:
         print("\n🚀 เริ่มรัน Walk-Forward ML Strategy...")

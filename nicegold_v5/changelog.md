@@ -311,3 +311,5 @@
 - ระบุรูปแบบ DATETIME_FORMAT ใน main.py เพื่อป้องกันคำเตือนการแปลงเวลา และเพิ่ม unit test ตรวจสอบ
 ## 2025-09-06
 - ลบไฟล์ที่ไม่ได้ใช้ m.ainmain.py และ XAUUSD_M1.csv
+## 2025-09-07
+- welcome() รัน simulate_trades_with_tp อัตโนมัติ (Patch v11.6)
