@@ -107,8 +107,9 @@ def sanitize_price_columns(df: pd.DataFrame) -> pd.DataFrame:
             series = df[col].astype(str).str.replace(",", "", regex=False).str.strip()
             df[col] = pd.to_numeric(series, errors="coerce")
 
-    missing = df[["close", "high", "low", "volume"]].isnull().sum()
-    print("[Patch v11.9.15] 🧼 Sanitize Columns:")
+    cols_to_check = [c for c in ["close", "high", "low", "volume"] if c in df.columns]
+    missing = df[cols_to_check].isnull().sum()
+    print("[Patch v11.9.16] 🧼 Sanitize Columns:")
     for col, count in missing.items():
         print(f"   ▸ {col}: {count} NaN")
     return df

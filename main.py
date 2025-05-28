@@ -161,16 +161,23 @@ def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
     """Run backtest with cleaned signals and real exit logic."""
     df = df.copy()
 
-    # Ensure timestamp is datetime BEFORE signal generation
+    from nicegold_v5.entry import sanitize_price_columns, validate_indicator_inputs
+
+    # ✅ [Patch v11.9.16] – Convert timestamp and sanitize before validation
     df["timestamp"] = pd.to_datetime(df["timestamp"], format=DATETIME_FORMAT, errors="coerce")
+    df = df.dropna(subset=["timestamp"])
+    df = df.sort_values("timestamp")
+    df = sanitize_price_columns(df)
+    validate_indicator_inputs(df, min_rows=min(500, len(df)))
 
     from nicegold_v5.config import RELAX_CONFIG_Q3
     df = generate_signals(df, config=SNIPER_CONFIG_Q3_TUNED)
     if "entry_signal" not in df.columns or df["entry_signal"].isnull().mean() == 1.0:
-        print("[Patch v11.9.14] ❗ ไม่พบสัญญาณใน Q3_TUNED – ใช้ fallback RELAX_CONFIG_Q3")
+        print("[Patch v11.9.16] ❗ ไม่พบสัญญาณใน Q3_TUNED – ใช้ fallback RELAX_CONFIG_Q3")
         df = generate_signals(df, config=RELAX_CONFIG_Q3)
 
-    print(f"[Patch v11.9.14] ✅ Entry Signal Coverage: {(df['entry_signal'].notna().mean() * 100):.2f}%")
+    signal_coverage = df["entry_signal"].notnull().mean() * 100
+    print(f"[Patch v11.9.16] ✅ Entry Signal Coverage: {signal_coverage:.2f}%")
 
     # Ensure timestamps are valid and use them for entry_time
     df["timestamp"] = pd.to_datetime(df["timestamp"], format=DATETIME_FORMAT)
