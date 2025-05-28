@@ -5,6 +5,10 @@ from .entry import (
     generate_signals_profit_v10,
     generate_signals_v11_scalper_m1,
     generate_signals,
+    apply_tp_logic,
+    generate_entry_signal,
+    session_filter,
+    trade_log_fields,
 )  # [Patch v10.0] expose latest logic
 from .risk import calc_lot
 from .exit import should_exit
