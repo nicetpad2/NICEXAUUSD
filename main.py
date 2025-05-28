@@ -29,6 +29,8 @@ from nicegold_v5.config import (
     SNIPER_CONFIG_PROFIT,
     SNIPER_CONFIG_Q3_TUNED,
 )
+from patch_phase3_qa_guard import run_qa_guard
+from patch_g5_auto_qa import auto_qa_after_backtest
 # User-provided custom instructions
 # *สนทนาภาษาไทยเท่านั้น
 
@@ -173,6 +175,8 @@ def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
     from nicegold_v5.utils import print_qa_summary, export_chatgpt_ready_logs
     metrics = print_qa_summary(trades, equity)
     export_chatgpt_ready_logs(trades, equity, metrics, outdir=TRADE_DIR)
+    run_qa_guard(trades, df)
+    auto_qa_after_backtest(trades, equity, label="Clean")
 
     return trades
 
@@ -331,6 +335,8 @@ def welcome():
             duration_sec=end - start,
         )
         export_chatgpt_ready_logs(trades, equity, summary, outdir=TRADE_DIR)
+        run_qa_guard(trades, df)
+        auto_qa_after_backtest(trades, equity, label="Signal")
 
     elif choice == 5:
         show_progress_bar("👋 กำลังออกจากระบบ", steps=2)

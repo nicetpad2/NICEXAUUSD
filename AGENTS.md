@@ -294,3 +294,6 @@
 
 \n### 2025-08-19
 - เพิ่มโมดูล QA Guard ตรวจจับ Overfitting และ Data Leakage พร้อมระบบ Drift Detection (Patch G)
+
+### 2025-08-20
+- รวมฟังก์ชัน QA Guard เข้ากับ `main.py` และ export ผ่าน `__init__.py`

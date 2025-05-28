@@ -23,10 +23,13 @@ def detect_overfit_bias(trades: pd.DataFrame) -> dict:
 
 def detect_noise_exit(trades: pd.DataFrame) -> pd.DataFrame:
     """Find trades exited too quickly or with low MFE while losing."""
+    if 'mfe' not in trades.columns or 'duration_min' not in trades.columns:
+        return pd.DataFrame()
     suspected = trades.copy()
     suspected = suspected[(suspected['mfe'] < 2.0) | (suspected['duration_min'] < 2)]
     suspected = suspected[suspected['pnl'] < 0]
-    return suspected[['_id', 'entry_time', 'pnl', 'mfe', 'duration_min', 'exit_reason']]
+    cols = ['_id', 'entry_time', 'pnl', 'mfe', 'duration_min', 'exit_reason']
+    return suspected[[c for c in cols if c in suspected.columns]]
 
 
 def detect_leakage_columns(df: pd.DataFrame) -> list:
@@ -67,11 +70,11 @@ def summarize_fold(trades: pd.DataFrame, fold_name: str = "Fold") -> dict:
         'winrate': round(len(wins) / len(trades) * 100, 2) if len(trades) > 0 else 0,
         'avg_pnl': round(trades['pnl'].mean(), 2) if not trades.empty else 0,
         'max_loss': round(trades['pnl'].min(), 2) if not trades.empty else 0,
-        'sl_count': trades['exit_reason'].fillna('').str.contains('sl').sum(),
-        'be_count': trades['exit_reason'].fillna('').str.contains('be').sum(),
-        'tsl_count': trades['exit_reason'].fillna('').str.contains('tsl').sum(),
-        'tp1_count': (trades['exit_reason'].fillna('') == 'tp1').sum(),
-        'tp2_count': (trades['exit_reason'].fillna('') == 'tp2').sum(),
+        'sl_count': trades.get('exit_reason', pd.Series(dtype=str)).fillna('').str.contains('sl').sum(),
+        'be_count': trades.get('exit_reason', pd.Series(dtype=str)).fillna('').str.contains('be').sum(),
+        'tsl_count': trades.get('exit_reason', pd.Series(dtype=str)).fillna('').str.contains('tsl').sum(),
+        'tp1_count': (trades.get('exit_reason', pd.Series(dtype=str)).fillna('') == 'tp1').sum(),
+        'tp2_count': (trades.get('exit_reason', pd.Series(dtype=str)).fillna('') == 'tp2').sum(),
     }
 
 
