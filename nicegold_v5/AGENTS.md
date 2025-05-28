@@ -309,3 +309,5 @@
 - ปรับ auto_qa_after_backtest ให้เพิ่ม timestamp ในชื่อไฟล์เพื่อป้องกัน overwrite (Patch G.7)
 ### 2025-08-25
 - Fix QA Export Path ให้ใช้ absolute path บันทึกที่ `/content/drive/MyDrive/NICEGOLD/logs/qa` (Patch G.8)
+### 2025-08-26
+- เพิ่มฟังก์ชัน apply_tp_logic, generate_entry_signal, session_filter และตัวแปร trade_log_fields สำหรับ TP1/TP2 และระบบบันทึกสัญญาณ (Patch v11.1)

@@ -1,6 +1,66 @@
 import pandas as pd
 import numpy as np
 
+# --- CONFIG FLAGS (Patch v11.1) ---
+ENABLE_TP1_TP2 = True
+ENABLE_SESSION_FILTER = True
+ENABLE_SIGNAL_LOG = True
+
+
+def apply_tp_logic(entry_price: float, direction: str, rr1: float = 1.5, rr2: float = 3.0, sl_distance: float = 5.0) -> tuple[float, float]:
+    """คำนวณเป้าหมาย TP1/TP2 ตาม Risk Reward"""
+    tp1 = entry_price + rr1 * sl_distance if direction == "buy" else entry_price - rr1 * sl_distance
+    tp2 = entry_price + rr2 * sl_distance if direction == "buy" else entry_price - rr2 * sl_distance
+    return tp1, tp2
+
+
+def generate_entry_signal(row: dict, log_list: list) -> str | None:
+    """ระบุตำแหน่งเข้าเทรดและบันทึกลง log"""
+    signal = None
+    if row.get("rsi", 50) < 30 and row.get("pattern") == "inside_bar":
+        signal = "RSI_InsideBar"
+    elif row.get("pattern") == "qm":
+        signal = "QM"
+    elif row.get("pattern") == "fractal_v":
+        signal = "FractalV"
+
+    if ENABLE_SIGNAL_LOG:
+        log_list.append(
+            {
+                "time": row.get("timestamp"),
+                "entry_price": row.get("close"),
+                "signal": signal,
+                "session": row.get("session"),
+                "risk_mode": row.get("risk_mode", "normal"),
+            }
+        )
+
+    return signal
+
+
+def session_filter(row: dict) -> bool:
+    """กรองไม่ให้เข้าออเดอร์หากเงื่อนไขเซสชันไม่ผ่าน"""
+    if ENABLE_SESSION_FILTER and row.get("session") == "NY":
+        if row.get("ny_sl_count", 0) > 3:
+            return False
+    return True
+
+
+trade_log_fields = [
+    "timestamp",
+    "entry_price",
+    "exit_price",
+    "sl_price",
+    "tp1_price",
+    "tp2_price",
+    "exit_reason",
+    "session",
+    "risk_mode",
+    "entry_signal",
+    "mfe",
+    "duration_min",
+]
+
 
 def rsi(series: pd.Series, period: int = 14) -> pd.Series:
     """คำนวณ RSI แบบเวกเตอร์เพื่อลดเวลาประมวลผล"""
