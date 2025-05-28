@@ -376,3 +376,5 @@
 - ปรับ run_clean_backtest แปลง timestamp ก่อนสร้างสัญญาณและเช็คคอลัมน์ entry_signal (Patch v11.9.14)
 ### 2025-09-24
 - ปรับ sanitize_price_columns ให้รองรับตัวเลขมี comma และเว้นวรรค (Patch v11.9.15)
+### 2025-09-25
+- ปรับ run_clean_backtest ให้ sanitize ข้อมูลและ validate ก่อนสร้างสัญญาณ พร้อม log coverage (Patch v11.9.16)

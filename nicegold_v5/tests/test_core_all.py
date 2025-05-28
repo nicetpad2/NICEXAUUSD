@@ -446,6 +446,7 @@ def test_run_clean_backtest(monkeypatch, tmp_path):
         'high': [1]*5,
         'low': [1]*5,
         'close': [1]*5,
+        'volume': [100]*5,
     })
 
     monkeypatch.setattr(main, 'TRADE_DIR', str(tmp_path))
@@ -469,6 +470,7 @@ def test_run_clean_backtest_fallback(monkeypatch, capsys, tmp_path):
         'high': [1, 1],
         'low': [1, 1],
         'close': [1, 1],
+        'volume': [100, 100],
     })
 
     sentinel = {'relax': True}
