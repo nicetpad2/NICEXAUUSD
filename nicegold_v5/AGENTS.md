@@ -400,3 +400,5 @@
 - เพิ่มฟังก์ชัน `generate_signals_v12_0` รวมกลยุทธ์หลายแพทเทิร์นและคำนวณ TP อัตโนมัติ
 ### 2025-10-05
 - ปรับ welcome() ใช้ generate_signals_v12_0 เป็นค่าเริ่มต้นและบันทึก trade_log v12 (Patch v12.0.1)
+### 2025-10-06
+- แก้ run_clean_backtest ให้ตรวจสอบคอลัมน์ entry_time หลัง generate_signals และเติมค่าที่ขาด (Patch v12.0.2)
