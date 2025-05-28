@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from tqdm import tqdm
 
 # --- CONFIG FLAGS (Patch v11.1) ---
 ENABLE_TP1_TP2 = True
@@ -57,6 +58,8 @@ trade_log_fields = [
     "session",
     "risk_mode",
     "entry_signal",
+    "signal_name",
+    "entry_tier",
     "mfe",
     "duration_min",
 ]
@@ -633,10 +636,15 @@ def simulate_trades_with_tp(df: pd.DataFrame, sl_distance: float = 5.0):
     df = df.copy()
     df["timestamp"] = pd.to_datetime(df["timestamp"])
 
+    from nicegold_v5.utils import safe_calculate_net_change
+
+    capital = 100.0
     logs: list[dict] = []
     trades: list[dict] = []
 
-    for _, row in df.iterrows():
+    it = tqdm(df.iterrows(), total=len(df), desc="🚀 Simulating", unit="bar")
+
+    for i, (_, row) in enumerate(it, 1):
         if not session_filter(row):
             continue
 
@@ -648,6 +656,10 @@ def simulate_trades_with_tp(df: pd.DataFrame, sl_distance: float = 5.0):
         direction = 1 if row.get("signal") == "long" else -1
         sl = entry_price - sl_distance if direction == 1 else entry_price + sl_distance
 
+        entry_signal = generate_entry_signal(row, logs)
+        signal_name = row.get("signal_name", row.get("entry_signal", entry_signal))  # [Patch v12.8.2]
+        entry_tier = row.get("entry_tier", "C")
+
         # Dynamic RR2 based on session
         session = row.get("session")
         rr2 = 2.5 if session == "Asia" else 3.0 if session == "London" else 3.5
@@ -656,48 +668,67 @@ def simulate_trades_with_tp(df: pd.DataFrame, sl_distance: float = 5.0):
 
         exit_price = tp1_price
         exit_reason = "tp1"
+        exit_time = window["timestamp"].iloc[-1]
+
+        # --- MFE Calculation ---
+        mfe = 0.0
 
         for _, bar in window.iterrows():
             high = bar.get("high", bar["close"])
             low = bar.get("low", bar["close"])
+            interim_pnl = (high - entry_price) if direction == 1 else (entry_price - low)
+            mfe = max(mfe, interim_pnl)
             if direction == 1:
                 if low <= sl:
                     exit_price = sl
                     exit_reason = "sl"
+                    exit_time = bar["timestamp"]
                     break
                 if high >= tp2_price:
                     exit_price = tp2_price
                     exit_reason = "tp2"
+                    exit_time = bar["timestamp"]
                     break
                 if high >= tp1_price:
                     exit_price = tp1_price
                     exit_reason = "tp1"
+                    exit_time = bar["timestamp"]
                     break
             else:
                 if high >= sl:
                     exit_price = sl
                     exit_reason = "sl"
+                    exit_time = bar["timestamp"]
                     break
                 if low <= tp2_price:
                     exit_price = tp2_price
                     exit_reason = "tp2"
+                    exit_time = bar["timestamp"]
                     break
                 if low <= tp1_price:
                     exit_price = tp1_price
                     exit_reason = "tp1"
+                    exit_time = bar["timestamp"]
                     break
+
+        duration_min = (exit_time - entry_time).total_seconds() / 60.0
 
         trade = {
             "timestamp": entry_time,
+            "exit_time": exit_time,
             "entry_price": entry_price,
             "tp1_price": tp1_price,
             "tp2_price": tp2_price,
             "sl_price": sl,
             "exit_price": exit_price,
             "exit_reason": exit_reason,
-            "entry_signal": generate_entry_signal(row, logs),
+            "entry_signal": entry_signal,
+            "signal_name": signal_name,
+            "entry_tier": entry_tier,
             "session": session,
             "risk_mode": row.get("risk_mode", "normal"),
+            "mfe": round(mfe, 4),
+            "duration_min": round(duration_min, 2),
         }
         trades.append(trade)
 

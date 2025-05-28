@@ -382,3 +382,5 @@
 - แก้ welcome() ให้สร้าง entry_time จาก timestamp อัตโนมัติ ป้องกัน KeyError ระหว่าง simulate (Patch CLI)
 ## 2025-10-09
 - ปรับ simulate_trades_with_tp ให้กำหนด RR2 ตาม session และตรวจราคาใน 60 นาทีแรก
+## 2025-10-10
+- เพิ่มค่า `signal_name` และ `entry_tier` ในผลลัพธ์ simulate_trades_with_tp พร้อมบันทึกค่า MFE (Patch v12.8.2)
