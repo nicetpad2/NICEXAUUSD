@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-from nicegold_v5.patch_phase3_qa_guard import (
+from nicegold_v5.qa import (
     detect_overfit_bias,
     detect_noise_exit,
     detect_leakage_columns,
@@ -8,10 +8,12 @@ from nicegold_v5.patch_phase3_qa_guard import (
     summarize_fold,
     compute_fold_bias,
     analyze_drawdown,
+    export_fold_qa,
+    detect_fold_drift,
+    auto_qa_after_backtest,
+    QA_BASE_PATH,
 )
-from nicegold_v5.patch_g4_fold_export_drift import export_fold_qa, detect_fold_drift
-import nicegold_v5.patch_g5_auto_qa as patch_g5_auto_qa
-from nicegold_v5.patch_g5_auto_qa import auto_qa_after_backtest
+import nicegold_v5.qa as patch_g5_auto_qa
 
 
 def sample_trades():
@@ -95,6 +97,6 @@ def test_auto_qa_after_backtest(tmp_path, monkeypatch):
 
 
 def test_default_qa_base_path():
-    from nicegold_v5.patch_g5_auto_qa import QA_BASE_PATH
+    from nicegold_v5.qa import QA_BASE_PATH
     assert os.path.isabs(QA_BASE_PATH)
     assert QA_BASE_PATH == "/content/drive/MyDrive/NICEGOLD/logs/qa"
