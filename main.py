@@ -23,8 +23,13 @@ from multiprocessing import cpu_count, get_context
 import numpy as np
 from nicegold_v5.utils import run_auto_wfv, split_by_session
 from nicegold_v5.entry import (
-    generate_signals_v11_scalper_m1 as generate_signals,
-)  # [Patch v10.1] Scalper Boost: QM + RSI + Fractal + InsideBar
+    generate_signals_v12_0 as generate_signals,  # 🔄 เปลี่ยนจาก v11 → v12
+    apply_tp_logic,
+    generate_entry_signal,
+    session_filter,
+    sanitize_price_columns,
+    validate_indicator_inputs,
+)
 from nicegold_v5.config import (
     SNIPER_CONFIG_PROFIT,
     SNIPER_CONFIG_Q3_TUNED,
@@ -279,26 +284,14 @@ def welcome():
 
     show_progress_bar("📡 เตรียมระบบ", steps=2)
 
-    # [Patch v11.7] Fail-Proof TP1/TP2 Simulation with Full Validation & RAM Optimization
-    from nicegold_v5.entry import simulate_trades_with_tp, generate_signals
+    # [Patch v12.0.1] Fail-Proof TP1/TP2 Simulation ด้วย logic v12.0
+    from nicegold_v5.entry import simulate_trades_with_tp
     from nicegold_v5.config import SNIPER_CONFIG_Q3_TUNED
     from nicegold_v5.utils import safe_calculate_net_change
 
-    def validate_for_simulation(df: pd.DataFrame) -> pd.DataFrame:
-        required = ["timestamp", "entry_signal", "entry_time"]
-        for col in required:
-            if col not in df.columns:
-                raise ValueError(f"[Patch QA] ❌ Missing column: {col}")
-        df = df.dropna(subset=required)
-        if df.empty:
-            raise ValueError("[Patch QA] ❌ ไม่มีแถวที่มีข้อมูลครบสำหรับ simulate")
-        if not pd.api.types.is_datetime64_any_dtype(df["timestamp"]):
-            raise ValueError("[Patch QA] ❌ timestamp ต้องแปลงเป็น datetime ก่อน simulate")
-        return df
-
-    print("📊 [Patch v11.7] เริ่ม Fail-Proof TP1/TP2 Simulation...")
+    print("📊 [Patch v12.0.1] เริ่ม Fail-Proof TP1/TP2 Simulation ด้วย logic v12.0...")
     df = load_csv_safe(M1_PATH)
-
+    
     # ✅ [Patch v11.9.18] รองรับ Date แบบพุทธศักราช
     df = convert_thai_datetime(df)
     show_progress_bar("🧼 แปลง timestamp", steps=1)
@@ -306,46 +299,19 @@ def welcome():
     df = df.dropna(subset=["timestamp"])
     df = df.sort_values("timestamp")
 
-    from nicegold_v5.entry import sanitize_price_columns
-    df = sanitize_price_columns(df)  # [Patch v11.9.10] ✅ Convert string to float + log
-
-    from nicegold_v5.entry import validate_indicator_inputs
+    df = sanitize_price_columns(df)
     validate_indicator_inputs(df)
 
     show_progress_bar("⚙️ ตรวจสอบสัญญาณ", steps=1)
-    if "entry_signal" not in df.columns:
-        print("[Patch] 🧠 Auto-generating signals using v11 config...")
-        df = generate_signals(df, config=SNIPER_CONFIG_Q3_TUNED)
-
-        # [Patch v11.8-fix] Retry relaxed strategy if v11 signal fully blocked
-        if df["entry_signal"].isnull().all():
-            print(
-                "[Patch QA] ⚠️ entry_signal ทั้งหมดถูกบล็อก – รัน fallback relaxed config"
-            )
-            df = generate_signals(df, config=RELAX_CONFIG_Q3)
-
-            if df["entry_signal"].isnull().all():
-                print("[Patch QA] ⚠️ fallback relaxed config ยังล้มเหลว – รัน diagnostic fallback")
-                from nicegold_v5.config import SNIPER_CONFIG_DIAGNOSTIC
-                df = generate_signals(df, config=SNIPER_CONFIG_DIAGNOSTIC)
-                sig_count = df["entry_signal"].notnull().sum()
-                gainz_std = df["gain_z"].std()
-                atr_avg = df["atr"].mean()
-                vol_ma = df["volume_ma"].mean()
-                print(f"[Patch QA] ✅ Diagnostic Signal Count: {sig_count}")
-                print(f"   ▸ gain_z std  : {gainz_std:.4f}")
-                print(f"   ▸ ATR avg     : {atr_avg:.4f}")
-                print(f"   ▸ Volume MA   : {vol_ma:.2f}")
-
-
-                if sig_count == 0:
-                    raise RuntimeError("[Patch QA] ❌ แม้ใช้ diagnostic แล้ว ยังไม่มี entry_signal – โปรดตรวจสอบข้อมูลหรือปรับ logic")
-
-        if df["entry_signal"].isnull().all():
-            raise RuntimeError("[Patch QA] ❌ ทุก config ล้มเหลว – ไม่มี entry_signal ให้ simulate")
+    df = generate_signals(df)
 
     show_progress_bar("🧪 ตรวจสอบความสมบูรณ์ของข้อมูล", steps=1)
-    df = validate_for_simulation(df)
+    required = ["timestamp", "entry_signal", "entry_time"]
+    df = df.dropna(subset=required)
+    if df.empty:
+        raise RuntimeError("[Patch QA] ❌ ไม่มีแถวที่มีข้อมูลครบสำหรับ simulate")
+    if not pd.api.types.is_datetime64_any_dtype(df["timestamp"]):
+        raise ValueError("[Patch QA] ❌ timestamp ต้องแปลงเป็น datetime ก่อน simulate")
 
     show_progress_bar("🚀 รัน simulate_trades_with_tp", steps=2)
     trades, logs = simulate_trades_with_tp(df)
@@ -356,9 +322,9 @@ def welcome():
         maximize_ram()
         return
 
-    out_path = os.path.join(TRADE_DIR, "trades_v11p_tp1tp2.csv")
+    out_path = os.path.join(TRADE_DIR, "trades_v12_tp1tp2.csv")
     trade_df.to_csv(out_path, index=False)
-    print(f"[Patch] ✅ บันทึกผล TP1/TP2 Trade log ที่: {out_path}")
+    print(f"[Patch v12.0.1] ✅ บันทึกผล TP1/TP2 Trade log ที่: {out_path}")
 
     tp1_hits = trade_df["exit_reason"].eq("tp1").sum()
     tp2_hits = trade_df["exit_reason"].eq("tp2").sum()
@@ -422,7 +388,7 @@ def welcome():
         df = df.sort_values("timestamp")
 
         from nicegold_v5.entry import (
-            generate_signals_v11_scalper_m1 as generate_signals
+            generate_signals_v11_scalper_m1 as generate_signals_menu
         )  # [Patch v10.1] Scalper Boost: QM + RSI + Fractal + InsideBar
         from nicegold_v5.config import SNIPER_CONFIG_PROFIT  # [Patch v10.1]
         from nicegold_v5.backtester import run_backtest
@@ -435,7 +401,7 @@ def welcome():
 
         # [Patch] Inject signal + run with updated SL/TP1/TP2/BE
         print("\U0001F9E0 [UltraFix] Injecting Profit Config for entry_signal...")
-        df = generate_signals(df, config=SNIPER_CONFIG_PROFIT)
+        df = generate_signals_menu(df, config=SNIPER_CONFIG_PROFIT)
         if "entry_tier" in df.columns:
             print("[Patch] Removing weak 'C' tier signals.")
             df = df[df["entry_tier"] != "C"]
