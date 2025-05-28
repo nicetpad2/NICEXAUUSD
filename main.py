@@ -203,6 +203,12 @@ def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
 
     from nicegold_v5.config import RELAX_CONFIG_Q3
     df = generate_signals(df, config=SNIPER_CONFIG_Q3_TUNED)
+
+    # [Patch v12.0.2] Ensure 'entry_time' column exists
+    if "entry_time" not in df.columns:
+        df["entry_time"] = df.get("timestamp")
+    if "entry_time" in df.columns and not pd.api.types.is_datetime64_any_dtype(df["entry_time"]):
+        df["entry_time"] = pd.to_datetime(df["entry_time"], errors="coerce")
     if "entry_signal" not in df.columns or df["entry_signal"].isnull().mean() == 1.0:
         print("[Patch v11.9.16] ❗ ไม่พบสัญญาณใน Q3_TUNED – ใช้ fallback RELAX_CONFIG_Q3")
         df = generate_signals(df, config=RELAX_CONFIG_Q3)
@@ -214,6 +220,15 @@ def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
     df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
     df["entry_time"] = df["timestamp"]
     df["signal_id"] = df["timestamp"].astype(str)
+
+    # [Patch v12.0.2] Validate required columns before backtest
+    required = ["entry_time", "entry_signal", "close"]
+    missing_required = [col for col in required if col not in df.columns]
+    if missing_required:
+        print(f"[Patch v12.0.2] ⚠️ Missing columns: {missing_required} – Creating with default values")
+        for col in missing_required:
+            df[col] = pd.NaT if "time" in col else None
+    df = df.dropna(subset=required)
 
     # Guard against leakage from future columns
     leak_cols = [c for c in df.columns if "future" in c or "next_" in c or c.endswith("_lead")]
