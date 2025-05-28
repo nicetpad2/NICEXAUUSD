@@ -722,6 +722,13 @@ def test_convert_thai_datetime():
     result = convert_thai_datetime(df)
     assert 'timestamp' in result.columns
     assert result.loc[0, 'timestamp'] == pd.Timestamp('2023-04-16 22:00:00')
+
+
+def test_convert_thai_datetime_lowercase():
+    df = pd.DataFrame({'date': ['25660416'], 'timestamp': ['22:00:00']})
+    result = convert_thai_datetime(df)
+    assert 'timestamp' in result.columns
+    assert result.loc[0, 'timestamp'] == pd.Timestamp('2023-04-16 22:00:00')
 import pandas as pd
 from nicegold_v5.utils import safe_calculate_net_change
 

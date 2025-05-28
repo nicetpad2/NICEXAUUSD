@@ -368,3 +368,5 @@
 - ปรับฟังก์ชัน run_clean_backtest ใช้ pandas รวม date+timestamp และแปลงปี พ.ศ. (Patch v11.9.23)
 ## 2025-10-02
 - ปรับปรุง patch v11.9.23 ให้รองรับ `date`/`timestamp` ตัวพิมพ์เล็กและป้องกัน NaT
+## 2025-10-03
+- ปรับ `convert_thai_datetime` รองรับคอลัมน์ตัวพิมพ์เล็กและเพิ่ม unit test (Patch v11.9.24)
