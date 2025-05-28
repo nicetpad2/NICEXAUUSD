@@ -91,6 +91,18 @@ def validate_indicator_inputs(df: pd.DataFrame, required_cols: list[str] | None 
     print(f"[Patch v11.9.9] ✅ ตรวจผ่าน: มีข้อมูลพร้อมใช้งาน {row_count} row")
 
 
+def sanitize_price_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """แปลงคอลัมน์ราคาทั้งหมดให้เป็น float และ log รายงาน"""
+    for col in ["close", "high", "low", "open", "volume"]:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+    missing = df[["close", "high", "low", "volume"]].isnull().sum()
+    print("[Patch v11.9.10] 🧼 Sanitize Columns:")
+    for col, count in missing.items():
+        print(f"   ▸ {col}: {count} NaN")
+    return df
+
+
 def generate_signals_v8_0(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
     """ใช้ logic sniper + TP1/TSL แบบล่าสุด (Patch v8.0)."""
     df = df.copy()

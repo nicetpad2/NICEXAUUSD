@@ -361,3 +361,5 @@
 - เพิ่ม diagnostic fallback ใน welcome() หาก RELAX_CONFIG_Q3 ยังล้มเหลว (Patch v11.9.7)
 ### 2025-09-18
 - เพิ่มฟังก์ชัน validate_indicator_inputs และเรียกใช้ใน main.py เพื่อตรวจสอบข้อมูลก่อนสร้างสัญญาณ (Patch v11.9.9)
+### 2025-09-19
+- เพิ่มฟังก์ชัน sanitize_price_columns แปลงคอลัมน์ราคาเป็น float และ log จำนวน NaN พร้อมใช้งานใน main.py (Patch v11.9.10)
