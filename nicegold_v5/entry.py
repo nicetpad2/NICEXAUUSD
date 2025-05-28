@@ -656,3 +656,69 @@ def simulate_trades_with_tp(df: pd.DataFrame, sl_distance: float = 5.0):
         trades.append(trade)
 
     return trades, logs
+
+
+def generate_signals_v12_0(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
+    """[Patch v12.0] Multi-pattern signal generator with auto TP calculation."""
+    df = df.copy()
+    df = sanitize_price_columns(df)
+    validate_indicator_inputs(df)
+
+    df["ema_15"] = df["close"].ewm(span=15).mean()
+    df["ema_50"] = df["close"].ewm(span=50).mean()
+    df["atr"] = (df["high"] - df["low"]).rolling(14).mean()
+    df["gain_z"] = (df["close"].diff() - df["close"].diff().rolling(20).mean()) / (
+        df["close"].diff().rolling(20).std() + 1e-9
+    )
+    df["volume_ma"] = df["volume"].rolling(20).mean()
+    df["rsi"] = 100 - (100 / (1 + (
+        df["close"].diff().clip(lower=0).rolling(14).mean() /
+        (-df["close"].diff().clip(upper=0).rolling(14).mean() + 1e-9)
+    )))
+
+    hour = df["timestamp"].dt.hour
+    df["session"] = np.where(hour < 8, "Asia", np.where(hour < 15, "London", "NY"))
+
+    signals: list[tuple[int, str]] = []
+    for i, row in df.iterrows():
+        signal = None
+        ema_fast = row.get("ema_15", 0)
+        ema_slow = row.get("ema_50", 0)
+        gain_z = row.get("gain_z", 0)
+        rsi = row.get("rsi", 50)
+
+        if rsi < 30 and row.get("pattern") == "inside_bar":
+            signal = "RSI_InsideBar"
+        elif row.get("pattern") == "qm":
+            signal = "QM"
+        elif row.get("pattern") == "fractal_v":
+            signal = "FractalV"
+        elif gain_z > 0.3 and ema_fast > ema_slow:
+            signal = "MomentumBreak"
+
+        if signal and session_filter(row):
+            signals.append((i, signal))
+
+    df["entry_signal"] = None
+    for idx, sig in signals:
+        df.at[idx, "entry_signal"] = sig
+
+    df["tp1_price"] = np.nan
+    df["tp2_price"] = np.nan
+    df["sl_price"] = np.nan
+
+    for i, row in df.iterrows():
+        if pd.notnull(row["entry_signal"]):
+            direction = "buy" if row["gain_z"] > 0 else "sell"
+            sl_dist = row["atr"]
+            tp1, tp2 = apply_tp_logic(row["close"], direction, 1.5, 3.0, sl_dist)
+            sl = row["close"] - sl_dist if direction == "buy" else row["close"] + sl_dist
+
+            df.at[i, "tp1_price"] = tp1
+            df.at[i, "tp2_price"] = tp2
+            df.at[i, "sl_price"] = sl
+
+    print("[Patch v12.0] ✅ Signals Generated with Multi-Pattern Strategy Layer")
+    coverage = df["entry_signal"].notnull().mean() * 100
+    print(f"[Patch v12.0] 📊 Entry Signal Coverage: {coverage:.2f}%")
+    return df

@@ -190,6 +190,15 @@ def test_generate_signals_v11_scalper_m1():
     assert 'tp_rr_ratio' in out.columns
 
 
+def test_generate_signals_v12_0(monkeypatch):
+    from nicegold_v5.entry import generate_signals_v12_0
+    monkeypatch.setattr('nicegold_v5.entry.validate_indicator_inputs', lambda df, required_cols=None, min_rows=500: None)
+    df = sample_df().assign(pattern='inside_bar')
+    out = generate_signals_v12_0(df)
+    assert 'entry_signal' in out.columns
+    assert 'tp1_price' in out.columns
+
+
 def test_auto_entry_config():
     df = sample_df()
     df = df.assign(ema_fast=1.0, gain_z=0.0, atr=1.0)
