@@ -275,16 +275,18 @@ def convert_thai_datetime(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def parse_timestamp_safe(series: pd.Series, fmt: str) -> pd.Series:
-    """Parse timestamp with a fallback when the strict format fails."""
-    ts = pd.to_datetime(series, format=fmt, errors="coerce")
-    success_ratio = ts.notna().mean()
-    if success_ratio < 0.5:
-        print(
-            f"[Patch v11.9.19] ⚠️ parsed only {success_ratio:.0%} with format {fmt} – retry without format"
-        )
-        ts = pd.to_datetime(series, errors="coerce")
-    return ts
+def parse_timestamp_safe(series: pd.Series, format: str = "%Y-%m-%d %H:%M:%S") -> pd.Series:
+    """Parse Series to datetime safely with logging."""
+
+    print("[Patch v11.9.20] 🧠 เริ่ม parse_timestamp_safe()")
+    if not pd.api.types.is_string_dtype(series):
+        series = series.astype(str)
+    parsed = pd.to_datetime(series, format=format, errors="coerce")
+    fail_count = parsed.isna().sum()
+    print(
+        f"[Patch v11.9.20] ✅ parse_timestamp_safe() เสร็จสิ้น – แปลงได้ {len(parsed) - fail_count} row | NaT {fail_count} row"
+    )
+    return parsed
 
 
 def simulate_tp_exit(
