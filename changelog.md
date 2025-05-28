@@ -268,3 +268,5 @@
 ## 2025-08-18
 - ติดตั้งระบบ Break-even และ Trailing Stop-Loss ใน `clean_exit_backtest.py` (Patch F.1)
 
+## 2025-08-19
+- เพิ่มโมดูล QA Guard ตรวจจับ Overfitting, Noise Exit และ Data Leakage พร้อมระบบ Drift Detection (Patch G)
