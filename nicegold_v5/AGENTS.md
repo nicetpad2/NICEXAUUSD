@@ -341,3 +341,5 @@
 - ปรับ welcome ให้ตรวจสอบคอลัมน์และสร้างสัญญาณอัตโนมัติ พร้อม progress bar และ RAM optimization (Patch v11.7)
 ### 2025-09-09
 - เพิ่ม fallback กลยุทธ์ RELAX_CONFIG_Q3 ใน main.py เมื่อไม่มีสัญญาณ (Patch v11.8)
+### 2025-09-10
+- แก้คำเตือน timestamp และ fallback ใน welcome() (Patch v11.9)

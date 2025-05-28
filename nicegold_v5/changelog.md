@@ -317,3 +317,5 @@
 - ปรับ welcome() ให้ตรวจสอบ timestamp, entry_signal, entry_time และสร้างสัญญาณอัตโนมัติ (Patch v11.7)
 ## 2025-09-09
 - เพิ่ม RELAX_CONFIG_Q3 และ fallback ใน main.py หากสัญญาณถูกบล็อกทั้งหมด (Patch v11.8)
+## 2025-09-10
+- แก้คำเตือน fallback datetime ใน welcome() และเพิ่มข้อความแจ้งเตือนใหม่ (Patch v11.9)

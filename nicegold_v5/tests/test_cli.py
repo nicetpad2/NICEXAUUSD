@@ -87,5 +87,5 @@ def test_autorun_relax_fallback(monkeypatch, capsys, tmp_path):
 
     main.welcome()
     output = capsys.readouterr().out
-    assert 'fallback to relaxed strategy' in output
+    assert 'fallback relaxed config' in output
 
