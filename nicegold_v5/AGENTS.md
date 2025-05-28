@@ -357,3 +357,5 @@
 - เพิ่มตรวจสอบความยาว reason_string และ throw ValueError หากไม่ตรงกับ df (Patch v11.9.5)
 ### 2025-09-16
 - แก้บั๊ก pandas apply คืนค่า DataFrame เมื่อไม่มีแถว ทำให้ assign entry_blocked_reason ล้มเหลว (Patch v11.9.6)
+### 2025-09-17
+- เพิ่ม diagnostic fallback ใน welcome() หาก RELAX_CONFIG_Q3 ยังล้มเหลว (Patch v11.9.7)
