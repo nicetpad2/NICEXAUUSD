@@ -303,3 +303,5 @@
 ## 2025-09-02
 - เพิ่มฟังก์ชัน convert_thai_datetime แปลงวันที่ พ.ศ. และเวลาเป็น timestamp (Patch I.1)
 
+## 2025-09-03
+- เพิ่ม simulate_tp_exit สำหรับตรวจ TP1/TP2 ในหน้าต่างเวลา (Patch J)
