@@ -988,6 +988,8 @@ def test_simulate_trades_with_tp():
         {
             'timestamp': pd.Timestamp('2025-01-01 00:00:00'),
             'close': 100.0,
+            'high': 120.0,
+            'low': 96.0,
             'signal': 'long',
             'session': 'London',
             'rsi': 25,
@@ -1001,6 +1003,8 @@ def test_simulate_trades_with_tp():
     trade = trades[0]
     assert trade['tp1_price'] > trade['entry_price']
     assert trade['tp2_price'] > trade['tp1_price']
+    assert trade['tp2_price'] == 115.0
+    assert trade['exit_reason'] == 'tp2'
 
 
 def test_parse_timestamp_safe_logs(capsys):

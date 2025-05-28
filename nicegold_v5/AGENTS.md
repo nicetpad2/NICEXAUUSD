@@ -406,3 +406,5 @@
 - ปรับ run_clean_backtest ตรวจสอบและสร้าง entry_time หากขาด พร้อมบล็อกเมื่อไม่มีสัญญาณ และ export QA log (Patch v12.0.3)
 ### 2025-10-08
 - แก้ welcome() สร้าง entry_time อัตโนมัติจาก timestamp ป้องกัน KeyError (Patch CLI)
+### 2025-10-09
+- ปรับ simulate_trades_with_tp ให้คำนวณ RR2 ตาม session และตรวจราคาในหน้าต่าง 60 นาที

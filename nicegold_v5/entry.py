@@ -629,7 +629,10 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
 
 
 def simulate_trades_with_tp(df: pd.DataFrame, sl_distance: float = 5.0):
-    """Simple trade simulator with TP1/TP2 and logging"""
+    """Simple trade simulator with TP1/TP2 and 60-min exit window"""
+    df = df.copy()
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
+
     logs: list[dict] = []
     trades: list[dict] = []
 
@@ -637,20 +640,63 @@ def simulate_trades_with_tp(df: pd.DataFrame, sl_distance: float = 5.0):
         if not session_filter(row):
             continue
 
+        entry_time = row["timestamp"]
+        exit_window = entry_time + pd.Timedelta(minutes=60)
+        window = df[(df["timestamp"] >= entry_time) & (df["timestamp"] <= exit_window)]
+
         entry_price = row["close"]
-        direction = "buy" if row.get("signal") == "long" else "sell"
-        tp1_price, tp2_price = apply_tp_logic(entry_price, direction, sl_distance=sl_distance)
+        direction = 1 if row.get("signal") == "long" else -1
+        sl = entry_price - sl_distance if direction == 1 else entry_price + sl_distance
+
+        # Dynamic RR2 based on session
+        session = row.get("session")
+        rr2 = 2.5 if session == "Asia" else 3.0 if session == "London" else 3.5
+        tp1_price = entry_price + 1.5 * sl_distance * direction
+        tp2_price = entry_price + rr2 * abs(entry_price - sl) if direction == 1 else entry_price - rr2 * abs(entry_price - sl)
+
+        exit_price = tp1_price
+        exit_reason = "tp1"
+
+        for _, bar in window.iterrows():
+            high = bar.get("high", bar["close"])
+            low = bar.get("low", bar["close"])
+            if direction == 1:
+                if low <= sl:
+                    exit_price = sl
+                    exit_reason = "sl"
+                    break
+                if high >= tp2_price:
+                    exit_price = tp2_price
+                    exit_reason = "tp2"
+                    break
+                if high >= tp1_price:
+                    exit_price = tp1_price
+                    exit_reason = "tp1"
+                    break
+            else:
+                if high >= sl:
+                    exit_price = sl
+                    exit_reason = "sl"
+                    break
+                if low <= tp2_price:
+                    exit_price = tp2_price
+                    exit_reason = "tp2"
+                    break
+                if low <= tp1_price:
+                    exit_price = tp1_price
+                    exit_reason = "tp1"
+                    break
 
         trade = {
-            "timestamp": row["timestamp"],
+            "timestamp": entry_time,
             "entry_price": entry_price,
             "tp1_price": tp1_price,
             "tp2_price": tp2_price,
-            "sl_price": entry_price - sl_distance if direction == "buy" else entry_price + sl_distance,
-            "exit_price": tp1_price,
-            "exit_reason": "tp1",
+            "sl_price": sl,
+            "exit_price": exit_price,
+            "exit_reason": exit_reason,
             "entry_signal": generate_entry_signal(row, logs),
-            "session": row.get("session"),
+            "session": session,
             "risk_mode": row.get("risk_mode", "normal"),
         }
         trades.append(trade)
