@@ -372,3 +372,5 @@
 - ปรับ `convert_thai_datetime` รองรับคอลัมน์ตัวพิมพ์เล็กและเพิ่ม unit test (Patch v11.9.24)
 ## 2025-10-04
 - เพิ่ม `generate_signals_v12_0` รวม InsideBar + QM + Fractal + RSI และคำนวณ TP1/TP2
+## 2025-10-05
+- เปลี่ยน welcome() ให้ใช้ generate_signals_v12_0 และปรับเส้นทางบันทึกไฟล์ TP1/TP2 เป็น v12 (Patch v12.0.1)
