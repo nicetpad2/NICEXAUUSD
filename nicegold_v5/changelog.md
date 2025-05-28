@@ -357,3 +357,5 @@
 - เพิ่ม convert_thai_datetime รองรับ Date+Timestamp แบบ พ.ศ. และเรียกใช้ใน main.py (Patch v11.9.18)
 ## 2025-09-27
 - เพิ่มฟังก์ชัน `parse_timestamp_safe` เพื่อแปลง timestamp อย่างยืดหยุ่นและ fallback หากรูปแบบไม่ตรง พร้อมปรับ main.py ใช้ฟังก์ชันนี้ (Patch v11.9.19)
+## 2025-09-28
+- ปรับ `load_csv_safe` ให้ค้นหาไฟล์ในไดเรกทอรี `nicegold_v5` เมื่อ path หลักไม่พบ และรองรับตัวแปรสภาพแวดล้อม `M1_PATH`/`M15_PATH` (Patch v11.9.20)
