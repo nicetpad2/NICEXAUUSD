@@ -106,3 +106,33 @@ def test_tp1_tp2_menu(monkeypatch, capsys, tmp_path):
     output = capsys.readouterr().out
     assert "QA Summary (TP1/TP2)" in output
     assert "TP2 Triggered" in output
+
+
+def test_tp1_tp2_menu_string_timestamp(monkeypatch, capsys, tmp_path):
+    inputs = iter(['6'])
+    monkeypatch.setattr(builtins, "input", lambda prompt='': next(inputs))
+    main = importlib.import_module('main')
+    monkeypatch.setattr(main, "TRADE_DIR", str(tmp_path))
+    monkeypatch.setattr(main, "load_csv_safe", lambda path: pd.DataFrame({
+        'timestamp': ['2024-01-01 00:00:00', '2024-01-01 01:00:00'],
+        'close': [100, 101],
+        'signal': ['long', 'long'],
+        'session': ['London', 'London'],
+        'rsi': [25, 30],
+        'pattern': ['inside_bar', 'inside_bar']
+    }))
+
+    def fake_simulate(df):
+        assert pd.api.types.is_datetime64_any_dtype(df['timestamp'])
+        return ([{
+            'entry_price': 100,
+            'tp1_price': 105,
+            'tp2_price': 110,
+            'exit_price': 110,
+            'exit_reason': 'tp2'
+        }], [])
+
+    monkeypatch.setattr('nicegold_v5.entry.simulate_trades_with_tp', fake_simulate)
+    main.welcome()
+    output = capsys.readouterr().out
+    assert "TP2 Triggered" in output

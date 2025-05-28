@@ -307,3 +307,5 @@
 - เพิ่ม simulate_tp_exit สำหรับตรวจ TP1/TP2 ในหน้าต่างเวลา (Patch J)
 ## 2025-09-04
 - ย้าย simulate_tp_exit ไป utils.py และลบไฟล์ patch_j_tp1tp2_simulation (Patch J.1)
+## 2025-09-05
+- ระบุรูปแบบ DATETIME_FORMAT ใน main.py เพื่อป้องกันคำเตือนการแปลงเวลา และเพิ่ม unit test ตรวจสอบ

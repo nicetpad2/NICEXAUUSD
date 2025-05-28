@@ -89,6 +89,7 @@ def run_csv_integrity_check():
 TRADE_DIR = "/content/drive/MyDrive/NICEGOLD/logs"
 M1_PATH = "/content/drive/MyDrive/NICEGOLD/XAUUSD_M1.csv"
 M15_PATH = "/content/drive/MyDrive/NICEGOLD/XAUUSD_M15.csv"
+DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 os.makedirs(TRADE_DIR, exist_ok=True)
 
 # [Patch C.2] Enable full RAM mode
@@ -162,7 +163,7 @@ def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
     df = generate_signals(df, config=SNIPER_CONFIG_Q3_TUNED)
 
     # Ensure timestamps are valid and use them for entry_time
-    df["timestamp"] = pd.to_datetime(df["timestamp"])
+    df["timestamp"] = pd.to_datetime(df["timestamp"], format=DATETIME_FORMAT)
     df["entry_time"] = df["timestamp"]
     df["signal_id"] = df["timestamp"].astype(str)
 
@@ -348,7 +349,9 @@ def welcome():
         show_progress_bar("🧪 TP1/TP2 Backtest Mode", steps=3)
         print("\n⚙️ เริ่มรัน simulate_trades_with_tp() จาก UltraFix Patch...")
         df = load_csv_safe(M1_PATH)
-        df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
+        df["timestamp"] = pd.to_datetime(
+            df["timestamp"], format=DATETIME_FORMAT, errors="coerce"
+        )
         df = df.sort_values("timestamp")
 
         from nicegold_v5.entry import simulate_trades_with_tp  # ← Patch v11.2 logic
@@ -384,7 +387,9 @@ if __name__ == "__main__":
         print("📥 Loading CSV...")
         df = load_csv_safe(M1_PATH)
         df.dropna(subset=["timestamp"], inplace=True)
-        df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
+        df["timestamp"] = pd.to_datetime(
+            df["timestamp"], format=DATETIME_FORMAT, errors="coerce"
+        )
         df = df.dropna(subset=["timestamp"])
         run_clean_backtest(df)
         print("✅ Done: Clean Backtest Completed")
