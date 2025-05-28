@@ -10,6 +10,7 @@ from nicegold_v5.patch_phase3_qa_guard import (
     analyze_drawdown,
 )
 from nicegold_v5.patch_g4_fold_export_drift import export_fold_qa, detect_fold_drift
+import nicegold_v5.patch_g5_auto_qa as patch_g5_auto_qa
 from nicegold_v5.patch_g5_auto_qa import auto_qa_after_backtest
 
 
@@ -83,9 +84,11 @@ def test_detect_fold_drift():
 def test_auto_qa_after_backtest(tmp_path, monkeypatch):
     trades = sample_trades()
     equity = pd.DataFrame({'equity': [100, 101, 99]})
-    monkeypatch.chdir(tmp_path)
+    qa_path = tmp_path / 'qa'
+    monkeypatch.setattr(patch_g5_auto_qa, 'QA_BASE_PATH', str(qa_path))
+    os.makedirs(qa_path, exist_ok=True)
     auto_qa_after_backtest(trades, equity, label='X')
-    csv_files = list((tmp_path / 'logs' / 'qa').glob('fold_qa_x_*.csv'))
-    json_files = list((tmp_path / 'logs' / 'qa').glob('fold_qa_x_*.json'))
+    csv_files = list(qa_path.glob('fold_qa_x_*.csv'))
+    json_files = list(qa_path.glob('fold_qa_x_*.json'))
     assert len(csv_files) == 1
     assert len(json_files) == 1

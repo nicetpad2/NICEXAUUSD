@@ -283,3 +283,5 @@
 - ปรับ unit test ให้นำเข้าเมธอดจาก backtester
 ## 2025-08-24
 - ปรับ auto_qa_after_backtest เพิ่ม timestamp ในชื่อไฟล์ป้องกันถูกเขียนทับ (Patch G.7)
+## 2025-08-25
+- Fix QA Export Path ใช้ absolute path `/content/drive/MyDrive/NICEGOLD/logs/qa` (Patch G.8)
