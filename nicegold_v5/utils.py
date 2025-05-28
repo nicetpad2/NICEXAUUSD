@@ -249,29 +249,47 @@ def safe_calculate_net_change(trade_df: pd.DataFrame) -> float:
 
 
 def convert_thai_datetime(df: pd.DataFrame) -> pd.DataFrame:
-    """Convert Thai Date+Timestamp columns in Buddhist Era to a timestamp."""
+    """Convert Thai Date+Timestamp columns in Buddhist Era to ``timestamp``.
 
-    if {"Date", "Timestamp"}.issubset(df.columns):
+    รองรับคอลัมน์ทั้งตัวพิมพ์ใหญ่และพิมพ์เล็ก (Patch v11.9.23).
+    """
+
+    cols_upper = {"Date", "Timestamp"}
+    cols_lower = {"date", "timestamp"}
+
+    if cols_upper.issubset(df.columns):
         print("[Patch v11.9.18] 📅 ตรวจพบ Date + Timestamp แบบ พ.ศ. – กำลังแปลง...")
-        try:
-            df["year"] = df["Date"].astype(str).str[:4].astype(int) - 543
-            df["month"] = df["Date"].astype(str).str[4:6]
-            df["day"] = df["Date"].astype(str).str[6:8]
-            df["datetime_str"] = (
-                df["year"].astype(str)
-                + "-"
-                + df["month"]
-                + "-"
-                + df["day"]
-                + " "
-                + df["Timestamp"]
-            )
-            df["timestamp"] = pd.to_datetime(
-                df["datetime_str"], format="%Y-%m-%d %H:%M:%S", errors="coerce"
-            )
-            print("[Patch v11.9.18] ✅ แปลง Date พ.ศ. → timestamp สำเร็จ")
-        except Exception as e:
-            print(f"[Patch v11.9.18] ❌ แปลง timestamp ล้มเหลว: {e}")
+        date_col = "Date"
+        ts_col = "Timestamp"
+    elif cols_lower.issubset(df.columns):
+        print(
+            "[Patch v11.9.23] 📅 ตรวจพบ date/timestamp แบบ พ.ศ. (lowercase) – กำลังแปลง..."
+        )
+        date_col = "date"
+        ts_col = "timestamp"
+    else:
+        return df
+
+    try:
+        df["year"] = df[date_col].astype(str).str[:4].astype(int) - 543
+        df["month"] = df[date_col].astype(str).str[4:6]
+        df["day"] = df[date_col].astype(str).str[6:8]
+        df["datetime_str"] = (
+            df["year"].astype(str)
+            + "-"
+            + df["month"]
+            + "-"
+            + df["day"]
+            + " "
+            + df[ts_col].astype(str)
+        )
+        df["timestamp"] = pd.to_datetime(
+            df["datetime_str"], format="%Y-%m-%d %H:%M:%S", errors="coerce"
+        )
+        print("[Patch v11.9.18] ✅ แปลง Date พ.ศ. → timestamp สำเร็จ")
+    except Exception as e:
+        print(f"[Patch v11.9.18] ❌ แปลง timestamp ล้มเหลว: {e}")
+
     return df
 
 

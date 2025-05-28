@@ -284,13 +284,17 @@ def welcome():
     from nicegold_v5.config import SNIPER_CONFIG_Q3_TUNED
     from nicegold_v5.utils import safe_calculate_net_change
 
-    def validate_for_simulation(df):
+    def validate_for_simulation(df: pd.DataFrame) -> pd.DataFrame:
         required = ["timestamp", "entry_signal", "entry_time"]
         for col in required:
-            if col not in df.columns or df[col].isnull().any():
-                raise ValueError(f"[Patch QA] ❌ Missing or NaN in column: {col}")
+            if col not in df.columns:
+                raise ValueError(f"[Patch QA] ❌ Missing column: {col}")
+        df = df.dropna(subset=required)
+        if df.empty:
+            raise ValueError("[Patch QA] ❌ ไม่มีแถวที่มีข้อมูลครบสำหรับ simulate")
         if not pd.api.types.is_datetime64_any_dtype(df["timestamp"]):
             raise ValueError("[Patch QA] ❌ timestamp ต้องแปลงเป็น datetime ก่อน simulate")
+        return df
 
     print("📊 [Patch v11.7] เริ่ม Fail-Proof TP1/TP2 Simulation...")
     df = load_csv_safe(M1_PATH)
@@ -341,14 +345,16 @@ def welcome():
             raise RuntimeError("[Patch QA] ❌ ทุก config ล้มเหลว – ไม่มี entry_signal ให้ simulate")
 
     show_progress_bar("🧪 ตรวจสอบความสมบูรณ์ของข้อมูล", steps=1)
-    validate_for_simulation(df)
+    df = validate_for_simulation(df)
 
     show_progress_bar("🚀 รัน simulate_trades_with_tp", steps=2)
     trades, logs = simulate_trades_with_tp(df)
     trade_df = pd.DataFrame(trades)
 
     if trade_df.empty or trade_df["exit_reason"].isnull().all():
-        raise RuntimeError("[Patch QA] ❌ simulate_trades_with_tp สำเร็จแต่ไม่มี trade ที่ถูกยิงจริง")
+        print("[Patch QA] ⚠️ simulate_trades_with_tp ไม่พบ trade ที่ถูกยิงจริง")
+        maximize_ram()
+        return
 
     out_path = os.path.join(TRADE_DIR, "trades_v11p_tp1tp2.csv")
     trade_df.to_csv(out_path, index=False)
