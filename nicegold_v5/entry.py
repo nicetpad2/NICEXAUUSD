@@ -559,3 +559,32 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
     return generate_signals_v8_0(df, config=config)  # ใช้ sniper confirm zone, risk score, delay, TP boost เท่านั้น
 
 
+
+def simulate_trades_with_tp(df: pd.DataFrame, sl_distance: float = 5.0):
+    """Simple trade simulator with TP1/TP2 and logging"""
+    logs: list[dict] = []
+    trades: list[dict] = []
+
+    for _, row in df.iterrows():
+        if not session_filter(row):
+            continue
+
+        entry_price = row["close"]
+        direction = "buy" if row.get("signal") == "long" else "sell"
+        tp1_price, tp2_price = apply_tp_logic(entry_price, direction, sl_distance=sl_distance)
+
+        trade = {
+            "timestamp": row["timestamp"],
+            "entry_price": entry_price,
+            "tp1_price": tp1_price,
+            "tp2_price": tp2_price,
+            "sl_price": entry_price - sl_distance if direction == "buy" else entry_price + sl_distance,
+            "exit_price": None,
+            "exit_reason": None,
+            "entry_signal": generate_entry_signal(row, logs),
+            "session": row.get("session"),
+            "risk_mode": row.get("risk_mode", "normal"),
+        }
+        trades.append(trade)
+
+    return trades, logs

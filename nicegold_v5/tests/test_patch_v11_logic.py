@@ -37,3 +37,25 @@ def test_session_filter():
 def test_trade_log_fields():
     required = {'tp1_price', 'tp2_price', 'mfe', 'duration_min'}
     assert required.issubset(set(trade_log_fields))
+
+
+def test_simulate_trades_with_tp():
+    from nicegold_v5.entry import simulate_trades_with_tp
+
+    df = pd.DataFrame([
+        {
+            'timestamp': pd.Timestamp('2025-01-01 00:00:00'),
+            'close': 100.0,
+            'signal': 'long',
+            'session': 'London',
+            'rsi': 25,
+            'pattern': 'inside_bar',
+        }
+    ])
+
+    trades, logs = simulate_trades_with_tp(df)
+    assert len(trades) == 1
+    assert len(logs) == 1
+    trade = trades[0]
+    assert trade['tp1_price'] > trade['entry_price']
+    assert trade['tp2_price'] > trade['tp1_price']
