@@ -333,3 +333,5 @@
 - รวม simulate_tp_exit เข้า utils.py และลบไฟล์ patch_j_tp1tp2_simulation (Patch J.1)
 ### 2025-09-05
 - แก้คำเตือน pandas ใน main.py โดยระบุ DATETIME_FORMAT และเพิ่มชุดทดสอบตรวจสอบการแปลง timestamp
+### 2025-09-06
+- ลบไฟล์ m.ainmain.py และตัวอย่าง XAUUSD_M1.csv ที่ไม่ได้ใช้
