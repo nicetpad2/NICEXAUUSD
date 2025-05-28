@@ -16,6 +16,38 @@ from nicegold_v5.exit import should_exit
 from tqdm import tqdm
 import time
 
+
+def calculate_mfe(
+    entry_time: pd.Timestamp,
+    exit_time: pd.Timestamp,
+    df: pd.DataFrame,
+    entry_price: float,
+    direction: str,
+) -> float:
+    """คำนวณ Maximum Favorable Excursion (MFE)"""
+    window = df[(df["timestamp"] >= entry_time) & (df["timestamp"] <= exit_time)]
+    if window.empty:
+        return 0.0
+    if direction == "buy":
+        mfe = window["high"].max() - entry_price
+    else:
+        mfe = entry_price - window["low"].min()
+    return round(float(mfe), 4)
+
+
+def calculate_duration(entry_time: pd.Timestamp, exit_time: pd.Timestamp) -> float:
+    """คำนวณเวลาถือครอง (นาที)"""
+    delta = (exit_time - entry_time).total_seconds() / 60.0
+    return round(float(delta), 2)
+
+
+def calculate_planned_risk(
+    entry_price: float, sl_price: float, lot: float, point_value: float = 0.1
+) -> float:
+    """คำนวณความเสี่ยงที่วางแผนไว้เป็น USD"""
+    risk_per_lot = abs(entry_price - sl_price) * point_value
+    return round(float(risk_per_lot * (lot / 0.01)), 2)
+
 # [Patch C.2] Enable full RAM mode
 MAX_RAM_MODE = True
 PNL_MULTIPLIER = 100  # [Patch QA-P12] Boost PnL for QA scenarios
@@ -89,7 +121,7 @@ def run_backtest(df: pd.DataFrame):
                 spread_cost = partial_lot * 0.2
                 slippage_cost = 0.1 * partial_lot  # [Patch QA-P1] ใช้ค่า Slippage คงที่เพื่อการทดสอบ QA ที่ทำซ้ำได้
                 capital += partial_pnl - commission - spread_cost - slippage_cost
-                trades.append({
+                trade = {
                     "entry_time": open_trade["entry_time"],
                     "exit_time": ts,
                     "entry": open_trade["entry"],
@@ -103,8 +135,12 @@ def run_backtest(df: pd.DataFrame):
                     "exit_reason": "TP1",
                     "session": session,
                     "risk_mode": "recovery" if recovery_mode else "normal",
-                    "duration_min": (ts - open_trade["entry_time"]).total_seconds() / 60,
-                })
+                }
+                sl_price = open_trade["entry"] - sl_dist if direction == "buy" else open_trade["entry"] + sl_dist
+                trade["duration_min"] = calculate_duration(open_trade["entry_time"], ts)
+                trade["mfe"] = calculate_mfe(open_trade["entry_time"], ts, df, open_trade["entry"], direction)
+                trade["planned_risk"] = calculate_planned_risk(open_trade["entry"], sl_price, partial_lot)
+                trades.append(trade)
                 open_trade["tp1_hit"] = True
                 open_trade["lot"] = open_trade["lot"] * 0.5
 
@@ -118,7 +154,7 @@ def run_backtest(df: pd.DataFrame):
                     spread_cost = open_trade["lot"] * 0.2
                     slippage_cost = 0.1 * open_trade["lot"]  # [Patch QA-P1] ใช้ค่า Slippage คงที่เพื่อการทดสอบ QA ที่ทำซ้ำได้
                     capital += pnl - commission - spread_cost - slippage_cost
-                    trades.append({
+                    trade = {
                         "entry_time": open_trade["entry_time"],
                         "exit_time": ts,
                         "entry": open_trade["entry"],
@@ -132,8 +168,12 @@ def run_backtest(df: pd.DataFrame):
                         "exit_reason": reason or "TP2",
                         "session": session,
                         "risk_mode": "recovery" if recovery_mode else "normal",
-                        "duration_min": (ts - open_trade["entry_time"]).total_seconds() / 60,
-                    })
+                    }
+                    sl_price = open_trade["entry"] - sl_dist if direction == "buy" else open_trade["entry"] + sl_dist
+                    trade["duration_min"] = calculate_duration(open_trade["entry_time"], ts)
+                    trade["mfe"] = calculate_mfe(open_trade["entry_time"], ts, df, open_trade["entry"], direction)
+                    trade["planned_risk"] = calculate_planned_risk(open_trade["entry"], sl_price, open_trade["lot"])
+                    trades.append(trade)
                     if (reason or "").startswith("SL"):
                         sl_streak += 1
                         recovery_mode = sl_streak >= RECOVERY_SL_TRIGGER
@@ -152,7 +192,7 @@ def run_backtest(df: pd.DataFrame):
                     spread_cost = open_trade["lot"] * 0.2
                     slippage_cost = 0.1 * open_trade["lot"]  # [Patch QA-P1] ใช้ค่า Slippage คงที่เพื่อการทดสอบ QA ที่ทำซ้ำได้
                     capital += pnl - commission - spread_cost - slippage_cost
-                    trades.append({
+                    trade = {
                         "entry_time": open_trade["entry_time"],
                         "exit_time": ts,
                         "entry": open_trade["entry"],
@@ -166,8 +206,12 @@ def run_backtest(df: pd.DataFrame):
                         "exit_reason": reason or "TP",
                         "session": session,
                         "risk_mode": "recovery" if recovery_mode else "normal",
-                        "duration_min": (ts - open_trade["entry_time"]).total_seconds() / 60,
-                    })
+                    }
+                    sl_price = open_trade["entry"] - sl_dist if direction == "buy" else open_trade["entry"] + sl_dist
+                    trade["duration_min"] = calculate_duration(open_trade["entry_time"], ts)
+                    trade["mfe"] = calculate_mfe(open_trade["entry_time"], ts, df, open_trade["entry"], direction)
+                    trade["planned_risk"] = calculate_planned_risk(open_trade["entry"], sl_price, open_trade["lot"])
+                    trades.append(trade)
                     if (reason or "").startswith("SL"):
                         sl_streak += 1
                         recovery_mode = sl_streak >= RECOVERY_SL_TRIGGER

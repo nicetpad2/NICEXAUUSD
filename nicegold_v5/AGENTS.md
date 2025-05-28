@@ -299,3 +299,9 @@
 - รวมฟังก์ชัน QA Guard เข้ากับ `main.py` และ export ผ่าน `__init__.py`
 ### 2025-08-21
 - ย้ายไฟล์ทั้งหมดมาอยู่ในไดเรกทอรี `nicegold_v5` ยกเว้น `main.py` และปรับเส้นทาง import ให้ทำงานปกติ
+### 2025-08-22
+- เพิ่ม patch_h_backtester_logging และฟังก์ชันคำนวณ duration/mfe/planned_risk
+- ปรับ run_backtest บันทึกข้อมูลใหม่และ QA Guard แปลง float (Patch H, G.6)
+### 2025-08-23
+- รวมฟังก์ชัน patch_h_backtester_logging เข้ากับ `backtester.py`
+- ลบไฟล์ patch แยกและปรับ unit test ให้ import จาก backtester
