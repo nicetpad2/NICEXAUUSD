@@ -72,7 +72,7 @@ def test_autorun_missing_entry_time(monkeypatch, tmp_path):
     monkeypatch.setattr(main, 'validate_indicator_inputs', lambda df: None)
     monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df, config=None: df)
     monkeypatch.setattr(main, 'generate_signals', lambda df: df)
-    with pytest.raises(KeyError):
+    with pytest.raises(RuntimeError):
         main.welcome()
 
 
