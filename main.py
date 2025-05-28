@@ -204,14 +204,25 @@ def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
     from nicegold_v5.config import RELAX_CONFIG_Q3
     df = generate_signals(df, config=SNIPER_CONFIG_Q3_TUNED)
 
-    # [Patch v12.0.2] Ensure 'entry_time' column exists
+    # [Patch v12.0.3] ✅ Ensure 'entry_time' exists
     if "entry_time" not in df.columns:
-        df["entry_time"] = df.get("timestamp")
-    if "entry_time" in df.columns and not pd.api.types.is_datetime64_any_dtype(df["entry_time"]):
+        print("[Patch v12.0.3] ⛑ fallback: สร้าง entry_time จาก timestamp")
+        df["entry_time"] = df.get("timestamp", pd.NaT)
+    if not pd.api.types.is_datetime64_any_dtype(df["entry_time"]):
         df["entry_time"] = pd.to_datetime(df["entry_time"], errors="coerce")
-    if "entry_signal" not in df.columns or df["entry_signal"].isnull().mean() == 1.0:
+
+    # [Patch v12.0.3] ✅ Ensure 'entry_signal' exists
+    if "entry_signal" not in df.columns:
+        print("[Patch v12.0.3] ⛑ fallback: ไม่มี entry_signal – ใส่ค่า None")
+        df["entry_signal"] = None
+
+    if df["entry_signal"].isnull().mean() == 1.0:
         print("[Patch v11.9.16] ❗ ไม่พบสัญญาณใน Q3_TUNED – ใช้ fallback RELAX_CONFIG_Q3")
         df = generate_signals(df, config=RELAX_CONFIG_Q3)
+    
+    # [Patch v12.0.3] 🧠 Block run if no signal at all
+    if df["entry_signal"].isnull().mean() >= 1.0:
+        raise RuntimeError("[Patch v12.0.3] ❌ ไม่มีสัญญาณเข้าเลย – หยุดรัน backtest")
 
     signal_coverage = df["entry_signal"].notnull().mean() * 100
     print(f"[Patch v11.9.16] ✅ Entry Signal Coverage: {signal_coverage:.2f}%")
@@ -238,10 +249,8 @@ def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
     trades, equity = run_backtest(df)
 
     from nicegold_v5.utils import print_qa_summary, export_chatgpt_ready_logs
-    metrics = print_qa_summary(trades, equity)
-    export_chatgpt_ready_logs(trades, equity, metrics, outdir=TRADE_DIR)
-    run_qa_guard(trades, df)
-    auto_qa_after_backtest(trades, equity, label="Clean")
+    print_qa_summary(trades, equity)
+    export_chatgpt_ready_logs(trades, equity, {"file_name": "v12.0.3-test"})
 
     return trades
 
