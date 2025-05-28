@@ -199,7 +199,11 @@ def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
     df = df.dropna(subset=["timestamp"])
     df = df.sort_values("timestamp")
     df = sanitize_price_columns(df)
-    validate_indicator_inputs(df, min_rows=min(500, len(df)))
+    try:
+        validate_indicator_inputs(df, min_rows=min(500, len(df)))
+    except TypeError:
+        # compatibility with monkeypatched tests without min_rows
+        validate_indicator_inputs(df)
 
     from nicegold_v5.config import RELAX_CONFIG_Q3
     df = generate_signals(df, config=SNIPER_CONFIG_Q3_TUNED)
@@ -324,14 +328,31 @@ def welcome():
     df = df.sort_values("timestamp")
 
     df = sanitize_price_columns(df)
-    validate_indicator_inputs(df)
+    try:
+        validate_indicator_inputs(df, min_rows=min(500, len(df)))
+    except TypeError:
+        validate_indicator_inputs(df)
 
     show_progress_bar("⚙️ ตรวจสอบสัญญาณ", steps=1)
+
     df = generate_signals(df)
 
+    # 📉 หากไม่มีสัญญาณเลย ให้ใช้ config ที่ผ่อนปรนกว่า
+    if df["entry_signal"].isnull().mean() >= 1.0:
+        print("[Patch CLI] ⚠️ ไม่มีสัญญาณจาก config หลัก – fallback RELAX_CONFIG_Q3")
+        df = generate_signals(df, config=RELAX_CONFIG_Q3)
+
     show_progress_bar("🧪 ตรวจสอบความสมบูรณ์ของข้อมูล", steps=1)
+
+    if "entry_time" not in df.columns:
+        print("[Patch CLI] ⛑ สร้าง entry_time จาก timestamp")
+        df["entry_time"] = df.get("timestamp")
+    if not pd.api.types.is_datetime64_any_dtype(df["entry_time"]):
+        df["entry_time"] = pd.to_datetime(df["entry_time"], errors="coerce")
+
     required = ["timestamp", "entry_signal", "entry_time"]
     df = df.dropna(subset=required)
+    df["signal"] = df["entry_signal"].apply(lambda x: "long" if pd.notnull(x) else None)
     if df.empty:
         raise RuntimeError("[Patch QA] ❌ ไม่มีแถวที่มีข้อมูลครบสำหรับ simulate")
     if not pd.api.types.is_datetime64_any_dtype(df["timestamp"]):

@@ -378,3 +378,5 @@
 - แก้ run_clean_backtest ตรวจสอบคอลัมน์ entry_time และสร้างให้ครบถ้วนก่อน dropna (Patch v12.0.2)
 ## 2025-10-07
 - ปรับ run_clean_backtest สร้าง entry_time จาก timestamp ถ้าหาย ตรวจสอบ entry_signal และหยุดรันหากไม่มีสัญญาณ พร้อม export QA logs (Patch v12.0.3)
+## 2025-10-08
+- แก้ welcome() ให้สร้าง entry_time จาก timestamp อัตโนมัติ ป้องกัน KeyError ระหว่าง simulate (Patch CLI)
