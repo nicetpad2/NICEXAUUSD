@@ -355,3 +355,5 @@
 - ปรับปรุงการ assign `entry_blocked_reason` โดยใช้คอลัมน์ชั่วคราว entry_reason_column เพื่อจัดการดัชนีอย่างปลอดภัย (Patch v11.9.4)
 ### 2025-09-15
 - เพิ่มตรวจสอบความยาว reason_string และ throw ValueError หากไม่ตรงกับ df (Patch v11.9.5)
+### 2025-09-16
+- แก้บั๊ก pandas apply คืนค่า DataFrame เมื่อไม่มีแถว ทำให้ assign entry_blocked_reason ล้มเหลว (Patch v11.9.6)

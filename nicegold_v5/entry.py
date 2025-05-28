@@ -220,7 +220,12 @@ def generate_signals_v8_0(df: pd.DataFrame, config: dict | None = None) -> pd.Da
 
     reason_series = [cond.map({True: name, False: ""}) for name, cond in conditions.items()]
     reason_df = pd.concat(reason_series, axis=1)
-    reason_string = reason_df.apply(lambda row: "|".join(filter(None, row)), axis=1)
+
+    # ✅ [Patch v11.9.6] ensure apply returns Series even when DataFrame empty
+    if reason_df.empty:
+        reason_string = pd.Series(dtype=object)
+    else:
+        reason_string = reason_df.apply(lambda row: "|".join(filter(None, row)), axis=1)
 
     # ✅ [Patch v11.9.5] Fix index assignment safely
     reason_string_safe = reason_string.reset_index(drop=True)
@@ -231,7 +236,7 @@ def generate_signals_v8_0(df: pd.DataFrame, config: dict | None = None) -> pd.Da
             f"[Patch QA] ❌ reason_string length mismatch: {len(reason_string_safe)} vs df: {len(entry_reason_column)}"
         )
 
-    entry_reason_column[:] = reason_string_safe.values
+    entry_reason_column.iloc[: len(reason_string_safe)] = reason_string_safe.values
     entry_reason_column.loc[df["entry_signal"].notnull()] = None
     df["entry_blocked_reason"] = entry_reason_column
     print(
