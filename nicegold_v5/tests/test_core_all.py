@@ -733,6 +733,18 @@ def test_validate_inputs_pass(capsys):
     df = pd.DataFrame({'close': range(5), 'high': range(5), 'low': range(5), 'volume': range(5)})
     validate_indicator_inputs(df, min_rows=5)
     assert '✅ ตรวจผ่าน' in capsys.readouterr().out
+
+
+def test_validate_inputs_inf_sanitization(capsys):
+    df = pd.DataFrame({
+        'close': [1, np.inf],
+        'high': [1, 2],
+        'low': [1, 2],
+        'volume': [1, 2],
+    })
+    validate_indicator_inputs(df, min_rows=1)
+    output = capsys.readouterr().out
+    assert '✅ ตรวจข้อมูลก่อนเข้า indicator' in output
 import pandas as pd
 from nicegold_v5.entry import sanitize_price_columns
 
