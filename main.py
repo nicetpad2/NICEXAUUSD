@@ -31,7 +31,7 @@ from nicegold_v5.config import (
 )
 from nicegold_v5.patch_phase3_qa_guard import run_qa_guard
 from nicegold_v5.patch_g5_auto_qa import auto_qa_after_backtest
-from patch_i_tp1tp2_fix import safe_calculate_net_change
+from nicegold_v5.utils import safe_calculate_net_change
 # User-provided custom instructions
 # *สนทนาภาษาไทยเท่านั้น
 
@@ -351,7 +351,7 @@ def welcome():
         df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
         df = df.sort_values("timestamp")
 
-        from patch_v11x import simulate_trades_with_tp  # ← Patch v11.2 logic
+        from nicegold_v5.entry import simulate_trades_with_tp  # ← Patch v11.2 logic
         trades, logs = simulate_trades_with_tp(df)
         trade_df = pd.DataFrame(trades)
 

@@ -95,7 +95,7 @@ def test_tp1_tp2_menu(monkeypatch, capsys, tmp_path):
         'rsi': [25, 30],
         'pattern': ['inside_bar', 'inside_bar']
     }))
-    monkeypatch.setattr('patch_v11x.simulate_trades_with_tp', lambda df: ([{
+    monkeypatch.setattr('nicegold_v5.entry.simulate_trades_with_tp', lambda df: ([{
         'entry_price': 100,
         'tp1_price': 105,
         'tp2_price': 110,

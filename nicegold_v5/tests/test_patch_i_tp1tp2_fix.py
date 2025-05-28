@@ -1,5 +1,5 @@
 import pandas as pd
-from patch_i_tp1tp2_fix import safe_calculate_net_change
+from nicegold_v5.utils import safe_calculate_net_change
 
 def test_safe_calculate_net_change():
     df = pd.DataFrame([

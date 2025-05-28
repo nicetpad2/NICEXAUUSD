@@ -21,6 +21,7 @@ from .utils import (
     print_qa_summary,
     export_chatgpt_ready_logs,
     create_summary_dict,
+    safe_calculate_net_change,
 )
 from .wfv import (
     run_walkforward_backtest,
