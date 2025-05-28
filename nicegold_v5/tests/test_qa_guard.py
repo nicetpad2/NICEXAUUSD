@@ -85,5 +85,7 @@ def test_auto_qa_after_backtest(tmp_path, monkeypatch):
     equity = pd.DataFrame({'equity': [100, 101, 99]})
     monkeypatch.chdir(tmp_path)
     auto_qa_after_backtest(trades, equity, label='X')
-    assert (tmp_path / 'logs' / 'qa' / 'fold_qa_x.csv').exists()
-    assert (tmp_path / 'logs' / 'qa' / 'fold_qa_x.json').exists()
+    csv_files = list((tmp_path / 'logs' / 'qa').glob('fold_qa_x_*.csv'))
+    json_files = list((tmp_path / 'logs' / 'qa').glob('fold_qa_x_*.json'))
+    assert len(csv_files) == 1
+    assert len(json_files) == 1

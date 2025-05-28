@@ -281,3 +281,5 @@
 ## 2025-08-23
 - รวมฟังก์ชัน patch_h_backtester_logging เข้ากับ backtester.py
 - ปรับ unit test ให้นำเข้าเมธอดจาก backtester
+## 2025-08-24
+- ปรับ auto_qa_after_backtest เพิ่ม timestamp ในชื่อไฟล์ป้องกันถูกเขียนทับ (Patch G.7)

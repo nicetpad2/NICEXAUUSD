@@ -305,3 +305,5 @@
 ### 2025-08-23
 - รวมฟังก์ชัน patch_h_backtester_logging เข้ากับ `backtester.py`
 - ลบไฟล์ patch แยกและปรับ unit test ให้ import จาก backtester
+### 2025-08-24
+- ปรับ auto_qa_after_backtest ให้เพิ่ม timestamp ในชื่อไฟล์เพื่อป้องกัน overwrite (Patch G.7)
