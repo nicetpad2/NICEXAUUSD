@@ -460,6 +460,40 @@ def test_run_clean_backtest(monkeypatch, tmp_path):
     assert not trades.empty
 
 
+def test_run_clean_backtest_thai_date(monkeypatch, tmp_path):
+    import importlib
+    main = importlib.import_module('main')
+
+    df = pd.DataFrame({
+        'Date': ['25660101', '25660101'],
+        'Timestamp': ['00:00:00', '00:01:00'],
+        'open': [1, 1],
+        'high': [1, 1],
+        'low': [1, 1],
+        'close': [1, 1],
+        'volume': [100, 100],
+    })
+
+    monkeypatch.setattr(main, 'TRADE_DIR', str(tmp_path))
+
+    def fake_backtest(d):
+        assert pd.api.types.is_datetime64_any_dtype(d['timestamp'])
+        assert d['timestamp'].iloc[0].year == 2023
+        return (
+            pd.DataFrame({'pnl': [1]}),
+            pd.DataFrame({'timestamp': [pd.Timestamp('2023-01-01')], 'equity': [100]})
+        )
+
+    monkeypatch.setattr('nicegold_v5.backtester.run_backtest', fake_backtest)
+    monkeypatch.setattr(main, 'generate_signals', lambda d, config=None: d.assign(entry_signal='buy'))
+    monkeypatch.setattr('nicegold_v5.utils.print_qa_summary', lambda *a, **k: {})
+    monkeypatch.setattr('nicegold_v5.utils.export_chatgpt_ready_logs', lambda *a, **k: None)
+
+    trades = main.run_clean_backtest(df)
+    assert isinstance(trades, pd.DataFrame)
+    assert not trades.empty
+
+
 def test_run_clean_backtest_fallback(monkeypatch, capsys, tmp_path):
     import importlib
     main = importlib.import_module('main')
