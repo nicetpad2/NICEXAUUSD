@@ -91,8 +91,8 @@ def run_csv_integrity_check():
     return True
 
 TRADE_DIR = "/content/drive/MyDrive/NICEGOLD/logs"
-M1_PATH = "/content/drive/MyDrive/NICEGOLD/XAUUSD_M1.csv"
-M15_PATH = "/content/drive/MyDrive/NICEGOLD/XAUUSD_M15.csv"
+M1_PATH = os.getenv("M1_PATH", "/content/drive/MyDrive/NICEGOLD/XAUUSD_M1.csv")
+M15_PATH = os.getenv("M15_PATH", "/content/drive/MyDrive/NICEGOLD/XAUUSD_M15.csv")
 DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 os.makedirs(TRADE_DIR, exist_ok=True)
 
@@ -148,6 +148,11 @@ def run_parallel_wfv(df: pd.DataFrame, features: list, label_col: str, n_folds: 
 
 
 def load_csv_safe(path, lowercase=True):
+    """Load CSV with fallback to local data directory."""
+    if not os.path.exists(path):
+        alt = os.path.join(os.path.dirname(__file__), "nicegold_v5", os.path.basename(path))
+        if os.path.exists(alt):
+            path = alt
     try:
         with tqdm(total=1, desc=f"📥 Loading {os.path.basename(path)}") as pbar:
             df = pd.read_csv(path, engine="python", on_bad_lines="skip")

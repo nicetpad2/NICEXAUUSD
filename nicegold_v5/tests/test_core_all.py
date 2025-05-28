@@ -942,3 +942,11 @@ def test_parse_timestamp_safe_fallback(capsys):
     result = parse_timestamp_safe(series, '%Y-%m-%d %H:%M:%S')
     assert result.notna().sum() == 2
     assert 'retry without format' in capsys.readouterr().out.lower()
+
+
+def test_load_csv_safe_fallback():
+    import importlib
+    main = importlib.import_module('main')
+    path = '/invalid/path/XAUUSD_M1.csv'
+    df = main.load_csv_safe(path)
+    assert not df.empty
