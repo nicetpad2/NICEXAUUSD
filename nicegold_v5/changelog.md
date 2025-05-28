@@ -376,3 +376,5 @@
 - เปลี่ยน welcome() ให้ใช้ generate_signals_v12_0 และปรับเส้นทางบันทึกไฟล์ TP1/TP2 เป็น v12 (Patch v12.0.1)
 ## 2025-10-06
 - แก้ run_clean_backtest ตรวจสอบคอลัมน์ entry_time และสร้างให้ครบถ้วนก่อน dropna (Patch v12.0.2)
+## 2025-10-07
+- ปรับ run_clean_backtest สร้าง entry_time จาก timestamp ถ้าหาย ตรวจสอบ entry_signal และหยุดรันหากไม่มีสัญญาณ พร้อม export QA logs (Patch v12.0.3)

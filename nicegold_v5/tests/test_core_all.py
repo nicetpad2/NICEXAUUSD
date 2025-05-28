@@ -578,6 +578,28 @@ def test_run_clean_backtest_fallback(monkeypatch, capsys, tmp_path):
     assert not trades.empty
 
 
+def test_run_clean_backtest_signal_guard(monkeypatch, tmp_path):
+    import importlib
+    main = importlib.import_module('main')
+
+    df = pd.DataFrame({
+        'timestamp': pd.date_range('2025-01-01', periods=2, freq='min'),
+        'open': [1, 1],
+        'high': [1, 1],
+        'low': [1, 1],
+        'close': [1, 1],
+        'volume': [100, 100],
+    })
+
+    monkeypatch.setattr(main, 'TRADE_DIR', str(tmp_path))
+    monkeypatch.setattr(main, 'generate_signals', lambda d, config=None: d.assign(entry_signal=[None]*len(d)))
+    monkeypatch.setattr('nicegold_v5.utils.print_qa_summary', lambda *a, **k: None)
+    monkeypatch.setattr('nicegold_v5.utils.export_chatgpt_ready_logs', lambda *a, **k: None)
+
+    with pytest.raises(RuntimeError):
+        main.run_clean_backtest(df)
+
+
 def test_strip_leakage_columns():
     import importlib
     module = importlib.import_module('nicegold_v5.backtester')
