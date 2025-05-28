@@ -172,22 +172,23 @@ def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
 
     from nicegold_v5.entry import sanitize_price_columns, validate_indicator_inputs
 
-    # ✅ [Patch v11.9.23] Fix Thai Buddhist date (พ.ศ.) + merge date+timestamp
+    # ✅ [Patch v11.9.23] รองรับ Date (พ.ศ.) + Timestamp รวม + Auto Fix Lowercase Columns
+    # - รองรับทั้งแบบ Date+Timestamp และ date+timestamp (lowercase)
+    # - แก้บั๊กแปลง timestamp fail (NaT ทุกแถว)
     if {"Date", "Timestamp"}.issubset(df.columns):
-        df = convert_thai_datetime(df)
+        df = convert_thai_datetime(df)  # สร้าง df["timestamp"] ที่ถูกต้องแล้ว
         df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
     elif {"date", "timestamp"}.issubset(df.columns):
+        # เผื่อกรณี lowercase
         df["date"] = df["date"].astype(str).str.zfill(8)
 
-        def _th2en(s: str) -> str:
+        def _th2en(s):
             y, m, d = int(s[:4]) - 543, s[4:6], s[6:8]
             return f"{y:04d}-{m}-{d}"
 
         df["date_gregorian"] = df["date"].apply(_th2en)
         df["timestamp_full"] = df["date_gregorian"] + " " + df["timestamp"].astype(str)
-        df["timestamp"] = pd.to_datetime(
-            df["timestamp_full"], format="%Y-%m-%d %H:%M:%S", errors="coerce"
-        )
+        df["timestamp"] = pd.to_datetime(df["timestamp_full"], format="%Y-%m-%d %H:%M:%S", errors="coerce")
     else:
         df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
     df = df.dropna(subset=["timestamp"])
