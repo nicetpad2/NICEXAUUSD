@@ -235,24 +235,52 @@ def welcome():
         return
 
     show_progress_bar("📡 เตรียมระบบ", steps=2)
-    # [Patch v11.6] Auto-run simulate_trades_with_tp on startup
-    print("🧪 [Patch] ตรวจสอบการทำงานของ TP1/TP2 Simulate Logic")
+
+    # [Patch v11.7] Fail-Proof TP1/TP2 Simulation with Full Validation & RAM Optimization
+    from nicegold_v5.entry import simulate_trades_with_tp, generate_signals
+    from nicegold_v5.config import SNIPER_CONFIG_Q3_TUNED
+    from nicegold_v5.utils import safe_calculate_net_change
+
+    def validate_for_simulation(df):
+        required = ["timestamp", "entry_signal", "entry_time"]
+        for col in required:
+            if col not in df.columns or df[col].isnull().any():
+                raise ValueError(f"[Patch QA] ❌ Missing or NaN in column: {col}")
+        if not pd.api.types.is_datetime64_any_dtype(df["timestamp"]):
+            raise ValueError("[Patch QA] ❌ timestamp ต้องแปลงเป็น datetime ก่อน simulate")
+
+    print("📊 [Patch v11.7] เริ่ม Fail-Proof TP1/TP2 Simulation...")
     df = load_csv_safe(M1_PATH)
-    df["timestamp"] = pd.to_datetime(df["timestamp"], format=DATETIME_FORMAT, errors="coerce")
+    show_progress_bar("🧼 แปลง timestamp", steps=1)
+    df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
+    df = df.dropna(subset=["timestamp"])
     df = df.sort_values("timestamp")
-    from nicegold_v5.entry import simulate_trades_with_tp
+
+    show_progress_bar("⚙️ ตรวจสอบสัญญาณ", steps=1)
+    if "entry_signal" not in df.columns:
+        print("[Patch] 🧠 Auto-generating signals using v11 config...")
+        df = generate_signals(df, config=SNIPER_CONFIG_Q3_TUNED)
+
+    show_progress_bar("🧪 ตรวจสอบความสมบูรณ์ของข้อมูล", steps=1)
+    validate_for_simulation(df)
+
+    show_progress_bar("🚀 รัน simulate_trades_with_tp", steps=2)
     trades, logs = simulate_trades_with_tp(df)
     trade_df = pd.DataFrame(trades)
+
+    if trade_df.empty or trade_df["exit_reason"].isnull().all():
+        raise RuntimeError("[Patch QA] ❌ simulate_trades_with_tp สำเร็จแต่ไม่มี trade ที่ถูกยิงจริง")
+
     out_path = os.path.join(TRADE_DIR, "trades_v11p_tp1tp2.csv")
     trade_df.to_csv(out_path, index=False)
     print(f"[Patch] ✅ บันทึกผล TP1/TP2 Trade log ที่: {out_path}")
 
-    tp1_hits = trade_df["exit_reason"].eq("tp1").sum() if "exit_reason" in trade_df.columns else 0
-    tp2_hits = trade_df["exit_reason"].eq("tp2").sum() if "exit_reason" in trade_df.columns else 0
-    sl_hits = trade_df["exit_reason"].eq("sl").sum() if "exit_reason" in trade_df.columns else 0
+    tp1_hits = trade_df["exit_reason"].eq("tp1").sum()
+    tp2_hits = trade_df["exit_reason"].eq("tp2").sum()
+    sl_hits = trade_df["exit_reason"].eq("sl").sum()
     total_pnl = safe_calculate_net_change(trade_df)
 
-    print("\n📊 [Patch] QA Summary (TP1/TP2):")
+    print("\n📊 [Patch QA] Summary (TP1/TP2):")
     print(f"   ▸ TP1 Triggered : {tp1_hits}")
     print(f"   ▸ TP2 Triggered : {tp2_hits}")
     print(f"   ▸ SL Count      : {sl_hits}")

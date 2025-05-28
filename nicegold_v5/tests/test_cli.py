@@ -1,5 +1,6 @@
 import importlib
 import pandas as pd
+import pytest
 
 
 def test_autorun_simulate(monkeypatch, capsys, tmp_path):
@@ -7,7 +8,8 @@ def test_autorun_simulate(monkeypatch, capsys, tmp_path):
     monkeypatch.setattr(main, "TRADE_DIR", str(tmp_path))
     monkeypatch.setattr(main, "load_csv_safe", lambda path: pd.DataFrame({
         'timestamp': pd.date_range('2024-01-01', periods=2, freq='h'),
-        'close': [100, 101]
+        'entry_signal': ['long', 'short'],
+        'entry_time': pd.date_range('2024-01-01', periods=2, freq='h')
     }))
     monkeypatch.setattr(
         'nicegold_v5.entry.simulate_trades_with_tp',
@@ -16,7 +18,7 @@ def test_autorun_simulate(monkeypatch, capsys, tmp_path):
     monkeypatch.setattr(main, 'safe_calculate_net_change', lambda df: 5.0)
     main.welcome()
     output = capsys.readouterr().out
-    assert 'QA Summary (TP1/TP2)' in output
+    assert 'Summary (TP1/TP2)' in output
     assert 'TP1 Triggered' in output
 
 
@@ -25,7 +27,8 @@ def test_autorun_string_timestamp(monkeypatch, capsys, tmp_path):
     monkeypatch.setattr(main, "TRADE_DIR", str(tmp_path))
     monkeypatch.setattr(main, "load_csv_safe", lambda path: pd.DataFrame({
         'timestamp': ['2024-01-01 00:00:00', '2024-01-01 01:00:00'],
-        'close': [100, 101]
+        'entry_signal': ['long', 'short'],
+        'entry_time': ['2024-01-01 00:00:00', '2024-01-01 01:00:00']
     }))
 
     def fake_simulate(df):
@@ -37,4 +40,17 @@ def test_autorun_string_timestamp(monkeypatch, capsys, tmp_path):
     main.welcome()
     output = capsys.readouterr().out
     assert 'TP2 Triggered' in output
+
+
+def test_autorun_missing_entry_time(monkeypatch, tmp_path):
+    main = importlib.import_module('main')
+    monkeypatch.setattr(main, "TRADE_DIR", str(tmp_path))
+    monkeypatch.setattr(main, "load_csv_safe", lambda path: pd.DataFrame({
+        'timestamp': pd.date_range('2024-01-01', periods=1, freq='h'),
+        'entry_signal': ['long']
+    }))
+
+    monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df, config=None: df)
+    with pytest.raises(ValueError):
+        main.welcome()
 

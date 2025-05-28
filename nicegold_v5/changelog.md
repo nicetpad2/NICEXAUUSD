@@ -313,3 +313,5 @@
 - ลบไฟล์ที่ไม่ได้ใช้ m.ainmain.py และ XAUUSD_M1.csv
 ## 2025-09-07
 - welcome() รัน simulate_trades_with_tp อัตโนมัติ (Patch v11.6)
+## 2025-09-08
+- ปรับ welcome() ให้ตรวจสอบ timestamp, entry_signal, entry_time และสร้างสัญญาณอัตโนมัติ (Patch v11.7)
