@@ -344,3 +344,5 @@
 - รวมไฟล์ทดสอบทั้งหมดเหลือ 3 ไฟล์
 ## 2025-09-21
 - ปรับปรุง validate_indicator_inputs แทนค่า inf/-inf ด้วย NaN และแสดง preview เมื่อข้อมูลไม่ครบ (Patch v11.9.11)
+## 2025-09-22
+- ปรับ run_clean_backtest ให้ fallback ไปยัง RELAX_CONFIG_Q3 เมื่อไม่มีสัญญาณและพิมพ์ Coverage (Patch v11.9.13)
