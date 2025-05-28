@@ -30,8 +30,7 @@ from nicegold_v5.config import (
     SNIPER_CONFIG_Q3_TUNED,
     RELAX_CONFIG_Q3,
 )
-from nicegold_v5.patch_phase3_qa_guard import run_qa_guard
-from nicegold_v5.patch_g5_auto_qa import auto_qa_after_backtest
+from nicegold_v5.qa import run_qa_guard, auto_qa_after_backtest
 from nicegold_v5.utils import safe_calculate_net_change
 # User-provided custom instructions
 # *สนทนาภาษาไทยเท่านั้น

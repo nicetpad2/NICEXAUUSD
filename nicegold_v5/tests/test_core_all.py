@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from nicegold_v5.entry import generate_signals, rsi, generate_signals_qa_clean
-from nicegold_v5.risk import (
+from nicegold_v5.backtester import (
     calc_lot,
     kill_switch,
     apply_recovery_lot,
@@ -461,7 +461,7 @@ def test_run_clean_backtest(monkeypatch, tmp_path):
 
 def test_strip_leakage_columns():
     import importlib
-    module = importlib.import_module('nicegold_v5.clean_exit_backtest')
+    module = importlib.import_module('nicegold_v5.backtester')
     df = pd.DataFrame({
         'a': [1],
         'future_price': [2],
@@ -478,7 +478,7 @@ def test_strip_leakage_columns():
 
 def test_run_clean_exit_backtest(monkeypatch, tmp_path):
     import importlib
-    module = importlib.import_module('nicegold_v5.clean_exit_backtest')
+    module = importlib.import_module('nicegold_v5.backtester')
 
     df = pd.DataFrame({
         'timestamp': pd.date_range('2025-01-01', periods=5, freq='min'),
@@ -492,7 +492,8 @@ def test_run_clean_exit_backtest(monkeypatch, tmp_path):
 
     monkeypatch.setattr(module, 'M1_PATH', str(csv_path))
     monkeypatch.setattr(module, 'TRADE_DIR', str(tmp_path))
-    monkeypatch.setattr(module, 'generate_signals_v11_scalper_m1', lambda d, config=None: d.assign(entry_signal='buy'))
+    monkeypatch.setattr('nicegold_v5.entry.generate_signals_v11_scalper_m1', lambda d, config=None: d.assign(entry_signal='buy'))
+    monkeypatch.setattr('nicegold_v5.config.SNIPER_CONFIG_Q3_TUNED', None)
     captured = {}
     def fake_run_backtest(d):
         captured['df'] = d.copy()
@@ -501,8 +502,8 @@ def test_run_clean_exit_backtest(monkeypatch, tmp_path):
             pd.DataFrame({'timestamp': [pd.Timestamp('2025-01-01')], 'equity': [100]})
         )
     monkeypatch.setattr(module, 'run_backtest', fake_run_backtest)
-    monkeypatch.setattr(module, 'print_qa_summary', lambda *a, **k: {})
-    monkeypatch.setattr(module, 'export_chatgpt_ready_logs', lambda *a, **k: None)
+    monkeypatch.setattr('nicegold_v5.utils.print_qa_summary', lambda *a, **k: {})
+    monkeypatch.setattr('nicegold_v5.utils.export_chatgpt_ready_logs', lambda *a, **k: None)
 
     trades = module.run_clean_exit_backtest()
     assert isinstance(trades, pd.DataFrame)
@@ -513,3 +514,315 @@ def test_run_clean_exit_backtest(monkeypatch, tmp_path):
         assert col in df_passed.columns
         if col in ['use_be', 'use_tsl', 'use_dynamic_tsl']:
             assert df_passed[col].all()
+import pandas as pd
+from nicegold_v5.entry import generate_signals_v8_0
+
+
+def test_entry_tier_handles_small_df():
+    df = pd.DataFrame({
+        'timestamp': pd.date_range('2025-01-01', periods=1, freq='min'),
+        'open': [1],
+        'high': [1],
+        'low': [1],
+        'close': [1],
+        'volume': [1],
+    })
+    out = generate_signals_v8_0(df)
+    assert 'entry_tier' in out.columns
+    assert out['entry_tier'].iloc[0] == 'C'
+import pandas as pd
+from nicegold_v5.backtester import run_backtest
+
+
+def test_backtest_hit_sl_expected():
+    """ทดสอบว่าไม้โดน SL และออกด้วยเหตุผล SL"""
+    df = pd.DataFrame({
+        "timestamp": pd.date_range(start="2025-01-01", periods=5, freq="min"),
+        "open": [100, 100.5, 100.8, 101.0, 101.2],
+        "high": [100, 100.6, 100.9, 101.1, 101.3],
+        "low": [99.5, 99.8, 100.0, 100.2, 100.4],
+        "close": [100.0, 99.0, 98.9, 99.1, 99.0],
+        "entry_signal": ["buy", None, None, None, None],
+        "atr": [0.5] * 5,
+        "atr_ma": [0.6] * 5,
+        "gain_z": [0.0] * 5,
+    })
+
+    from nicegold_v5 import exit as exit_mod
+    exit_mod.MIN_HOLD_MINUTES = 0
+    trades, equity = run_backtest(df)
+    assert not trades.empty
+    assert any(trades["exit_reason"].str.lower().isin(["sl", "recovery_sl"]))
+    assert (trades["pnl"] < 0).any()
+
+
+def test_backtest_avg_profit_over_one():
+    df = pd.DataFrame({
+        "timestamp": pd.date_range(start="2025-01-01", periods=3, freq="min"),
+        "open": [100, 101, 103],
+        "high": [101, 103, 105],
+        "low": [99, 100, 102],
+        "close": [101, 103, 105],
+        "entry_signal": ["buy", None, None],
+        "atr": [0.5, 0.5, 0.5],
+        "atr_ma": [0.5, 0.5, 0.5],
+        "gain_z": [0.5, 0.5, 0.5],
+    })
+    from nicegold_v5 import exit as exit_mod
+    exit_mod.MIN_HOLD_MINUTES = 0
+    trades, _ = run_backtest(df)
+    assert not trades.empty
+    assert trades["pnl"].mean() > 1.0
+import pandas as pd
+from nicegold_v5.backtester import (
+    calculate_duration,
+    calculate_mfe,
+    calculate_planned_risk,
+)
+
+
+def test_calculate_duration():
+    start = pd.Timestamp('2025-01-01 00:00:00')
+    end = pd.Timestamp('2025-01-01 00:05:30')
+    assert calculate_duration(start, end) == 5.5
+
+
+def test_calculate_planned_risk():
+    risk = calculate_planned_risk(100.0, 99.0, 0.02)
+    assert risk == 0.2
+
+
+def test_calculate_mfe():
+    df = pd.DataFrame({
+        'timestamp': pd.date_range('2025-01-01', periods=5, freq='min'),
+        'high': [1, 2, 3, 4, 5],
+        'low': [0, 1, 2, 3, 4],
+    })
+    start = df['timestamp'].iloc[1]
+    end = df['timestamp'].iloc[3]
+    mfe_buy = calculate_mfe(start, end, df, 1.5, 'buy')
+    mfe_sell = calculate_mfe(start, end, df, 3.5, 'sell')
+    assert mfe_buy == 2.5
+    assert mfe_sell == 2.5
+import pandas as pd
+from nicegold_v5.utils import convert_thai_datetime
+
+def test_convert_thai_datetime():
+    df = pd.DataFrame({'Date': ['25660416'], 'Timestamp': ['22:00:00']})
+    result = convert_thai_datetime(df)
+    assert 'timestamp' in result.columns
+    assert result.loc[0, 'timestamp'] == pd.Timestamp('2023-04-16 22:00:00')
+import pandas as pd
+from nicegold_v5.utils import safe_calculate_net_change
+
+def test_safe_calculate_net_change():
+    df = pd.DataFrame([
+        {'entry_price': 100.0, 'exit_price': 105.0},
+        {'entry_price': 110.0, 'exit_price': None},
+        {'entry_price': None, 'exit_price': 120.0},
+        {'entry_price': 120.0, 'exit_price': 121.0},
+    ])
+    result = safe_calculate_net_change(df)
+    assert result == 6.0
+import pandas as pd
+from nicegold_v5.utils import simulate_tp_exit
+
+
+def test_simulate_tp_exit():
+    trades = pd.DataFrame([
+        {
+            'timestamp': pd.Timestamp('2025-01-01 00:00:00'),
+            'entry_price': 100.0,
+            'tp1_price': 101.0,
+            'tp2_price': 102.0,
+            'sl_price': 99.0,
+            'direction': 'buy',
+        },
+        {
+            'timestamp': pd.Timestamp('2025-01-01 00:10:00'),
+            'entry_price': 100.0,
+            'tp1_price': 99.0,
+            'tp2_price': 98.0,
+            'sl_price': 101.0,
+            'direction': 'sell',
+        },
+    ])
+
+    m1 = pd.DataFrame([
+        {'timestamp': '2025-01-01 00:00:00', 'high': 100.5, 'low': 99.5},
+        {'timestamp': '2025-01-01 00:01:00', 'high': 101.5, 'low': 100.0},
+        {'timestamp': '2025-01-01 00:10:00', 'high': 100.5, 'low': 99.5},
+        {'timestamp': '2025-01-01 00:11:00', 'high': 100.8, 'low': 97.5},
+    ])
+
+    result = simulate_tp_exit(trades, m1, window_minutes=2)
+
+    assert result.loc[0, 'exit_reason'] == 'TP1'
+    assert result.loc[1, 'exit_reason'] == 'TP2'
+import pandas as pd
+import warnings
+import importlib
+
+def test_no_datetime_warning():
+    main = importlib.import_module('main')
+    df = pd.DataFrame({'timestamp': ['2025-01-01 00:00:00', '2025-01-01 01:00:00']})
+    with warnings.catch_warnings(record=True) as w:
+        df['timestamp'] = pd.to_datetime(
+            df['timestamp'], format=main.DATETIME_FORMAT, errors='coerce'
+        )
+    assert len(w) == 0
+import pandas as pd
+import pytest
+from nicegold_v5.entry import generate_signals_v8_0
+
+
+def test_entry_blocked_reason_length_check(monkeypatch):
+    df = pd.DataFrame({
+        'timestamp': pd.date_range('2025-01-01', periods=3, freq='min'),
+        'open': [1, 1, 1],
+        'high': [1, 1, 1],
+        'low': [1, 1, 1],
+        'close': [1, 1, 1],
+        'volume': [1, 1, 1],
+    })
+
+    original_reset_index = pd.Series.reset_index
+
+    def fake_reset_index(self, level=None, drop=False, name=None, inplace=False):
+        result = original_reset_index(self, level=level, drop=drop, name=name, inplace=False)
+        return result.iloc[:-1]
+
+    monkeypatch.setattr(pd.Series, "reset_index", fake_reset_index)
+    with pytest.raises(ValueError):
+        generate_signals_v8_0(df)
+
+import pandas as pd
+from nicegold_v5.entry import generate_signals_v8_0
+
+
+def test_entry_blocked_reason_empty_df():
+    df = pd.DataFrame({
+        'timestamp': pd.to_datetime([]),
+        'open': [],
+        'high': [],
+        'low': [],
+        'close': [],
+        'volume': [],
+    })
+    out = generate_signals_v8_0(df)
+    assert 'entry_blocked_reason' in out.columns
+    assert len(out) == 0
+import pandas as pd
+import pytest
+from nicegold_v5.entry import validate_indicator_inputs
+
+
+def test_validate_inputs_missing_column():
+    df = pd.DataFrame({'close': [1, 2], 'high': [1, 2], 'low': [1, 2]})
+    with pytest.raises(RuntimeError):
+        validate_indicator_inputs(df)
+
+
+def test_validate_inputs_min_rows():
+    df = pd.DataFrame({'close': [1, 2], 'high': [1, 2], 'low': [1, 2], 'volume': [1, 2]})
+    with pytest.raises(RuntimeError):
+        validate_indicator_inputs(df, min_rows=5)
+
+
+def test_validate_inputs_pass(capsys):
+    df = pd.DataFrame({'close': range(5), 'high': range(5), 'low': range(5), 'volume': range(5)})
+    validate_indicator_inputs(df, min_rows=5)
+    assert '✅ ตรวจผ่าน' in capsys.readouterr().out
+import pandas as pd
+from nicegold_v5.entry import sanitize_price_columns
+
+
+def test_sanitize_conversion_and_logging(capsys):
+    df = pd.DataFrame({
+        'close': ['1', '2'],
+        'high': ['3', '4'],
+        'low': ['5', '6'],
+        'open': ['7', '8'],
+        'volume': ['9', '10'],
+    })
+    out = sanitize_price_columns(df)
+    assert out['close'].tolist() == [1.0, 2.0]
+    assert pd.api.types.is_numeric_dtype(out['high'])
+    log = capsys.readouterr().out
+    assert 'Sanitize Columns' in log
+
+
+def test_sanitize_nan_count(capsys):
+    df = pd.DataFrame({
+        'close': ['a', '1'],
+        'high': ['b', '2'],
+        'low': ['c', '3'],
+        'open': ['d', '4'],
+        'volume': ['e', '5'],
+    })
+    out = sanitize_price_columns(df)
+    assert out['close'].isna().sum() == 1
+    log = capsys.readouterr().out
+    assert 'close: 1 NaN' in log
+
+import pandas as pd
+from nicegold_v5.entry import (
+    apply_tp_logic,
+    generate_entry_signal,
+    session_filter,
+    trade_log_fields,
+)
+
+
+def test_apply_tp_logic():
+    tp1, tp2 = apply_tp_logic(100, 'buy', rr1=1.5, rr2=3.0, sl_distance=5)
+    assert tp1 == 107.5
+    assert tp2 == 115.0
+
+
+def test_generate_entry_signal():
+    logs = []
+    row = {
+        'rsi': 25,
+        'pattern': 'inside_bar',
+        'timestamp': pd.Timestamp('2025-01-01'),
+        'close': 100.0,
+        'session': 'London',
+    }
+    signal = generate_entry_signal(row, logs)
+    assert signal == 'RSI_InsideBar'
+    assert logs and logs[0]['signal'] == 'RSI_InsideBar'
+
+
+def test_session_filter():
+    row_block = {'session': 'NY', 'ny_sl_count': 4}
+    row_allow = {'session': 'NY', 'ny_sl_count': 1}
+    assert not session_filter(row_block)
+    assert session_filter(row_allow)
+
+
+def test_trade_log_fields():
+    required = {'tp1_price', 'tp2_price', 'mfe', 'duration_min'}
+    assert required.issubset(set(trade_log_fields))
+
+
+def test_simulate_trades_with_tp():
+    from nicegold_v5.entry import simulate_trades_with_tp
+
+    df = pd.DataFrame([
+        {
+            'timestamp': pd.Timestamp('2025-01-01 00:00:00'),
+            'close': 100.0,
+            'signal': 'long',
+            'session': 'London',
+            'rsi': 25,
+            'pattern': 'inside_bar',
+        }
+    ])
+
+    trades, logs = simulate_trades_with_tp(df)
+    assert len(trades) == 1
+    assert len(logs) == 1
+    trade = trades[0]
+    assert trade['tp1_price'] > trade['entry_price']
+    assert trade['tp2_price'] > trade['tp1_price']

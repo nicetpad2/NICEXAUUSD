@@ -11,7 +11,7 @@ from .entry import (
     trade_log_fields,
     simulate_trades_with_tp,
 )  # [Patch v10.0] expose latest logic
-from .risk import calc_lot
+from .backtester import calc_lot
 from .exit import should_exit
 from .backtester import run_backtest
 from .utils import (
@@ -34,11 +34,12 @@ from .wfv import (
 )
 from .config import ENTRY_CONFIG_PER_FOLD
 from .optuna_tuner import start_optimization, objective
-from .patch_phase3_qa_guard import (
+from .qa import (
     run_qa_guard,
     summarize_fold,
     compute_fold_bias,
     analyze_drawdown,
+    export_fold_qa,
+    detect_fold_drift,
+    auto_qa_after_backtest,
 )
-from .patch_g4_fold_export_drift import export_fold_qa, detect_fold_drift
-from .patch_g5_auto_qa import auto_qa_after_backtest

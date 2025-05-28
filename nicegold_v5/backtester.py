@@ -3,18 +3,101 @@ from datetime import datetime
 import random
 import logging
 import numpy as np
-from nicegold_v5.risk import (
-    calc_lot_risk,
-    kill_switch,
-    adaptive_tp_multiplier,
-    get_sl_tp,
-    calc_lot_recovery,
-    get_sl_tp_recovery,
-    RECOVERY_SL_TRIGGER,
-)
+# Risk management utilities
+MAX_LOT_CAP = 1.0  # [Patch v6.7]
+
+
+def calc_lot(capital: float, risk_pct: float = 1.5, sl_pips: float = 100) -> float:
+    risk_amount = capital * (risk_pct / 100)
+    pip_value = 10  # For gold 0.1/point × 100 = $10/lot
+    lot = risk_amount / (sl_pips * pip_value)
+    return min(MAX_LOT_CAP, max(0.01, round(lot, 2)))  # [Patch v6.7]
+
+
+# --- Patch C: Advanced Risk Management ---
+KILL_SWITCH_DD = 25  # % drawdown limit
+MIN_TRADES_BEFORE_KILL = 100  # ต้องมีเทรดมากกว่า 100 ไม้ก่อนจึงเริ่มตรวจ DD
+
+
+def kill_switch(equity_curve: list[float]) -> bool:
+    """Return True if drawdown exceeds threshold (หลังจากเทรดครบ MIN_TRADES_BEFORE_KILL)"""
+    if not equity_curve or len(equity_curve) < MIN_TRADES_BEFORE_KILL:
+        return False  # ยังไม่ตรวจ drawdown
+    peak = equity_curve[0]
+    for eq in equity_curve:
+        drawdown = (peak - eq) / peak * 100
+        if drawdown >= KILL_SWITCH_DD:
+            print("[KILL SWITCH] Drawdown limit reached. Backtest halted.")
+            return True
+        peak = max(peak, eq)
+    return False
+
+
+def apply_recovery_lot(capital: float, sl_streak: int, base_lot: float = 0.01) -> float:
+    """Increase lot size after consecutive stop-losses."""
+    if sl_streak >= 2:
+        factor = 1 + 0.5 * (sl_streak - 1)
+        return round(base_lot * factor, 2)
+    return base_lot
+
+
+def adaptive_tp_multiplier(session: str) -> float:
+    if session == "Asia":
+        return 1.5
+    if session == "London":
+        return 2.0
+    if session == "NY":
+        return 2.5
+    return 2.0
+
+
+def get_sl_tp(price: float, atr: float, session: str, direction: str) -> tuple[float, float]:
+    """คำนวณ SL/TP สำหรับโหมดปกติ"""
+    multiplier = adaptive_tp_multiplier(session)
+    sl = price - atr * 1.5 if direction == "buy" else price + atr * 1.5
+    tp = price + atr * multiplier if direction == "buy" else price - atr * multiplier
+    return sl, tp
+
+
+def calc_lot_risk(capital: float, atr: float, risk_pct: float = 1.5) -> float:
+    """True percent risk model using ATR as stop distance."""
+    pip_value = 10  # XAUUSD standard
+    sl_pips = atr * 10
+    risk_amount = capital * (risk_pct / 100)
+    lot = risk_amount / (sl_pips * pip_value)
+    return min(MAX_LOT_CAP, max(0.01, round(lot, 2)))  # [Patch v6.7]
+
+
+# --- Patch B.2: Recovery Mode Risk Logic ---
+RECOVERY_SL_TRIGGER = 3  # SL สะสมกี่ครั้งจึงเข้าโหมด recovery
+
+
+def calc_lot_recovery(capital: float, atr: float, risk_pct: float = 1.5) -> float:
+    """Adaptive lot size เมื่ออยู่ใน Recovery Mode (lot × 1.5)."""
+    base_lot = calc_lot_risk(capital, atr, risk_pct)
+    recovery_lot = base_lot * 1.5
+    return min(MAX_LOT_CAP, max(0.01, round(recovery_lot, 2)))  # [Patch v6.7]
+
+
+def get_sl_tp_recovery(price: float, atr: float, direction: str) -> tuple[float, float]:
+    """คำนวณ SL/TP แบบกว้างขึ้นสำหรับ Recovery Mode."""
+    sl_multiplier = 1.8
+    tp_multiplier = 1.8
+    if direction == "buy":
+        sl = price - atr * sl_multiplier
+        tp = price + atr * tp_multiplier
+    else:
+        sl = price + atr * sl_multiplier
+        tp = price - atr * tp_multiplier
+    return sl, tp
 from nicegold_v5.exit import should_exit
 from tqdm import tqdm
 import time
+import os
+
+TRADE_DIR = "/content/drive/MyDrive/NICEGOLD/logs"
+M1_PATH = "/content/drive/MyDrive/NICEGOLD/XAUUSD_M1.csv"
+os.makedirs(TRADE_DIR, exist_ok=True)
 
 
 def calculate_mfe(
@@ -249,3 +332,56 @@ def run_backtest(df: pd.DataFrame):
         f"⏱️ Backtest Duration: {end - start:.2f}s | Trades: {len(trades)} | Avg per row: {(end - start)/len(df):.6f}s"
     )
     return pd.DataFrame(trades), pd.DataFrame(equity)
+
+
+def strip_leakage_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Remove columns that could leak future information."""
+    leak_cols = [
+        c for c in df.columns
+        if "future" in c or "next_" in c or c.endswith("_lead") or c == "target"
+    ]
+    return df.drop(columns=leak_cols, errors="ignore")
+
+
+def run_clean_exit_backtest() -> pd.DataFrame:
+    """Run backtest using real exit logic without future leakage."""
+    from nicegold_v5.entry import generate_signals_v11_scalper_m1
+    from nicegold_v5.config import SNIPER_CONFIG_Q3_TUNED
+    from nicegold_v5.utils import print_qa_summary, export_chatgpt_ready_logs
+    df = pd.read_csv(M1_PATH)
+    df.columns = [c.lower() for c in df.columns]
+    df = df.dropna(subset=["timestamp"])
+    df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
+    df = df.dropna(subset=["timestamp"])
+    df = df.sort_values("timestamp")
+
+    df = generate_signals_v11_scalper_m1(df, config=SNIPER_CONFIG_Q3_TUNED)
+    df["entry_time"] = df["timestamp"]
+    df["signal_id"] = df["timestamp"].astype(str)
+    df = strip_leakage_columns(df)
+
+    df["use_be"] = True
+    df["use_tsl"] = True
+    df["tp1_rr_ratio"] = 2.0
+    df["use_dynamic_tsl"] = True
+
+    if "exit_reason" in df.columns:
+        df.drop(columns=["exit_reason"], inplace=True)
+
+    print("🚀 Running Backtest with Clean Exit + BE/TSL Protection...")
+    trades, equity = run_backtest(df)
+    print_qa_summary(trades, equity)
+
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    export_chatgpt_ready_logs(
+        trades,
+        equity,
+        {
+            "file_name": os.path.basename(M1_PATH),
+            "total_trades": len(trades),
+            "total_profit": trades["pnl"].sum(),
+        },
+        outdir=TRADE_DIR,
+    )
+    print(f"📦 Export Completed: trades_detail_{ts}.csv")
+    return trades
