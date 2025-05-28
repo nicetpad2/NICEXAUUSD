@@ -33,10 +33,16 @@ def run_clean_exit_backtest():
     df["signal_id"] = df["timestamp"].astype(str)
     df = strip_leakage_columns(df)
 
+    # [Patch F.1] Enable Break-even and Trailing SL Logic
+    df["use_be"] = True
+    df["use_tsl"] = True
+    df["tp1_rr_ratio"] = 2.0  # TP1 used to trigger BE
+    df["use_dynamic_tsl"] = True  # TSL adjusts dynamically based on RR threshold
+
     if "exit_reason" in df.columns:
         df.drop(columns=["exit_reason"], inplace=True)
 
-    print("\U0001F680 Running Backtest with Clean Exit Logic...")
+    print("\U0001F680 Running Backtest with Clean Exit + BE/TSL Protection...")
     trades, equity = run_backtest(df)
     print_qa_summary(trades, equity)
 

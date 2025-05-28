@@ -493,10 +493,23 @@ def test_run_clean_exit_backtest(monkeypatch, tmp_path):
     monkeypatch.setattr(module, 'M1_PATH', str(csv_path))
     monkeypatch.setattr(module, 'TRADE_DIR', str(tmp_path))
     monkeypatch.setattr(module, 'generate_signals_v11_scalper_m1', lambda d, config=None: d.assign(entry_signal='buy'))
-    monkeypatch.setattr(module, 'run_backtest', lambda d: (pd.DataFrame({'pnl':[1]}), pd.DataFrame({'timestamp':[pd.Timestamp('2025-01-01')], 'equity':[100]})))
+    captured = {}
+    def fake_run_backtest(d):
+        captured['df'] = d.copy()
+        return (
+            pd.DataFrame({'pnl': [1]}),
+            pd.DataFrame({'timestamp': [pd.Timestamp('2025-01-01')], 'equity': [100]})
+        )
+    monkeypatch.setattr(module, 'run_backtest', fake_run_backtest)
     monkeypatch.setattr(module, 'print_qa_summary', lambda *a, **k: {})
     monkeypatch.setattr(module, 'export_chatgpt_ready_logs', lambda *a, **k: None)
 
     trades = module.run_clean_exit_backtest()
     assert isinstance(trades, pd.DataFrame)
     assert not trades.empty
+    df_passed = captured.get('df')
+    assert df_passed is not None
+    for col in ['use_be', 'use_tsl', 'tp1_rr_ratio', 'use_dynamic_tsl']:
+        assert col in df_passed.columns
+        if col in ['use_be', 'use_tsl', 'use_dynamic_tsl']:
+            assert df_passed[col].all()

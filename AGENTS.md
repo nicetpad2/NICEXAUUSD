@@ -289,4 +289,6 @@
 
 ### 2025-08-17
 - เพิ่มสคริปต์ `clean_exit_backtest.py` สำหรับโหมด Exit Clean และฟังก์ชัน `strip_leakage_columns` (Patch F)
+### 2025-08-18
+- ติดตั้ง Break-even และ Trailing Stop-Loss ใน `clean_exit_backtest.py` (Patch F.1)
 
