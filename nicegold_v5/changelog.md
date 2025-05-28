@@ -370,3 +370,5 @@
 - ปรับปรุง patch v11.9.23 ให้รองรับ `date`/`timestamp` ตัวพิมพ์เล็กและป้องกัน NaT
 ## 2025-10-03
 - ปรับ `convert_thai_datetime` รองรับคอลัมน์ตัวพิมพ์เล็กและเพิ่ม unit test (Patch v11.9.24)
+## 2025-10-04
+- เพิ่ม `generate_signals_v12_0` รวม InsideBar + QM + Fractal + RSI และคำนวณ TP1/TP2
