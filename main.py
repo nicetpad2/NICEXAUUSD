@@ -31,7 +31,11 @@ from nicegold_v5.config import (
     RELAX_CONFIG_Q3,
 )
 from nicegold_v5.qa import run_qa_guard, auto_qa_after_backtest
-from nicegold_v5.utils import safe_calculate_net_change, convert_thai_datetime
+from nicegold_v5.utils import (
+    safe_calculate_net_change,
+    convert_thai_datetime,
+    parse_timestamp_safe,
+)
 # User-provided custom instructions
 # *สนทนาภาษาไทยเท่านั้น
 
@@ -166,7 +170,7 @@ def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
     # ✅ [Patch v11.9.18] รองรับ Date พ.ศ. ก่อนแปลง timestamp
     df = convert_thai_datetime(df)
     # ✅ [Patch v11.9.16] – Convert timestamp and sanitize before validation
-    df["timestamp"] = pd.to_datetime(df["timestamp"], format=DATETIME_FORMAT, errors="coerce")
+    df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
     df = df.dropna(subset=["timestamp"])
     df = df.sort_values("timestamp")
     df = sanitize_price_columns(df)
@@ -182,7 +186,7 @@ def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
     print(f"[Patch v11.9.16] ✅ Entry Signal Coverage: {signal_coverage:.2f}%")
 
     # Ensure timestamps are valid and use them for entry_time
-    df["timestamp"] = pd.to_datetime(df["timestamp"], format=DATETIME_FORMAT)
+    df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
     df["entry_time"] = df["timestamp"]
     df["signal_id"] = df["timestamp"].astype(str)
 
@@ -274,9 +278,7 @@ def welcome():
     # ✅ [Patch v11.9.18] รองรับ Date แบบพุทธศักราช
     df = convert_thai_datetime(df)
     show_progress_bar("🧼 แปลง timestamp", steps=1)
-    df["timestamp"] = pd.to_datetime(
-        df["timestamp"], format="%Y-%m-%d %H:%M:%S", errors="coerce"
-    )
+    df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
     df = df.dropna(subset=["timestamp"])
     df = df.sort_values("timestamp")
 
@@ -390,9 +392,7 @@ def welcome():
         df = convert_thai_datetime(df)
 
         # [Patch] Apply full datetime and signal generation
-        df["timestamp"] = pd.to_datetime(
-            df["timestamp"], format="%Y-%m-%d %H:%M:%S", errors="coerce"
-        )
+        df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
         df = df.sort_values("timestamp")
 
         from nicegold_v5.entry import (
@@ -453,9 +453,7 @@ def welcome():
         # ✅ [Patch v11.9.18] รองรับ Date แบบพุทธศักราช
         df = convert_thai_datetime(df)
 
-        df["timestamp"] = pd.to_datetime(
-            df["timestamp"], format=DATETIME_FORMAT, errors="coerce"
-        )
+        df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
         df = df.sort_values("timestamp")
 
         from nicegold_v5.entry import simulate_trades_with_tp  # ← Patch v11.2 logic
@@ -495,9 +493,7 @@ if __name__ == "__main__":
         df = convert_thai_datetime(df)
 
         df.dropna(subset=["timestamp"], inplace=True)
-        df["timestamp"] = pd.to_datetime(
-            df["timestamp"], format=DATETIME_FORMAT, errors="coerce"
-        )
+        df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
         df = df.dropna(subset=["timestamp"])
         run_clean_backtest(df)
         print("✅ Done: Clean Backtest Completed")

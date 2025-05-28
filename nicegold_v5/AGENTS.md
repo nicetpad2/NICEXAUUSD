@@ -380,3 +380,5 @@
 - ปรับ run_clean_backtest ให้ sanitize ข้อมูลและ validate ก่อนสร้างสัญญาณ พร้อม log coverage (Patch v11.9.16)
 ### 2025-09-26
 - เพิ่ม convert_thai_datetime รองรับ Date+Timestamp แบบ พ.ศ. และเรียกใช้ใน main.py (Patch v11.9.18)
+### 2025-09-27
+- เพิ่มฟังก์ชัน `parse_timestamp_safe` แปลงเวลาพร้อม fallback หากรูปแบบไม่ตรง และใช้งานใน main.py (Patch v11.9.19)

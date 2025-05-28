@@ -355,3 +355,5 @@
 
 ## 2025-09-26
 - เพิ่ม convert_thai_datetime รองรับ Date+Timestamp แบบ พ.ศ. และเรียกใช้ใน main.py (Patch v11.9.18)
+## 2025-09-27
+- เพิ่มฟังก์ชัน `parse_timestamp_safe` เพื่อแปลง timestamp อย่างยืดหยุ่นและ fallback หากรูปแบบไม่ตรง พร้อมปรับ main.py ใช้ฟังก์ชันนี้ (Patch v11.9.19)
