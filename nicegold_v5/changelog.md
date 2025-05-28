@@ -327,3 +327,5 @@
 - ปรับ generate_signals_v8_0 ให้ตรวจสอบและบันทึก entry_blocked_reason อย่างปลอดภัย (Patch v11.9.2)
 ## 2025-09-13
 - ปรับปรุงการ assign `entry_blocked_reason` ใช้การจัดดัชนีและ reindex เพื่อป้องกันความยาวไม่ตรง (Patch v11.9.2)
+## 2025-09-14
+- ปรับปรุงการ assign `entry_blocked_reason` ใช้ entry_reason_column เพื่อสร้างคอลัมน์ที่ดัชนีตรงกับ df เสมอ (Patch v11.9.4)
