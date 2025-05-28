@@ -263,3 +263,6 @@
 ## 2025-08-16
 - เพิ่มฟังก์ชัน `run_clean_backtest` ใน main.py ใช้ exit จริงและป้องกัน Data Leakage (Patch v11.0)
 
+## 2025-08-17
+- เพิ่มสคริปต์ `clean_exit_backtest.py` เพื่อรัน backtest แบบ Exit Clean และเพิ่มฟังก์ชัน `strip_leakage_columns` (Patch F)
+
