@@ -305,3 +305,5 @@
 
 ## 2025-09-03
 - เพิ่ม simulate_tp_exit สำหรับตรวจ TP1/TP2 ในหน้าต่างเวลา (Patch J)
+## 2025-09-04
+- ย้าย simulate_tp_exit ไป utils.py และลบไฟล์ patch_j_tp1tp2_simulation (Patch J.1)
