@@ -9,6 +9,7 @@ from .entry import (
     generate_entry_signal,
     session_filter,
     trade_log_fields,
+    simulate_trades_with_tp,
 )  # [Patch v10.0] expose latest logic
 from .risk import calc_lot
 from .exit import should_exit

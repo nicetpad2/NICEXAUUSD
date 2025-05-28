@@ -311,3 +311,5 @@
 - Fix QA Export Path ให้ใช้ absolute path บันทึกที่ `/content/drive/MyDrive/NICEGOLD/logs/qa` (Patch G.8)
 ### 2025-08-26
 - เพิ่มฟังก์ชัน apply_tp_logic, generate_entry_signal, session_filter และตัวแปร trade_log_fields สำหรับ TP1/TP2 และระบบบันทึกสัญญาณ (Patch v11.1)
+### 2025-08-27
+- เพิ่มฟังก์ชัน simulate_trades_with_tp สำหรับทดสอบ TP1/TP2 และ logging ขั้นสูง (Patch v11.1)
