@@ -1152,6 +1152,8 @@ def test_simulate_partial_tp_safe_session(monkeypatch):
         {'timestamp': pd.Timestamp('2025-01-01 10:00'), 'close': 100.0, 'high': 100.6, 'low': 99.5, 'entry_signal': 'buy', 'atr': 1.0},
         {'timestamp': pd.Timestamp('2025-01-01 10:05'), 'close': 101.6, 'high': 101.6, 'low': 100.5, 'entry_signal': 'buy', 'atr': 1.0},
         {'timestamp': pd.Timestamp('2025-01-01 10:10'), 'close': 100.5, 'high': 100.7, 'low': 100.4, 'entry_signal': 'buy', 'atr': 1.0},
+        {'timestamp': pd.Timestamp('2025-01-01 10:20'), 'close': 101.8, 'high': 101.9, 'low': 100.9, 'entry_signal': 'buy', 'atr': 1.0},
+        {'timestamp': pd.Timestamp('2025-01-01 10:30'), 'close': 100.8, 'high': 101.2, 'low': 100.6, 'entry_signal': 'buy', 'atr': 1.0},
     ])
 
     trades, _ = simulate_partial_tp_safe(df)

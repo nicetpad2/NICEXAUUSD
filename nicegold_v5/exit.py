@@ -21,6 +21,7 @@ TSL_ATR_MULTIPLIER = 1.2  # [Patch v12.1.x] ใช้ ATR ในการ trail 
 MAX_HOLD_MINUTES = 360
 MIN_PROFIT_TRIGGER = 0.5
 MICRO_LOCK_THRESHOLD = 0.3
+TP2_HOLD_MIN = 15  # [Patch v12.3.0] ต้องถือ TP2 อย่างน้อย 15 นาที
 
 
 def _rget(row, key, default=None):
@@ -48,7 +49,11 @@ def should_exit(trade, row):
     atr = _rget(row, "atr", 1.0)
     atr_ma = _rget(row, "atr_ma", 1.0)
     gain_z = _rget(row, "gain_z", 0)
-    sl_threshold = atr * 1.2
+    session = trade.get("session", "Unknown")
+    high_val = _rget(row, "high", price_now)
+    low_val = _rget(row, "low", price_now)
+    mfe = max(high_val - entry, 0) if direction == "buy" else max(entry - low_val, 0)
+    sl_threshold = atr * (1.5 if session == "London" else 1.2)  # [Patch v12.3.0]
     tsl_trigger = atr * TSL_TRIGGER_GAIN
     be_trigger = atr * BE_TRIGGER_GAIN
 
@@ -63,8 +68,9 @@ def should_exit(trade, row):
         return True, "timeout_exit"
 
     if gain < -sl_threshold and not trade.get("breakeven"):
-        logging.info(f"[{recovery_prefix.upper()}SL] Hit @ {price_now:.2f}")
-        return True, f"{recovery_prefix}sl"
+        if mfe < 3.0:  # [Patch v12.3.0] ห้าม SL หาก MFE > 3.0
+            logging.info(f"[{recovery_prefix.upper()}SL] Hit @ {price_now:.2f}")
+            return True, f"{recovery_prefix}sl"
 
     if gain >= tsl_trigger and not trade.get("tsl_activated"):
         trade["tsl_activated"] = True
@@ -163,12 +169,18 @@ def simulate_partial_tp_safe(df: pd.DataFrame, capital: float = 1000.0):
             if tp1_hit:
                 open_position["tp1_hit"] = True
 
+            if open_position.get("tp1_hit"):
+                delay_hold = (row["timestamp"] - open_position["entry_time"]).total_seconds() / 60 >= TP2_HOLD_MIN
+                if not delay_hold:
+                    continue  # [Patch v12.3.0] Delay exit until TP2 hold time reached
+
             if open_position["tp1_hit"] and not open_position["tsl_activated"]:
+                open_position["tsl_activated"] = True
+                # [Patch v12.3.0] เพิ่ม TSL ด้วย Dynamic SL
                 if direction == "buy":
                     open_position["trailing_sl"] = max(row["high"] - row.get("atr", 1.0), open_position["sl"])
                 else:
                     open_position["trailing_sl"] = min(row["low"] + row.get("atr", 1.0), open_position["sl"])
-                open_position["tsl_activated"] = True
 
             exit_triggered, reason = should_exit(open_position, row)
             if exit_triggered:
