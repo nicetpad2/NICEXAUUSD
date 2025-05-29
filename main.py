@@ -9,6 +9,8 @@ if ROOT_DIR not in sys.path:
 import pandas as pd
 import gc
 import logging
+import json  # [Patch v12.4.0] Added for JSON export
+from datetime import datetime
 from tqdm import tqdm, trange
 from nicegold_v5.wfv import (
     run_walkforward_backtest as raw_run,
@@ -177,103 +179,90 @@ def load_csv_safe(path, lowercase=True):
 
 
 def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
-    """Run backtest with cleaned signals and real exit logic."""
-    # [Patch v12.3.9] – แก้ main.py ให้ใช้ simulate_and_autofix() แบบหายขาด
+    # [Patch v12.4.2] – Export Summary JSON + QA Summary ต่อ Fold (Incorporates v12.4.0, v12.4.1)
     # -------------------------------------------------------------------
-    # ✅ แก้ run_clean_backtest() ให้เรียก simulate_and_autofix() โดยตรง
-    # ✅ ยกเลิก simulate_partial_tp_safe ตรง ๆ และไม่เรียกซ้ำซ้อน
-    # ✅ ฝัง AutoFix + Diagnostic + Adaptive Config ครบทุก run
+    # ✅ robust: fallback config if signal missing
+    # ✅ export: log + config_used + summary
+    # ✅ CLI: เพิ่มเมนูใน welcome() → choice 7 (commented out in welcome())
+    # ✅ บันทึก QA Summary แยกไฟล์ JSON
     df = df.copy()
-
-    from nicegold_v5.entry import sanitize_price_columns, validate_indicator_inputs
-
-    # ✅ [Patch v11.9.23] รองรับ Date (พ.ศ.) + Timestamp รวม + Auto Fix Lowercase Columns
-    # - รองรับทั้งแบบ Date+Timestamp และ date+timestamp (lowercase)
-    # - แก้บั๊กแปลง timestamp fail (NaT ทุกแถว)
+    # รองรับ Date+Timestamp แบบ พ.ศ. และตัวพิมพ์เล็ก
     if {"Date", "Timestamp"}.issubset(df.columns):
-        df = convert_thai_datetime(df)  # สร้าง df["timestamp"] ที่ถูกต้องแล้ว
+        df = convert_thai_datetime(df)
         df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
     elif {"date", "timestamp"}.issubset(df.columns):
-        # เผื่อกรณี lowercase
         df["date"] = df["date"].astype(str).str.zfill(8)
-
         def _th2en(s):
             y, m, d = int(s[:4]) - 543, s[4:6], s[6:8]
             return f"{y:04d}-{m}-{d}"
-
         df["date_gregorian"] = df["date"].apply(_th2en)
         df["timestamp_full"] = df["date_gregorian"] + " " + df["timestamp"].astype(str)
         df["timestamp"] = pd.to_datetime(df["timestamp_full"], format="%Y-%m-%d %H:%M:%S", errors="coerce")
-    else:
-        df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
     df = df.dropna(subset=["timestamp"])
     df = df.sort_values("timestamp")
+
+    # [Patch v12.4.0] Sanitize and validate
     try:
-        df = sanitize_price_columns(df)  # [Patch v12.3.9] Moved sanitize before validate
-        validate_indicator_inputs(df, min_rows=min(500, len(df)))  # [Patch v12.3.9] Ensure df is sanitized
+        df = sanitize_price_columns(df)
+        validate_indicator_inputs(df, min_rows=min(500, len(df)))
     except TypeError:
-        # compatibility with monkeypatched tests without min_rows
         validate_indicator_inputs(df)
 
     from nicegold_v5.config import RELAX_CONFIG_Q3
     df = generate_signals(df, config=SNIPER_CONFIG_Q3_TUNED)
 
-    # [Patch v12.3.9] Ensure 'entry_time' exists and is datetime
+    # [Patch v12.4.0] Fallback if no signals
+    if df["entry_signal"].isnull().mean() >= 1.0:
+        print("[Patch QA] ⚠️ ไม่พบสัญญาณ → fallback RELAX_CONFIG_Q3")
+        df = generate_signals(df, config=RELAX_CONFIG_Q3)
+
+    if "entry_signal" not in df.columns:
+        df["entry_signal"] = None
+
+    if df["entry_signal"].isnull().mean() >= 1.0:
+        raise RuntimeError("[Patch QA] ❌ ไม่มีสัญญาณเข้าเลย – หยุดรัน backtest")
+
+    df = df.dropna(subset=["timestamp", "entry_signal", "close", "high", "low"])
     df["entry_time"] = pd.to_datetime(df["timestamp"], errors="coerce")
     df["signal_id"] = df["timestamp"].astype(str)
 
-    # [Patch v12.3.9] Moved fallback logic after initial signal generation
-    if df["entry_signal"].isnull().mean() == 1.0:
-        print("[Patch v11.9.16] ❗ ไม่พบสัญญาณใน Q3_TUNED – ใช้ fallback RELAX_CONFIG_Q3")
-        df = generate_signals(df, config=RELAX_CONFIG_Q3)
-
-    # [Patch v12.0.3] ✅ Ensure 'entry_signal' exists
-    if "entry_signal" not in df.columns:
-        print("[Patch v12.0.3] ⛑ fallback: ไม่มี entry_signal – ใส่ค่า None")
-        df["entry_signal"] = None
-    
-    # [Patch v12.0.3] 🧠 Block run if no signal at all
-    if df["entry_signal"].isnull().mean() >= 1.0:
-        raise RuntimeError("[Patch v12.0.3] ❌ ไม่มีสัญญาณเข้าเลย – หยุดรัน backtest")
-
-    signal_coverage = df["entry_signal"].notnull().mean() * 100
-    print(f"[Patch v11.9.16] ✅ Entry Signal Coverage: {signal_coverage:.2f}%")
-
-    # Ensure timestamps are valid and use them for entry_time
-    # df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT) # [Patch v12.3.9] Already parsed
-
-    # [Patch v12.0.2] Validate required columns before backtest
-    required = ["entry_time", "entry_signal", "close"]
-    missing_required = [col for col in required if col not in df.columns]
-    if missing_required:
-        print(f"[Patch v12.0.2] ⚠️ Missing columns: {missing_required} – Creating with default values")
-        for col in missing_required:
-            df[col] = pd.NaT if "time" in col else None
-    df = df.dropna(subset=required)
-
-    # Guard against leakage from future columns
-    leak_cols = [c for c in df.columns if "future" in c or "next_" in c or c.endswith("_lead")]
-    df.drop(columns=leak_cols, errors="ignore", inplace=True)
-
-    print("\n🚀 [Patch v12.3.9] Using simulate_and_autofix() pipeline...")
-    trades_df, equity_df, config_used = simulate_and_autofix(  # [Patch v12.3.9] equity_df is returned
+    print("\n🚀 [Patch v12.4.2] Using simulate_and_autofix() pipeline...")
+    trades_df, equity_df, config_used = simulate_and_autofix(
         df,
         simulate_partial_tp_safe,
         SNIPER_CONFIG_Q3_TUNED,
-        session="London"  # [Patch v12.3.9] Specify session
+        session="London"
     )
     print("\n✅ Simulation Completed with Adaptive Config:")
     for k, v in config_used.items():
         print(f"    ▸ {k}: {v}")
 
-    trades_df.to_csv(os.path.join(TRADE_DIR, "trades_v1239.csv"), index=False)  # [Patch v12.3.9] Updated filename
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    out_path = os.path.join(TRADE_DIR, f"trades_cleanbacktest_{ts}.csv")
+    trades_df.to_csv(out_path, index=False)
+    print(f"📁 Exported trades → {out_path}")
+
+    config_path = os.path.join(TRADE_DIR, f"config_used_{ts}.json")
+    with open(config_path, "w") as f:
+        json.dump(config_used, f, indent=2)
+    print(f"⚙️ Exported config_used → {config_path}")
+
     if "exit_reason" in trades_df.columns:
-        print(
-            f"📊 Exit reasons: \n{trades_df['exit_reason'].value_counts().to_string()}"
-        )
-    if "session" in trades_df.columns:
-        print(
-            f"🕒 Sessions covered: \n{trades_df['session'].value_counts().to_string()}")
+        qa_summary = {
+            "tp1_count": int(trades_df["exit_reason"].eq("tp1").sum()),
+            "tp2_count": int(trades_df["exit_reason"].eq("tp2").sum()),
+            "sl_count": int(trades_df["exit_reason"].eq("sl").sum()),
+            "total_trades": len(trades_df),
+            "net_pnl": float(trades_df["pnl"].sum() if "pnl" in trades_df.columns else 0.0),
+        }
+        qa_path = os.path.join(TRADE_DIR, f"qa_summary_{ts}.json")
+        with open(qa_path, "w") as f:
+            json.dump(qa_summary, f, indent=2)
+        print(f"📊 Exported QA Summary → {qa_path}")
+
+        print("\n📊 [Patch QA] Summary (TP1/TP2):")
+        for k, v_val in qa_summary.items():
+            print(f"    ▸ {k.replace('_', ' ').title()}: {v_val}")
     return trades_df
 
 def run_wfv_with_progress(df, features, label_col):
@@ -400,6 +389,11 @@ def welcome():
     print(f"   ▸ SL Count      : {sl_hits}")
     print(f"   ▸ Net PnL       : {total_pnl:.2f} USD")
     maximize_ram()
+    # print("6. TP1/TP2 Backtest Mode (v11.2+)")  # [Patch v12.4.1] Existing menu item
+    # print("7. Run CleanBacktest (AutoFix, Export, Summary)")  # [Patch v12.4.1] New menu item
+    # choice = input("👉 เลือกเมนู (1-6): ")
+    # try:
+    #     choice = int(choice)
     return  # Skip menu for automation
 
     if choice == 1:
@@ -553,3 +547,9 @@ if __name__ == "__main__":
         print("✅ Done: Clean Backtest Completed")
     else:
         welcome()
+    # [Patch v12.4.1] Example of how choice 7 might be handled if menu was active
+    # elif choice == 7:  # This would be part of the active menu loop in welcome()
+    #     print("\n🚀 เริ่มรัน CleanBacktest ด้วย AutoFix + Export...")
+    #     df = load_csv_safe(M1_PATH)  # Ensure M1_PATH is defined
+    #     # Potentially convert_thai_datetime(df) and other pre-processing here
+    #     trades_df = run_clean_backtest(df)
