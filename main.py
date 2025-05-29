@@ -118,12 +118,12 @@ def maximize_ram():
         gc.collect()
 
 def _run_fold(args):
-    df, features, label_col, i = args
-    # [Patch] Ensure 'Open' column exists and is capitalized correctly
+    df, features, label_col, fold_name = args
+    # [Patch Perf-F] Ensure 'Open' column exists and is capitalized correctly
     if 'open' in df.columns:
         df = df.rename(columns={'open': 'Open'})
-    trades = raw_run(df, features, label_col, strategy_name=f"Fold{i+1}")
-    trades["fold"] = i + 1
+    trades = raw_run(df, features, label_col, strategy_name=str(fold_name))
+    trades["fold"] = fold_name
     return trades
 
 def run_parallel_wfv(df: pd.DataFrame, features: list, label_col: str, n_folds: int = 5):
@@ -138,11 +138,15 @@ def run_parallel_wfv(df: pd.DataFrame, features: list, label_col: str, n_folds: 
     df = df.drop(columns=[col for col in df.columns if col not in features + [label_col] + required_cols])
 
     session_dict = split_by_session(df)
-    trades_list = []
-    for name, sess_df in session_dict.items():
-        trades = raw_run(sess_df, features, label_col, strategy_name=name)
-        trades["fold"] = name
-        trades_list.append(trades)
+    args_list = [(sess_df, features, label_col, name) for name, sess_df in session_dict.items()]
+
+    ctx = get_context("spawn")
+    try:
+        with ctx.Pool(min(cpu_count(), len(args_list))) as pool:
+            trades_list = pool.map(_run_fold, args_list)
+    except Exception:
+        # Fallback to sequential if multiprocessing fails
+        trades_list = [_run_fold(args) for args in args_list]
 
     all_df = pd.concat(trades_list, ignore_index=True)
     out_path = os.path.join(TRADE_DIR, "manual_backtest_trades.csv")

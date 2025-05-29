@@ -393,3 +393,6 @@
 ## 2025-10-13
 - ปรับ generate_entry_signal เพิ่มสัญญาณ SELL RSI70_InsideBar, QM_Bearish และ BearishEngulfing (Patch v12.9.0)
 
+## 2025-10-14
+- ปรับ run_parallel_wfv ใช้ multiprocessing จริง และ fallback แบบ sequential หากล้มเหลว (Patch Perf-F)
+
