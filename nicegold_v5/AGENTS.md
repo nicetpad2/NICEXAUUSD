@@ -413,3 +413,6 @@
 ### 2025-10-11
 - ปรับปรุง run_backtest ใช้การอ่านข้อมูลแบบ array ลดเวลา loop (Patch Perf-E)
 
+### 2025-10-12
+- เพิ่มกำไรสุทธิและ Risk Metrics ใน simulate_trades_with_tp และรองรับ Sell ครบระบบ (Patch v12.8.3)
+
