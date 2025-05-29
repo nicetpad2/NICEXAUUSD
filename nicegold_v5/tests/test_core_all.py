@@ -1207,6 +1207,25 @@ def test_entry_simulate_partial_tp_safe_basic():
     assert trades['exit_reason'].iloc[0] == 'tp1'
 
 
+def test_simulate_partial_tp_safe_low_atr_high_gainz():
+    from nicegold_v5.exit import simulate_partial_tp_safe
+
+    df = pd.DataFrame({
+        'timestamp': [pd.Timestamp('2025-01-01 00:00'),
+                     pd.Timestamp('2025-01-01 00:01'),
+                     pd.Timestamp('2025-01-01 00:16')],
+        'close': [100, 100.5, 99.0],
+        'high': [100.2, 100.7, 100.0],
+        'low': [99.8, 100.3, 98.8],
+        'entry_signal': ['buy', 'buy', 'buy'],
+        'atr': [0.1, 0.1, 0.1],
+        'gain_z_entry': [0.5, 0.5, 0.5],
+    })
+
+    trades, _ = simulate_partial_tp_safe(df)
+    assert not trades.empty
+
+
 def test_generate_pattern_signals():
     from nicegold_v5.entry import generate_pattern_signals
 

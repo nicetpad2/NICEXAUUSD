@@ -506,3 +506,6 @@
 - ปรับปรุง `fix_engine.auto_fix_logic` ให้คำนวณ `net_pnl` และเปิด Dynamic TSL
   อัตโนมัติเมื่อกำไรสุทธิเป็นลบ พร้อมเพิ่มเงื่อนไขขยาย SL และเพิ่ม hold time
 
+
+### 2025-11-09
+- ผ่อนปรน simulate_partial_tp_safe เปิดออเดอร์เมื่อ ATR หรือตัวชี้วัด momentum สูง (Patch v16.1.1)

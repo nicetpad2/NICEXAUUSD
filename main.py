@@ -349,6 +349,12 @@ def welcome():
         print("[Patch CLI] ⚠️ ไม่มีสัญญาณจาก config หลัก – fallback RELAX_CONFIG_Q3")
         df = generate_signals(df, config=RELAX_CONFIG_Q3)
 
+    # [Patch v16.1.1] เพิ่ม fallback Diagnostic หากยังไม่พบสัญญาณ
+    if df["entry_signal"].isnull().mean() >= 1.0:
+        from nicegold_v5.config import SNIPER_CONFIG_DIAGNOSTIC
+        print("[Patch CLI] ⚠️ RELAX_CONFIG_Q3 ยังไม่พบสัญญาณ – fallback DIAGNOSTIC")
+        df = generate_signals(df, config=SNIPER_CONFIG_DIAGNOSTIC)
+
     show_progress_bar("🧪 ตรวจสอบความสมบูรณ์ของข้อมูล", steps=1)
 
     if "entry_time" not in df.columns:
