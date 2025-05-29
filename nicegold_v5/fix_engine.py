@@ -1,5 +1,14 @@
+"""Adaptive Fix Engine utilities."""
+
 import pandas as pd
 import numpy as np
+import logging
+
+# [Patch v12.3.7+] – รวม Unified Patch + AutoFix WFV + AutoRiskAdjust
+# ----------------------------------------------------------------------
+# ✅ รวม Patch v12.3.5–v12.3.7
+# ✅ ฝัง AutoFix Logic เข้า WFV (ต่อ Fold)
+# ✅ เพิ่ม AutoRiskAdjust: ปรับ TP1 RR / SL ตามผล Fold ก่อนหน้า
 
 
 def run_self_diagnostic(trades_df: pd.DataFrame, df: pd.DataFrame) -> dict:
@@ -24,7 +33,7 @@ def run_self_diagnostic(trades_df: pd.DataFrame, df: pd.DataFrame) -> dict:
     return summary
 
 
-def auto_fix_logic(summary: dict, config: dict, session: str | None = None) -> dict:
+def auto_fix_logic(summary: dict, config: dict, session: str = None) -> dict:
     """แก้ไข config อัตโนมัติ หากเจอ TP = 0 หรือ SL เยอะ"""
     new_config = config.copy()
 
@@ -42,26 +51,43 @@ def auto_fix_logic(summary: dict, config: dict, session: str | None = None) -> d
         print("\n[Patch Fix] 🔁 ปรับ SL multiplier สำหรับ session London")
         new_config["atr_multiplier"] = 1.7
 
-    if summary.get("avg_mfe", 0) > 2.5 and summary["tp2_count"] == 0:
+    if summary["avg_mfe"] > 2.5 and summary["tp2_count"] == 0:
         print("\n[Patch Fix] 🧪 พบ MFE สูงแต่ไม่เกิด TP2 → ลด delay หรือเพิ่ม TP margin")
         new_config["tp2_delay_min"] = 5
         new_config["tp2_rr_ratio"] = 3.2
 
-    if summary.get("avg_duration", 0) < 2.0 and summary["sl_rate"] > 0.2:
+    if summary["avg_duration"] < 2.0 and summary["sl_rate"] > 0.2:
         print("\n[Patch Fix] ⛑ SL เกิดเร็ว → เพิ่ม minimum hold time ก่อน exit")
         new_config["min_hold_minutes"] = 10
 
     return new_config
 
 
-def simulate_and_autofix(
-    df: pd.DataFrame,
-    simulate_fn,
-    config: dict,
-    session: str | None = None,
-):
+def simulate_and_autofix(df: pd.DataFrame, simulate_fn, config: dict, session: str = None):
     """simulate แล้วรัน Self-Diagnostic + AutoFix พร้อมคืน config ที่ปรับแล้ว"""
     trades_df, equity_df = simulate_fn(df)
     summary = run_self_diagnostic(trades_df, df)
     config_adapted = auto_fix_logic(summary, config, session=session)
     return trades_df, equity_df, config_adapted
+
+
+# [Patch v12.3.7+] ✅ AutoFix WFV Fold
+def autofix_fold_run(df_fold: pd.DataFrame, simulate_fn, config: dict, fold_name: str):
+    print(f"\n🔁 [Fold: {fold_name}] Running simulation with AutoFix...")
+    trades_df, equity_df, config_used = simulate_and_autofix(df_fold, simulate_fn, config)
+    print(f"✅ [Fold: {fold_name}] Completed. Adjusted config:")
+    for k, v in config_used.items():
+        print(f"   ▸ {k}: {v}")
+    return trades_df, config_used
+
+
+# [Patch v12.3.7+] ✅ AutoRiskAdjust ฟังก์ชันสำหรับปรับ config ต่อเนื่อง WFV
+def autorisk_adjust(prev_config: dict, prev_summary: dict) -> dict:
+    config = prev_config.copy()
+    if prev_summary.get("tp_rate", 0) < 0.2:
+        config["tp1_rr_ratio"] = 1.2
+        print("[AutoRiskAdjust] ลด RR1 → 1.2 เนื่องจาก TP เกิดน้อย")
+    if prev_summary.get("sl_rate", 0) > 0.4:
+        config["atr_multiplier"] = 1.6
+        print("[AutoRiskAdjust] ขยาย SL → atr_multiplier 1.6")
+    return config

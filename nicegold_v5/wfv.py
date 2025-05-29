@@ -5,6 +5,8 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
+import os  # [Patch v12.3.9] Added for export
+from datetime import datetime  # [Patch v12.3.9] Added for timestamp
 
 COMMISSION_PER_LOT = 0.10
 SPREAD_VALUE = 0.2
@@ -13,6 +15,11 @@ POINT_VALUE = 0.1
 ORDER_DURATION_MIN = 120
 DEFAULT_RISK_PER_TRADE = 0.01
 INITIAL_CAPITAL = 10000.0
+
+from nicegold_v5.fix_engine import autofix_fold_run, autorisk_adjust, run_self_diagnostic
+
+TRADE_DIR = "/content/drive/MyDrive/NICEGOLD/logs"  # [Patch v12.3.9] Define log dir
+os.makedirs(TRADE_DIR, exist_ok=True)  # [Patch v12.3.9] Ensure log dir exists
 
 
 def auto_entry_config(fold_df: pd.DataFrame) -> dict:
@@ -246,3 +253,29 @@ def streak_summary(trades_df):
         "max_loss_streak": trades_df["loss_streak"].max(),
         "max_drawdown": trades_df["drawdown"].max()
     }
+
+
+# [Patch v12.3.8] – รัน WFV แบบ AutoFix Multi-Fold
+# -------------------------------------------------------------
+# ✅ ใช้ autofix_fold_run() สำหรับแต่ละ fold
+# ✅ ใช้ autorisk_adjust() ปรับ config ต่อเนื่องระหว่าง fold
+
+def run_autofix_wfv(df: pd.DataFrame, simulate_fn, base_config: dict, n_folds: int = 5) -> pd.DataFrame:
+    """Run walk-forward validation แบบ AutoFix Adaptive ต่อเนื่อง"""
+    fold_size = len(df) // n_folds
+    all_trades = []
+    config = base_config.copy()
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")  # [Patch v12.3.9] Use one timestamp for the run
+
+    for fold in range(n_folds):
+        fold_df = df.iloc[fold * fold_size : (fold + 1) * fold_size].reset_index(drop=True)
+        fold_name = f"Fold{fold+1}"
+        trades_df, config = autofix_fold_run(fold_df, simulate_fn, config, fold_name=fold_name)
+        config = autorisk_adjust(config, run_self_diagnostic(trades_df, fold_df))
+        trades_df["fold"] = fold + 1
+        out_path = os.path.join(TRADE_DIR, f"trades_autofix_{fold_name}_{ts}.csv")
+        trades_df.to_csv(out_path, index=False)
+        print(f"📤 Exported {len(trades_df):,} trades → {out_path}")
+        all_trades.append(trades_df)
+
+    return pd.concat(all_trades, ignore_index=True)

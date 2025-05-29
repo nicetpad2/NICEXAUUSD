@@ -354,6 +354,33 @@ def test_run_auto_wfv(tmp_path):
     assert len(summary) == 2
 
 
+def test_autorisk_adjust():
+    from nicegold_v5.fix_engine import autorisk_adjust
+
+    cfg = {"tp1_rr_ratio": 1.5, "atr_multiplier": 1.0}
+    summary = {"tp_rate": 0.1, "sl_rate": 0.5}
+    new_cfg = autorisk_adjust(cfg, summary)
+    assert new_cfg["tp1_rr_ratio"] == 1.2
+    assert new_cfg["atr_multiplier"] == 1.6
+
+
+def test_run_autofix_wfv(tmp_path):
+    from nicegold_v5.wfv import run_autofix_wfv
+
+    def fake_sim(df):
+        trades = pd.DataFrame({
+            "exit_reason": ["sl"] * len(df),
+            "mfe": [1.0] * len(df),
+            "duration_min": [1.0] * len(df),
+        })
+        return trades, pd.DataFrame()
+
+    df = sample_wfv_df()
+    result = run_autofix_wfv(df, fake_sim, {"tp1_rr_ratio": 1.5}, n_folds=2)
+    assert isinstance(result, pd.DataFrame)
+    assert set(result["fold"]) == {1, 2}
+
+
 def test_run_walkforward_backtest():
     df = sample_wfv_df()
     trades = wfv.run_walkforward_backtest(
