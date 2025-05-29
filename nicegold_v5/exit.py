@@ -156,11 +156,17 @@ def simulate_partial_tp_safe(df: pd.DataFrame, capital: float = 1000.0):
             atr = getattr(row, "atr", 1.0)
             direction = "buy" if row.entry_signal.startswith("buy") else "sell"
 
+            # [Patch v15.8.0] กรองกราฟนิ่งและ momentum ต่ำ
+            gain_z_entry = getattr(row, "gain_z_entry", getattr(row, "gain_z", 1.0))
+            if atr < 0.15 or gain_z_entry < 0.3:
+                continue
+
             # [Patch v12.3.2] ✅ Adaptive SL/TP by ATR Level
             atr_mult = 1.5 if getattr(row, "session", None) == "London" else 1.2
+            rr1 = 1.8  # [Patch v15.8.0] เพิ่ม RR เพื่อให้ PnL > 1 USD หลังหักค่าธรรมเนียม
             rr2 = 3.5 if getattr(row, "entry_score", 0) > 4.5 else 2.5
             sl = entry_price - atr * atr_mult if direction == "buy" else entry_price + atr * atr_mult
-            tp1 = entry_price + atr * 1.5 if direction == "buy" else entry_price - atr * 1.5
+            tp1 = entry_price + atr * rr1 if direction == "buy" else entry_price - atr * rr1
             tp2 = entry_price + atr * rr2 if direction == "buy" else entry_price - atr * rr2
 
             lot = 0.1
@@ -185,7 +191,8 @@ def simulate_partial_tp_safe(df: pd.DataFrame, capital: float = 1000.0):
             # [Patch v12.2.x] Enhanced: wait TP2 if TP1 hit recently
             price_now = row.close
             direction = open_position["type"]
-            tp1_hit = price_now >= open_position["tp1"] if direction == "buy" else price_now <= open_position["tp1"]
+            # [Patch v15.8.0] ตรวจ TP1 จาก high/low จริง
+            tp1_hit = row.high >= open_position["tp1"] if direction == "buy" else row.low <= open_position["tp1"]
             if tp1_hit:
                 open_position["tp1_hit"] = True
 
