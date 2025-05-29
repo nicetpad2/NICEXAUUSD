@@ -367,7 +367,7 @@ def welcome():
 
     show_progress_bar("🚀 รัน simulate_partial_tp_safe", steps=2)
     trades, logs = simulate_partial_tp_safe(df)
-    trade_df = pd.DataFrame(trades)
+    trade_df = pd.DataFrame(trades)  # ✅ [Patch v15.7.1] ใช้ trades แทน logs เพื่อให้มี entry/exit
 
     if trade_df.empty or trade_df["exit_reason"].isnull().all():
         print("[Patch QA] ⚠️ simulate_trades_with_tp ไม่พบ trade ที่ถูกยิงจริง")
