@@ -419,3 +419,7 @@
 ## 2025-10-21
 - แก้บั๊ก ImportError เมื่อเรียก simulate_partial_tp_safe จาก main.py
 - ปรับ main.py ให้เพิ่ม path โฟลเดอร์อัตโนมัติด้วย ROOT_DIR
+## 2025-10-22
+- ปรับ should_exit เพิ่ม SL threshold ตาม session และ MFE Guard
+- เพิ่ม TP2_HOLD_MIN ดีเลย์ TP2 และ Dynamic TSL ใน simulate_partial_tp_safe/backtester (v12.3.0)
+

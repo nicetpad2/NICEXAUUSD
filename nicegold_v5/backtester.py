@@ -90,7 +90,7 @@ def get_sl_tp_recovery(price: float, atr: float, direction: str) -> tuple[float,
         sl = price + atr * sl_multiplier
         tp = price - atr * tp_multiplier
     return sl, tp
-from nicegold_v5.exit import should_exit
+from nicegold_v5.exit import should_exit, TP2_HOLD_MIN
 from tqdm import tqdm
 import time
 import os
@@ -248,6 +248,9 @@ def run_backtest(df: pd.DataFrame):
                 open_trade["lot"] = open_trade["lot"] * 0.5
 
             elif open_trade.get("tp1_hit"):
+                delay_hold = (ts - open_trade["entry_time"]).total_seconds() / 60 >= TP2_HOLD_MIN
+                if not delay_hold:
+                    continue  # [Patch v12.3.0] Delay exit until TP2 hold time reached
                 exit_now, reason = should_exit(open_trade, row_data)
                 if exit_now or (direction == "buy" and gain >= tp2) or (direction == "sell" and gain >= tp2):
                     pnl = (price - open_trade["entry"] if direction == "buy" else open_trade["entry"] - price) * open_trade["lot"] * PNL_MULTIPLIER

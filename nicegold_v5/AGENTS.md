@@ -440,3 +440,7 @@
 - ปรับ main.py ใช้ simulate_partial_tp_safe แทน simulate_trades_with_tp และบันทึก log เซสชัน
 ### 2025-10-21
 - แก้บั๊ก import simulate_partial_tp_safe ใน main.py และเพิ่ม ROOT_DIR ใน sys.path
+### 2025-10-22
+- ปรับ should_exit เพิ่ม SL threshold ตาม session และป้องกัน SL เมื่อ MFE > 3.0
+- เพิ่มตัวแปร TP2_HOLD_MIN และดีเลย์ TP2 ใน simulate_partial_tp_safe/backtester (Patch v12.3.0)
+
