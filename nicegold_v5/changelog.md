@@ -479,3 +479,7 @@
 - เพิ่ม `generate_pattern_signals` สำหรับตรวจจับ Engulfing และ Inside Bar
 - อัปเดตชุดทดสอบรองรับฟังก์ชันใหม่ (Patch v16.0.0)
 
+## 2025-11-08
+- ปรับปรุง `fix_engine.auto_fix_logic` ตรวจจับกำไรสุทธิเป็นลบและปรับ RR/SL
+  อัตโนมัติ เพิ่มการใช้ Dynamic TSL และเวลา hold ขั้นต่ำ (Patch v16.1.0)
+

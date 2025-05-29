@@ -22,6 +22,8 @@ def run_self_diagnostic(trades_df: pd.DataFrame, df: pd.DataFrame) -> dict:
         "total_trades": len(trades_df),
         "avg_mfe": trades_df["mfe"].mean() if "mfe" in trades_df.columns else np.nan,
         "avg_duration": trades_df["duration_min"].mean() if "duration_min" in trades_df.columns else np.nan,
+        "net_pnl": trades_df["pnl"].sum() if "pnl" in trades_df.columns else 0.0,
+        "avg_pnl": trades_df["pnl"].mean() if "pnl" in trades_df.columns else 0.0,
     }
     summary["tp_rate"] = (summary["tp1_count"] + summary["tp2_count"]) / (summary["total_trades"] + 1e-9)
     summary["sl_rate"] = summary["sl_count"] / (summary["total_trades"] + 1e-9)
@@ -59,6 +61,17 @@ def auto_fix_logic(summary: dict, config: dict, session: str = None) -> dict:
     if summary["avg_duration"] < 2.0 and summary["sl_rate"] > 0.2:
         print("\n[Patch Fix] ⛑ SL เกิดเร็ว → เพิ่ม minimum hold time ก่อน exit")
         new_config["min_hold_minutes"] = 10
+
+    if summary.get("net_pnl", 0) <= 0:
+        print("\n[Patch Fix] 📉 Net PnL ติดลบ → ลด RR1 และเปิด Dynamic TSL")
+        new_config["tp1_rr_ratio"] = min(new_config.get("tp1_rr_ratio", 1.2), 1.0)
+        new_config["atr_multiplier"] = max(new_config.get("atr_multiplier", 1.6), 1.8)
+        new_config["use_dynamic_tsl"] = True
+
+    if summary["sl_rate"] > 0.5 and summary["avg_mfe"] < 1.0:
+        print("\n[Patch Fix] 🛡️ SL สูงและ MFE ต่ำ → เพิ่มเวลาถือและขยาย SL")
+        new_config["min_hold_minutes"] = max(new_config.get("min_hold_minutes", 10), 15)
+        new_config["atr_multiplier"] = max(new_config.get("atr_multiplier", 1.8), 2.0)
 
     return new_config
 
