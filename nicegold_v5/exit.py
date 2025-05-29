@@ -1,5 +1,6 @@
 import logging
 from datetime import timedelta
+from collections import deque
 import pandas as pd
 import numpy as np
 
@@ -139,28 +140,32 @@ def simulate_partial_tp_safe(df: pd.DataFrame, capital: float = 1000.0):
     trades = []
     logs = []
     open_position = None
+    high_window = deque(maxlen=10)
+    low_window = deque(maxlen=10)
 
-    for i, row in df.iterrows():
-        if pd.isna(row.get("entry_signal")):
+    for row in df.itertuples(index=False):
+        high_window.append(getattr(row, "high", np.nan))
+        low_window.append(getattr(row, "low", np.nan))
+
+        if pd.isna(getattr(row, "entry_signal")):
             continue
-
-        row_session = detect_session_auto(row["timestamp"])
+        row_session = detect_session_auto(row.timestamp)
 
         if open_position is None:
-            entry_price = row["close"]
-            atr = row.get("atr", 1.0)
-            direction = "buy" if row["entry_signal"].startswith("buy") else "sell"
+            entry_price = row.close
+            atr = getattr(row, "atr", 1.0)
+            direction = "buy" if row.entry_signal.startswith("buy") else "sell"
 
             # [Patch v12.3.2] ✅ Adaptive SL/TP by ATR Level
-            atr_mult = 1.5 if row.get("session") == "London" else 1.2
-            rr2 = 3.5 if row.get("entry_score", 0) > 4.5 else 2.5
+            atr_mult = 1.5 if getattr(row, "session", None) == "London" else 1.2
+            rr2 = 3.5 if getattr(row, "entry_score", 0) > 4.5 else 2.5
             sl = entry_price - atr * atr_mult if direction == "buy" else entry_price + atr * atr_mult
             tp1 = entry_price + atr * 1.5 if direction == "buy" else entry_price - atr * 1.5
             tp2 = entry_price + atr * rr2 if direction == "buy" else entry_price - atr * rr2
 
             lot = 0.1
             open_position = {
-                "entry_time": row["timestamp"],
+                "entry_time": row.timestamp,
                 "entry": entry_price,
                 "sl": sl,
                 "tp1": tp1,
@@ -172,45 +177,44 @@ def simulate_partial_tp_safe(df: pd.DataFrame, capital: float = 1000.0):
                 "breakeven": False,
                 "tp1_hit": False,
                 "session": row_session,
-                "entry_score": row.get("entry_score", 0),
+                "entry_score": getattr(row, "entry_score", 0),
             }
             continue
 
         if open_position:
             # [Patch v12.2.x] Enhanced: wait TP2 if TP1 hit recently
-            price_now = row["close"]
+            price_now = row.close
             direction = open_position["type"]
             tp1_hit = price_now >= open_position["tp1"] if direction == "buy" else price_now <= open_position["tp1"]
             if tp1_hit:
                 open_position["tp1_hit"] = True
 
             if open_position.get("tp1_hit"):
-                delay_hold = (row["timestamp"] - open_position["entry_time"]).total_seconds() / 60 >= TP2_HOLD_MIN
+                delay_hold = (row.timestamp - open_position["entry_time"]).total_seconds() / 60 >= TP2_HOLD_MIN
                 if not delay_hold:
                     continue  # [Patch v12.3.0] Delay exit until TP2 hold time reached
 
             # [Patch v12.3.2] ✅ Dynamic TSL ใช้ rolling max/min 10 แท่ง
             if open_position["tp1_hit"] and not open_position["tsl_activated"]:
-                history = df[df["timestamp"] <= row["timestamp"]].tail(10)
                 if direction == "buy":
-                    open_position["trailing_sl"] = max(history["high"]) - atr
+                    open_position["trailing_sl"] = max(high_window) - atr
                 else:
-                    open_position["trailing_sl"] = min(history["low"]) + atr
+                    open_position["trailing_sl"] = min(low_window) + atr
                 open_position["tsl_activated"] = True
 
             # [Patch v12.3.1] ✅ ถือ TP2 อย่างน้อย 15 นาที หาก Entry Score > 4.5
-            duration = (row["timestamp"] - open_position["entry_time"]).total_seconds() / 60
+            duration = (row.timestamp - open_position["entry_time"]).total_seconds() / 60
             if open_position.get("entry_score", 0) > 4.5 and duration < 15:
                 continue  # ห้าม exit ก่อน 15 นาที
 
             exit_triggered, reason = should_exit(open_position, row)
             if exit_triggered:
-                exit_price = row["close"]
-                duration = (row["timestamp"] - open_position["entry_time"]).total_seconds() / 60
-                mfe = np.abs(row["high"] - open_position["entry"] if open_position["type"] == "buy" else open_position["entry"] - row["low"])
+                exit_price = row.close
+                duration = (row.timestamp - open_position["entry_time"]).total_seconds() / 60
+                mfe = np.abs(row.high - open_position["entry"] if open_position["type"] == "buy" else open_position["entry"] - row.low)
                 trades.append({
                     "entry_time": open_position["entry_time"],
-                    "exit_time": row["timestamp"],
+                    "exit_time": row.timestamp,
                     "entry": open_position["entry"],
                     "exit_price": exit_price,
                     "tp1_price": open_position["tp1"],
