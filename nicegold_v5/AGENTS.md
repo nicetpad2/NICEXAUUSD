@@ -449,3 +449,6 @@
 - ปรับ simulate_partial_tp_safe ใช้ ATR multiplier ตาม session และ Dynamic TSL 10 แท่ง (Patch v12.3.2)
 - ปรับ generate_signals_v12_0 กรอง entry_score > 3.5 (Patch v12.3.4)
 
+### 2025-10-24
+- ปรับ welcome() ใช้ simulate_partial_tp_safe และอัพเดตชุดทดสอบ CLI
+
