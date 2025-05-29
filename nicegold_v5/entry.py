@@ -145,6 +145,47 @@ def sanitize_price_columns(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def generate_pattern_signals(df: pd.DataFrame) -> pd.DataFrame:
+    """สร้างสัญญาณเบื้องต้นจากรูปแบบแท่งเทียน"""
+    df = df.copy()
+    df["pattern_signal"] = None
+
+    bullish = (
+        (df["close"].shift(1) < df["open"].shift(1))
+        & (df["close"] > df["open"])
+        & (df["close"] > df["open"].shift(1))
+        & (df["open"] < df["close"].shift(1))
+    )
+    df.loc[bullish, "pattern_signal"] = "bullish_engulfing"
+
+    bearish = (
+        (df["close"].shift(1) > df["open"].shift(1))
+        & (df["close"] < df["open"])
+        & (df["close"] < df["open"].shift(1))
+        & (df["open"] > df["close"].shift(1))
+    )
+    df.loc[bearish, "pattern_signal"] = "bearish_engulfing"
+
+    inside_bar = (df["high"] < df["high"].shift(1)) & (df["low"] > df["low"].shift(1))
+    df.loc[inside_bar, "pattern_signal"] = "inside_bar"
+
+    df["entry_signal"] = None
+    df.loc[df["pattern_signal"] == "bullish_engulfing", "entry_signal"] = "buy"
+    df.loc[df["pattern_signal"] == "bearish_engulfing", "entry_signal"] = "sell"
+    df.loc[
+        (df["pattern_signal"] == "inside_bar")
+        & (df["close"] > df["high"].shift(1)),
+        "entry_signal",
+    ] = "buy"
+    df.loc[
+        (df["pattern_signal"] == "inside_bar")
+        & (df["close"] < df["low"].shift(1)),
+        "entry_signal",
+    ] = "sell"
+
+    return df
+
+
 def generate_signals_v8_0(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
     """ใช้ logic sniper + TP1/TSL แบบล่าสุด (Patch v8.0)."""
     df = df.copy()

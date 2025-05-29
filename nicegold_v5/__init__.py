@@ -6,6 +6,7 @@ from .entry import (
     generate_signals_v11_scalper_m1,
     generate_signals_v12_0,
     generate_signals,
+    generate_pattern_signals,
     apply_tp_logic,
     generate_entry_signal,
     session_filter,
