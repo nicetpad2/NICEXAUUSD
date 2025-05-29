@@ -315,8 +315,8 @@ def test_atr_contract_exit():
         'timestamp': pd.Timestamp('2025-01-01 00:20:00')
     }
     exit_now, reason = should_exit(trade, row)
-    assert exit_now
-    assert reason == 'atr_contract_exit'
+    assert not exit_now
+    assert reason is None
 
 
 def test_micro_gain_lock():

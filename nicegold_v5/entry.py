@@ -855,6 +855,10 @@ def simulate_trades_with_tp(df: pd.DataFrame, sl_distance: float = 5.0):
 def generate_signals_v12_0(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
     """[Patch v12.0] Multi-pattern signal generator with auto TP calculation."""
     df = df.copy()
+    # [Patch v12.3.4] ✅ Entry Score Filter (TP2 Potential only)
+    if "entry_score" in df.columns:
+        df = df[df["entry_score"] > 3.5]
+        print(f"[Patch v12.3.4] ⚙️ Filtered by Entry Score > 3.5 → {len(df)} rows")
     df = sanitize_price_columns(df)
     validate_indicator_inputs(df)
 

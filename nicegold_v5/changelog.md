@@ -423,3 +423,8 @@
 - ปรับ should_exit เพิ่ม SL threshold ตาม session และ MFE Guard
 - เพิ่ม TP2_HOLD_MIN ดีเลย์ TP2 และ Dynamic TSL ใน simulate_partial_tp_safe/backtester (v12.3.0)
 
+## 2025-10-23
+- ปรับ should_exit เพิ่ม Momentum Exit Guard และบล็อก SL เมื่อ MFE > 3.0 (Patch v12.3.1-v12.3.3)
+- ปรับ simulate_partial_tp_safe ใช้ ATR multiplier ตาม session และ Dynamic TSL 10 แท่ง (Patch v12.3.2)
+- ปรับ generate_signals_v12_0 กรอง entry_score > 3.5 เพื่อคัด TP2 Potential (Patch v12.3.4)
+

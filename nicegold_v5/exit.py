@@ -57,6 +57,7 @@ def should_exit(trade, row):
     tsl_trigger = atr * TSL_TRIGGER_GAIN
     be_trigger = atr * BE_TRIGGER_GAIN
 
+
     # [Patch QA-P7] หมายเหตุ: ควรพิจารณาเพิ่ม Logic การคำนวณ TSL แบบ Dynamic โดยใช้ ATR ณ ปัจจุบัน
     # TSL_ATR_FACTOR = 1.5 # ตัวอย่างค่าคงที่สำหรับ Dynamic TSL
     now = _rget(row, "timestamp")
@@ -110,6 +111,16 @@ def should_exit(trade, row):
     #     logging.info("[Patch D.14] Exit: early profit lock before gain_z turns negative")
     #     return True, "early_profit_lock"
 
+    # [Patch v12.3.1] ✅ หาก MFE > 3.0 → ห้าม SL
+    if trade.get("mfe", 0) > 3.0 and gain < 0:
+        logging.info("[Patch v12.3.1] SL Blocked: MFE > 3.0")
+        return False, None
+
+    # [Patch v12.3.3] ✅ Momentum Exit Guard (GainZ > 0)
+    if gain > 0 and gain_z > 0:
+        logging.info("[Patch v12.3.3] Momentum Lock: gain_z > 0")
+        return False, None
+
     if gain > atr * MIN_PROFIT_TRIGGER and atr_ma < atr * 0.75:
         logging.info("[Patch D.14] Exit: volatility contraction after profit")
         return True, "atr_contract_exit"
@@ -140,9 +151,12 @@ def simulate_partial_tp_safe(df: pd.DataFrame, capital: float = 1000.0):
             atr = row.get("atr", 1.0)
             direction = "buy" if row["entry_signal"].startswith("buy") else "sell"
 
-            sl = entry_price - atr * 1.2 if direction == "buy" else entry_price + atr * 1.2
+            # [Patch v12.3.2] ✅ Adaptive SL/TP by ATR Level
+            atr_mult = 1.5 if row.get("session") == "London" else 1.2
+            rr2 = 3.5 if row.get("entry_score", 0) > 4.5 else 2.5
+            sl = entry_price - atr * atr_mult if direction == "buy" else entry_price + atr * atr_mult
             tp1 = entry_price + atr * 1.5 if direction == "buy" else entry_price - atr * 1.5
-            tp2 = entry_price + atr * 3.0 if direction == "buy" else entry_price - atr * 3.0
+            tp2 = entry_price + atr * rr2 if direction == "buy" else entry_price - atr * rr2
 
             lot = 0.1
             open_position = {
@@ -158,6 +172,7 @@ def simulate_partial_tp_safe(df: pd.DataFrame, capital: float = 1000.0):
                 "breakeven": False,
                 "tp1_hit": False,
                 "session": row_session,
+                "entry_score": row.get("entry_score", 0),
             }
             continue
 
@@ -174,13 +189,19 @@ def simulate_partial_tp_safe(df: pd.DataFrame, capital: float = 1000.0):
                 if not delay_hold:
                     continue  # [Patch v12.3.0] Delay exit until TP2 hold time reached
 
+            # [Patch v12.3.2] ✅ Dynamic TSL ใช้ rolling max/min 10 แท่ง
             if open_position["tp1_hit"] and not open_position["tsl_activated"]:
-                open_position["tsl_activated"] = True
-                # [Patch v12.3.0] เพิ่ม TSL ด้วย Dynamic SL
+                history = df[df["timestamp"] <= row["timestamp"]].tail(10)
                 if direction == "buy":
-                    open_position["trailing_sl"] = max(row["high"] - row.get("atr", 1.0), open_position["sl"])
+                    open_position["trailing_sl"] = max(history["high"]) - atr
                 else:
-                    open_position["trailing_sl"] = min(row["low"] + row.get("atr", 1.0), open_position["sl"])
+                    open_position["trailing_sl"] = min(history["low"]) + atr
+                open_position["tsl_activated"] = True
+
+            # [Patch v12.3.1] ✅ ถือ TP2 อย่างน้อย 15 นาที หาก Entry Score > 4.5
+            duration = (row["timestamp"] - open_position["entry_time"]).total_seconds() / 60
+            if open_position.get("entry_score", 0) > 4.5 and duration < 15:
+                continue  # ห้าม exit ก่อน 15 นาที
 
             exit_triggered, reason = should_exit(open_position, row)
             if exit_triggered:
