@@ -1,6 +1,6 @@
 # main.py - NICEGOLD Assistant (L4 GPU + QA Guard + Full Progress Bars)
 
-import os
+import os  # [Patch v12.3.9] Ensure os is imported for path.join
 import sys
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 if ROOT_DIR not in sys.path:
@@ -25,12 +25,12 @@ from multiprocessing import cpu_count, get_context
 import numpy as np
 from nicegold_v5.utils import run_auto_wfv, split_by_session
 from nicegold_v5.entry import (
-    generate_signals_v12_0 as generate_signals,
+    generate_signals_v12_0 as generate_signals,  # [Patch v12.3.9] ensure import
     sanitize_price_columns,
     validate_indicator_inputs,
 )
 from nicegold_v5.exit import simulate_partial_tp_safe  # [Patch v12.2.x]
-from nicegold_v5.config import (
+from nicegold_v5.config import (  # [Patch v12.3.9] Import SNIPER_CONFIG_Q3_TUNED
     SNIPER_CONFIG_PROFIT,
     SNIPER_CONFIG_Q3_TUNED,
     RELAX_CONFIG_Q3,
@@ -41,6 +41,7 @@ from nicegold_v5.utils import (
     convert_thai_datetime,
     parse_timestamp_safe,
 )
+from nicegold_v5.fix_engine import simulate_and_autofix  # [Patch v12.3.9] Added import
 # User-provided custom instructions
 # *สนทนาภาษาไทยเท่านั้น
 
@@ -177,6 +178,11 @@ def load_csv_safe(path, lowercase=True):
 
 def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
     """Run backtest with cleaned signals and real exit logic."""
+    # [Patch v12.3.9] – แก้ main.py ให้ใช้ simulate_and_autofix() แบบหายขาด
+    # -------------------------------------------------------------------
+    # ✅ แก้ run_clean_backtest() ให้เรียก simulate_and_autofix() โดยตรง
+    # ✅ ยกเลิก simulate_partial_tp_safe ตรง ๆ และไม่เรียกซ้ำซ้อน
+    # ✅ ฝัง AutoFix + Diagnostic + Adaptive Config ครบทุก run
     df = df.copy()
 
     from nicegold_v5.entry import sanitize_price_columns, validate_indicator_inputs
@@ -202,9 +208,9 @@ def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
         df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
     df = df.dropna(subset=["timestamp"])
     df = df.sort_values("timestamp")
-    df = sanitize_price_columns(df)
     try:
-        validate_indicator_inputs(df, min_rows=min(500, len(df)))
+        df = sanitize_price_columns(df)  # [Patch v12.3.9] Moved sanitize before validate
+        validate_indicator_inputs(df, min_rows=min(500, len(df)))  # [Patch v12.3.9] Ensure df is sanitized
     except TypeError:
         # compatibility with monkeypatched tests without min_rows
         validate_indicator_inputs(df)
@@ -212,21 +218,19 @@ def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
     from nicegold_v5.config import RELAX_CONFIG_Q3
     df = generate_signals(df, config=SNIPER_CONFIG_Q3_TUNED)
 
-    # [Patch v12.0.3] ✅ Ensure 'entry_time' exists
-    if "entry_time" not in df.columns:
-        print("[Patch v12.0.3] ⛑ fallback: สร้าง entry_time จาก timestamp")
-        df["entry_time"] = df.get("timestamp", pd.NaT)
-    if not pd.api.types.is_datetime64_any_dtype(df["entry_time"]):
-        df["entry_time"] = pd.to_datetime(df["entry_time"], errors="coerce")
+    # [Patch v12.3.9] Ensure 'entry_time' exists and is datetime
+    df["entry_time"] = pd.to_datetime(df["timestamp"], errors="coerce")
+    df["signal_id"] = df["timestamp"].astype(str)
+
+    # [Patch v12.3.9] Moved fallback logic after initial signal generation
+    if df["entry_signal"].isnull().mean() == 1.0:
+        print("[Patch v11.9.16] ❗ ไม่พบสัญญาณใน Q3_TUNED – ใช้ fallback RELAX_CONFIG_Q3")
+        df = generate_signals(df, config=RELAX_CONFIG_Q3)
 
     # [Patch v12.0.3] ✅ Ensure 'entry_signal' exists
     if "entry_signal" not in df.columns:
         print("[Patch v12.0.3] ⛑ fallback: ไม่มี entry_signal – ใส่ค่า None")
         df["entry_signal"] = None
-
-    if df["entry_signal"].isnull().mean() == 1.0:
-        print("[Patch v11.9.16] ❗ ไม่พบสัญญาณใน Q3_TUNED – ใช้ fallback RELAX_CONFIG_Q3")
-        df = generate_signals(df, config=RELAX_CONFIG_Q3)
     
     # [Patch v12.0.3] 🧠 Block run if no signal at all
     if df["entry_signal"].isnull().mean() >= 1.0:
@@ -236,9 +240,7 @@ def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
     print(f"[Patch v11.9.16] ✅ Entry Signal Coverage: {signal_coverage:.2f}%")
 
     # Ensure timestamps are valid and use them for entry_time
-    df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
-    df["entry_time"] = df["timestamp"]
-    df["signal_id"] = df["timestamp"].astype(str)
+    # df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT) # [Patch v12.3.9] Already parsed
 
     # [Patch v12.0.2] Validate required columns before backtest
     required = ["entry_time", "entry_signal", "close"]
@@ -253,31 +255,25 @@ def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
     leak_cols = [c for c in df.columns if "future" in c or "next_" in c or c.endswith("_lead")]
     df.drop(columns=leak_cols, errors="ignore", inplace=True)
 
-    # [Patch v12.3.7] ✅ ใช้ simulate_and_autofix() แทน simulate เดิม
-    from nicegold_v5.fix_engine import simulate_and_autofix
-
-    print("\n🚀 [Patch v12.3.7] Adaptive Simulation Pipeline started...")
-    trades_df, logs, config_used = simulate_and_autofix(
+    print("\n🚀 [Patch v12.3.9] Using simulate_and_autofix() pipeline...")
+    trades_df, equity_df, config_used = simulate_and_autofix(  # [Patch v12.3.9] equity_df is returned
         df,
         simulate_partial_tp_safe,
         SNIPER_CONFIG_Q3_TUNED,
-        session="London",
+        session="London"  # [Patch v12.3.9] Specify session
     )
-    print("\n✅ [Patch v12.3.7] Simulation Completed with AutoFix Config:")
+    print("\n✅ Simulation Completed with Adaptive Config:")
     for k, v in config_used.items():
-        print(f"   ▸ {k}: {v}")
+        print(f"    ▸ {k}: {v}")
 
-    output_path = os.path.join(TRADE_DIR, "trades_v12_tp1tp2.csv")
-    trades_df.to_csv(output_path, index=False)
-    print(f"✅ Exported {len(trades_df):,} trades to: {output_path}")
+    trades_df.to_csv(os.path.join(TRADE_DIR, "trades_v1239.csv"), index=False)  # [Patch v12.3.9] Updated filename
     if "exit_reason" in trades_df.columns:
         print(
             f"📊 Exit reasons: \n{trades_df['exit_reason'].value_counts().to_string()}"
         )
     if "session" in trades_df.columns:
         print(
-            f"🕒 Sessions covered: \n{trades_df['session'].value_counts().to_string()}"
-        )
+            f"🕒 Sessions covered: \n{trades_df['session'].value_counts().to_string()}")
     return trades_df
 
 def run_wfv_with_progress(df, features, label_col):

@@ -442,3 +442,8 @@
 \n## 2025-10-27
 - แก้ simulate_partial_tp_safe ใช้ deque สำหรับ rolling history ลดเวลาและป้องกัน hang ใน main.py
 
+## 2025-10-28
+- ปรับปรุง `run_clean_backtest` ใช้ `simulate_and_autofix` ครบวงจร
+- ย้าย sanitize ก่อน validate และขยับ fallback หลัง generate_signals
+- บันทึกผลเป็น `trades_v1239.csv` และแก้ import os
+
