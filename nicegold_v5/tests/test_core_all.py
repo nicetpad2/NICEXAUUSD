@@ -791,13 +791,13 @@ from nicegold_v5.utils import safe_calculate_net_change
 
 def test_safe_calculate_net_change():
     df = pd.DataFrame([
-        {'entry_price': 100.0, 'exit_price': 105.0},
-        {'entry_price': 110.0, 'exit_price': None},
-        {'entry_price': None, 'exit_price': 120.0},
-        {'entry_price': 120.0, 'exit_price': 121.0},
+        {'entry_price': 100.0, 'exit_price': 105.0, 'direction': 'buy'},
+        {'entry_price': 110.0, 'exit_price': None, 'direction': 'sell'},
+        {'entry_price': None, 'exit_price': 120.0, 'direction': 'buy'},
+        {'entry_price': 120.0, 'exit_price': 118.0, 'direction': 'sell'},
     ])
     result = safe_calculate_net_change(df)
-    assert result == 6.0
+    assert result == 7.0
 import pandas as pd
 from nicegold_v5.utils import simulate_tp_exit
 
