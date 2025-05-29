@@ -431,3 +431,6 @@
 ### 2025-10-17
 - เพิ่ม simulate_partial_tp_safe และปรับ should_exit รองรับ BE/TSL + BE Delay (Patch v12.1.x)
 
+### 2025-10-18
+- ปรับ simulate_partial_tp_safe ตรวจจับเซสชันอัตโนมัติและเปิด TSL หลัง TP1 (Patch v12.2.x)
+
