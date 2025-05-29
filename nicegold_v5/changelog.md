@@ -403,3 +403,6 @@
 ## 2025-10-16
 - simulate_trades_with_tp ปรับ BE/TSL แบบไดนามิกตามค่า ATR และราคาในหน้าต่าง (Patch v12.9.6)
 
+## 2025-10-17
+- เพิ่มฟังก์ชัน `simulate_partial_tp_safe` และปรับ `should_exit` ให้รองรับ BE/TSL แบบใหม่ (Patch v12.1.x)
+

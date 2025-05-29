@@ -428,4 +428,6 @@
 
 ### 2025-10-16
 - ปรับ BE/TSL ให้คำนวณ trailing stop แบบไดนามิกจากราคาในหน้าต่างและ ATR (Patch v12.9.6)
+### 2025-10-17
+- เพิ่ม simulate_partial_tp_safe และปรับ should_exit รองรับ BE/TSL + BE Delay (Patch v12.1.x)
 

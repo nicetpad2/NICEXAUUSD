@@ -243,7 +243,7 @@ def test_get_sl_tp_recovery():
 
 def test_tsl_activation():
     from nicegold_v5 import exit as exit_mod
-    exit_mod.MIN_HOLD_MINUTES = 0
+    exit_mod.BE_HOLD_MIN = 0
     trade = {
         "entry": 100,
         "type": "buy",
@@ -252,6 +252,8 @@ def test_tsl_activation():
     }
     row = {
         "close": 103.0,
+        "high": 103.5,
+        "low": 102.0,
         "gain_z": 0.2,
         "atr": 1.0,
         "atr_ma": 1.0,
@@ -460,7 +462,7 @@ def test_run_clean_backtest(monkeypatch, tmp_path):
 
     monkeypatch.setattr(main, 'TRADE_DIR', str(tmp_path))
     monkeypatch.setattr(main, 'generate_signals', lambda d, config=None: d.assign(entry_signal='buy'))
-    monkeypatch.setattr('nicegold_v5.backtester.run_backtest', lambda d: (pd.DataFrame({'pnl': [1]}), pd.DataFrame({'timestamp':[pd.Timestamp('2025-01-01')], 'equity':[100]})))
+    monkeypatch.setattr(main, 'simulate_partial_tp_safe', lambda d: (pd.DataFrame({'pnl': [1]}), []))
     monkeypatch.setattr('nicegold_v5.utils.print_qa_summary', lambda *a, **k: {})
     monkeypatch.setattr('nicegold_v5.utils.export_chatgpt_ready_logs', lambda *a, **k: None)
 
@@ -493,7 +495,7 @@ def test_run_clean_backtest_thai_date(monkeypatch, tmp_path):
             pd.DataFrame({'timestamp': [pd.Timestamp('2023-01-01')], 'equity': [100]})
         )
 
-    monkeypatch.setattr('nicegold_v5.backtester.run_backtest', fake_backtest)
+    monkeypatch.setattr(main, 'simulate_partial_tp_safe', lambda d: (pd.DataFrame({'pnl': [1]}), []))
     monkeypatch.setattr(main, 'generate_signals', lambda d, config=None: d.assign(entry_signal='buy'))
     monkeypatch.setattr('nicegold_v5.utils.print_qa_summary', lambda *a, **k: {})
     monkeypatch.setattr('nicegold_v5.utils.export_chatgpt_ready_logs', lambda *a, **k: None)
@@ -527,7 +529,7 @@ def test_run_clean_backtest_lowercase_date(monkeypatch, tmp_path):
             pd.DataFrame({'timestamp': [pd.Timestamp('2023-01-01')], 'equity': [100]})
         )
 
-    monkeypatch.setattr('nicegold_v5.backtester.run_backtest', fake_backtest)
+    monkeypatch.setattr(main, 'simulate_partial_tp_safe', lambda d: (pd.DataFrame({'pnl': [1]}), []))
     monkeypatch.setattr(main, 'generate_signals', lambda d, config=None: d.assign(entry_signal='buy'))
     monkeypatch.setattr('nicegold_v5.utils.print_qa_summary', lambda *a, **k: {})
     monkeypatch.setattr('nicegold_v5.utils.export_chatgpt_ready_logs', lambda *a, **k: None)
@@ -563,10 +565,7 @@ def test_run_clean_backtest_fallback(monkeypatch, capsys, tmp_path):
             raise AssertionError('unexpected config')
 
     monkeypatch.setattr(main, 'generate_signals', fake_generate)
-    monkeypatch.setattr('nicegold_v5.backtester.run_backtest', lambda d: (
-        pd.DataFrame({'pnl': [1]}),
-        pd.DataFrame({'timestamp': [pd.Timestamp('2025-01-01')], 'equity': [100]})
-    ))
+    monkeypatch.setattr(main, 'simulate_partial_tp_safe', lambda d: (pd.DataFrame({'pnl': [1]}), []))
     monkeypatch.setattr('nicegold_v5.utils.print_qa_summary', lambda *a, **k: {})
     monkeypatch.setattr('nicegold_v5.utils.export_chatgpt_ready_logs', lambda *a, **k: None)
     monkeypatch.setattr(main, 'TRADE_DIR', str(tmp_path))
@@ -690,7 +689,7 @@ def test_backtest_hit_sl_expected():
     })
 
     from nicegold_v5 import exit as exit_mod
-    exit_mod.MIN_HOLD_MINUTES = 0
+    exit_mod.BE_HOLD_MIN = 0
     trades, equity = run_backtest(df)
     assert not trades.empty
     assert any(trades["exit_reason"].str.lower().isin(["sl", "recovery_sl"]))
@@ -710,7 +709,7 @@ def test_backtest_avg_profit_over_one():
         "gain_z": [0.5, 0.5, 0.5],
     })
     from nicegold_v5 import exit as exit_mod
-    exit_mod.MIN_HOLD_MINUTES = 0
+    exit_mod.BE_HOLD_MIN = 0
     trades, _ = run_backtest(df)
     assert not trades.empty
     assert trades["pnl"].mean() > 1.0
