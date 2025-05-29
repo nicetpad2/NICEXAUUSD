@@ -212,10 +212,11 @@ def simulate_partial_tp_safe(df: pd.DataFrame, capital: float = 1000.0):
                 exit_price = row.close
                 duration = (row.timestamp - open_position["entry_time"]).total_seconds() / 60
                 mfe = np.abs(row.high - open_position["entry"] if open_position["type"] == "buy" else open_position["entry"] - row.low)
+                trade_entry = open_position["entry"]  # 🛠 ตั้งชื่อให้สอดคล้อง
                 trades.append({
                     "entry_time": open_position["entry_time"],
                     "exit_time": row.timestamp,
-                    "entry": open_position["entry"],
+                    "entry_price": trade_entry,
                     "exit_price": exit_price,
                     "tp1_price": open_position["tp1"],
                     "tp2_price": open_position["tp2"],
