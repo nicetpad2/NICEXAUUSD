@@ -11,6 +11,7 @@ from .entry import (
     session_filter,
     trade_log_fields,
     simulate_trades_with_tp,
+    simulate_partial_tp_safe,
 )  # [Patch v10.0] expose latest logic
 from .backtester import calc_lot
 from .exit import should_exit

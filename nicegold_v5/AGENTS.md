@@ -436,3 +436,5 @@
 
 ### 2025-10-19
 - เพิ่ม unit test สำหรับ detect_session_auto และ simulate_partial_tp_safe (Patch QA)
+### 2025-10-20
+- ปรับ main.py ใช้ simulate_partial_tp_safe แทน simulate_trades_with_tp และบันทึก log เซสชัน

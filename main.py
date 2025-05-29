@@ -23,14 +23,11 @@ from multiprocessing import cpu_count, get_context
 import numpy as np
 from nicegold_v5.utils import run_auto_wfv, split_by_session
 from nicegold_v5.entry import (
-    generate_signals_v12_0 as generate_signals,  # 🔄 เปลี่ยนจาก v11 → v12
-    apply_tp_logic,
-    generate_entry_signal,
-    session_filter,
+    generate_signals_v12_0 as generate_signals,
+    simulate_partial_tp_safe,  # [Patch v12.2.x]
     sanitize_price_columns,
     validate_indicator_inputs,
 )
-from nicegold_v5.exit import simulate_partial_tp_safe  # [Patch v12.1.x] ใช้ฟังก์ชันใหม่รองรับ TP2 + BE/TSL
 from nicegold_v5.config import (
     SNIPER_CONFIG_PROFIT,
     SNIPER_CONFIG_Q3_TUNED,
@@ -254,13 +251,15 @@ def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
     leak_cols = [c for c in df.columns if "future" in c or "next_" in c or c.endswith("_lead")]
     df.drop(columns=leak_cols, errors="ignore", inplace=True)
 
-    print("\n🚀 Running simulate_partial_tp_safe() with BE/TSL/TP2 Logic...")
+    print("\n🚀 Running simulate_partial_tp_safe() with TSL + BE + TP2 logic...")
     trades, logs = simulate_partial_tp_safe(df)
-
-    from nicegold_v5.utils import print_qa_summary, export_chatgpt_ready_logs
-    print_qa_summary(trades, pd.DataFrame())
-    export_chatgpt_ready_logs(trades, pd.DataFrame(), {"file_name": "v12.1.x"})
-
+    output_path = os.path.join(TRADE_DIR, "trades_v12_tp1tp2.csv")
+    trades.to_csv(output_path, index=False)
+    print(f"✅ Exported {len(trades):,} trades to: {output_path}")
+    if 'exit_reason' in trades.columns:
+        print(f"📊 Exit reasons: \n{trades['exit_reason'].value_counts().to_string()}")
+    if 'session' in trades.columns:
+        print(f"🕒 Sessions covered: \n{trades['session'].value_counts().to_string()}")
     return trades
 
 def run_wfv_with_progress(df, features, label_col):
