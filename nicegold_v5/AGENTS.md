@@ -464,3 +464,8 @@
 \n### 2025-10-27
 - ปรับ simulate_partial_tp_safe ใช้ deque แทนการ slice DataFrame เพื่อลดเวลาและแก้ hang ใน CLI
 
+### 2025-10-28
+- ปรับปรุง `run_clean_backtest` ใช้ `simulate_and_autofix` แบบครบวงจร
+- ย้าย sanitize ก่อน validate และย้าย fallback หลัง generate_signals
+- บันทึกไฟล์ `trades_v1239.csv` และอัปเดต import
+
