@@ -969,6 +969,20 @@ def test_generate_entry_signal():
     assert logs and logs[0]['signal'] == 'RSI_InsideBar'
 
 
+def test_generate_entry_signal_sell():
+    logs = []
+    row = {
+        'rsi': 75,
+        'pattern': 'inside_bar',
+        'timestamp': pd.Timestamp('2025-01-01'),
+        'close': 100.0,
+        'session': 'London',
+    }
+    signal = generate_entry_signal(row, logs)
+    assert signal == 'RSI70_InsideBar'
+    assert logs and logs[0]['signal'] == 'RSI70_InsideBar'
+
+
 def test_session_filter():
     row_block = {'session': 'NY', 'ny_sl_count': 4}
     row_allow = {'session': 'NY', 'ny_sl_count': 1}
