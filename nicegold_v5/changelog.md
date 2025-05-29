@@ -415,3 +415,7 @@
 - เพิ่ม unit test สำหรับตรวจสอบ session auto และการทำงานของ simulate_partial_tp_safe
 ## 2025-10-20
 - ปรับ main.py ใช้ simulate_partial_tp_safe แทน simulate_trades_with_tp และบันทึกข้อมูล exit/session
+
+## 2025-10-21
+- แก้บั๊ก ImportError เมื่อเรียก simulate_partial_tp_safe จาก main.py
+- ปรับ main.py ให้เพิ่ม path โฟลเดอร์อัตโนมัติด้วย ROOT_DIR

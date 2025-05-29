@@ -2,7 +2,9 @@
 
 import os
 import sys
-sys.path.append("/content/drive/MyDrive/NICEGOLD")  # Add project root to path
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+if ROOT_DIR not in sys.path:
+    sys.path.append(ROOT_DIR)
 
 import pandas as pd
 import gc
@@ -24,10 +26,10 @@ import numpy as np
 from nicegold_v5.utils import run_auto_wfv, split_by_session
 from nicegold_v5.entry import (
     generate_signals_v12_0 as generate_signals,
-    simulate_partial_tp_safe,  # [Patch v12.2.x]
     sanitize_price_columns,
     validate_indicator_inputs,
 )
+from nicegold_v5.exit import simulate_partial_tp_safe  # [Patch v12.2.x]
 from nicegold_v5.config import (
     SNIPER_CONFIG_PROFIT,
     SNIPER_CONFIG_Q3_TUNED,
