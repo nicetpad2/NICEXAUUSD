@@ -439,3 +439,6 @@
 - เพิ่มฟังก์ชัน `autofix_fold_run`, `autorisk_adjust` และ `run_autofix_wfv`
 - รองรับ export trade log ต่อ fold และเพิ่ม unit test ใหม่
 
+\n## 2025-10-27
+- แก้ simulate_partial_tp_safe ใช้ deque สำหรับ rolling history ลดเวลาและป้องกัน hang ใน main.py
+

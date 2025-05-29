@@ -461,3 +461,6 @@
 - เพิ่ม `autofix_fold_run`, `autorisk_adjust` และ `run_autofix_wfv` สำหรับ WFV
 - บันทึก trade log ต่อ fold และเพิ่มชุดทดสอบใหม่
 
+\n### 2025-10-27
+- ปรับ simulate_partial_tp_safe ใช้ deque แทนการ slice DataFrame เพื่อลดเวลาและแก้ hang ใน CLI
+
