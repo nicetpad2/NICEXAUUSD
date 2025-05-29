@@ -447,3 +447,8 @@
 - ย้าย sanitize ก่อน validate และขยับ fallback หลัง generate_signals
 - บันทึกผลเป็น `trades_v1239.csv` และแก้ import os
 
+## 2025-10-29
+- อัพเดต `run_clean_backtest` ให้ export trade log และ config เป็น JSON
+- สรุปผล QA ต่อไฟล์ `qa_summary_<ts>.json` และแสดงบนหน้าจอ
+- เพิ่มคอมเมนต์เมนู choice 7 สำหรับ CleanBacktest ใน `welcome()`
+

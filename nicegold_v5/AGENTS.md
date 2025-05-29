@@ -469,3 +469,8 @@
 - ย้าย sanitize ก่อน validate และย้าย fallback หลัง generate_signals
 - บันทึกไฟล์ `trades_v1239.csv` และอัปเดต import
 
+### 2025-10-29
+- เพิ่มการ export trade log และ config เป็น JSON ใน `run_clean_backtest`
+- บันทึก QA Summary ต่อไฟล์และแสดงผลสรุป TP1/TP2
+- เพิ่มตัวอย่างเมนู choice 7 ใน `welcome()` (คอมเมนต์ไว้)
+
