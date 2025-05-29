@@ -482,3 +482,6 @@
 - ปรับ simulate_partial_tp_safe ให้คืนค่า DataFrame เดียวและเพิ่ม unit test ใหม่
 ### 2025-11-01
 - ปรับ welcome() ให้ใช้ trades ใน DataFrame และเพิ่มคอมเมนต์ Patch v15.7.1
+### 2025-11-02
+- ปรับ simulate_partial_tp_safe ใช้ key 'entry_price' แทน 'entry' และเพิ่ม trade_entry (Patch v15.7.2)
+
