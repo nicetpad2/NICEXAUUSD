@@ -487,3 +487,7 @@
 ### 2025-11-03
 - ปรับ run_backtest ให้บันทึก entry_price และ exit_price ใน trade log (Patch v15.7.3)
 
+### 2025-11-04
+- ปรับ simulate_partial_tp_safe เพิ่ม RR1 เป็น 1.8 กรอง ATR < 0.15 และ gain_z_entry < 0.3
+  พร้อมตรวจ TP1 จาก high/low (Patch v15.8.0)
+
