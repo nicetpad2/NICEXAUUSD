@@ -30,6 +30,7 @@ from nicegold_v5.entry import (
     sanitize_price_columns,
     validate_indicator_inputs,
 )
+from nicegold_v5.exit import simulate_partial_tp_safe  # [Patch v12.1.x] ใช้ฟังก์ชันใหม่รองรับ TP2 + BE/TSL
 from nicegold_v5.config import (
     SNIPER_CONFIG_PROFIT,
     SNIPER_CONFIG_Q3_TUNED,
@@ -253,12 +254,12 @@ def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
     leak_cols = [c for c in df.columns if "future" in c or "next_" in c or c.endswith("_lead")]
     df.drop(columns=leak_cols, errors="ignore", inplace=True)
 
-    from nicegold_v5.backtester import run_backtest
-    trades, equity = run_backtest(df)
+    print("\n🚀 Running simulate_partial_tp_safe() with BE/TSL/TP2 Logic...")
+    trades, logs = simulate_partial_tp_safe(df)
 
     from nicegold_v5.utils import print_qa_summary, export_chatgpt_ready_logs
-    print_qa_summary(trades, equity)
-    export_chatgpt_ready_logs(trades, equity, {"file_name": "v12.0.3-test"})
+    print_qa_summary(trades, pd.DataFrame())
+    export_chatgpt_ready_logs(trades, pd.DataFrame(), {"file_name": "v12.1.x"})
 
     return trades
 
