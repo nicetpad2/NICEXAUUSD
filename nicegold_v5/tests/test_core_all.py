@@ -1089,6 +1089,34 @@ def test_simulate_trades_with_tp_skip_tp1():
     assert trades[0]['exit_reason'] == 'tp2'
 
 
+def test_simulate_trades_with_tp_dynamic_tsl():
+    from nicegold_v5.entry import simulate_trades_with_tp
+
+    data = [
+        {
+            'timestamp': pd.Timestamp('2025-01-01 00:00:00'),
+            'close': 100.0,
+            'high': 105.0,
+            'low': 96.0,
+            'signal': 'long',
+            'session': 'London',
+            'rsi': 25,
+            'pattern': 'inside_bar',
+            'atr': 1.0,
+            'entry_score': 5.0,
+            'mfe': 4.0,
+        },
+        {'timestamp': pd.Timestamp('2025-01-01 00:10:00'), 'close': 106.0, 'high': 107.0, 'low': 96.0, 'session': 'NY', 'ny_sl_count': 4},
+        {'timestamp': pd.Timestamp('2025-01-01 00:20:00'), 'close': 110.0, 'high': 111.0, 'low': 101.0, 'session': 'NY', 'ny_sl_count': 4},
+        {'timestamp': pd.Timestamp('2025-01-01 00:30:00'), 'close': 108.0, 'high': 114.9, 'low': 107.0, 'session': 'NY', 'ny_sl_count': 4},
+        {'timestamp': pd.Timestamp('2025-01-01 00:40:00'), 'close': 114.0, 'high': 114.0, 'low': 110.0, 'session': 'NY', 'ny_sl_count': 4},
+    ]
+    df = pd.DataFrame(data)
+
+    trades, _ = simulate_trades_with_tp(df)
+    assert trades[0]['exit_reason'] == 'tsl_exit'
+
+
 def test_parse_timestamp_safe_logs(capsys):
     from nicegold_v5.utils import parse_timestamp_safe
 

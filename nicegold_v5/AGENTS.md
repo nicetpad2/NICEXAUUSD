@@ -426,3 +426,6 @@
 - เพิ่มตรรกะหยุด TP1 หาก entry_score สูงและ MFE มากใน simulate_trades_with_tp
 - ติดตั้งระบบ Breakeven และ Trailing SL แบบใหม่ (Patch v12.9.3-v12.9.4)
 
+### 2025-10-16
+- ปรับ BE/TSL ให้คำนวณ trailing stop แบบไดนามิกจากราคาในหน้าต่างและ ATR (Patch v12.9.6)
+
