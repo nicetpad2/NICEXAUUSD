@@ -227,8 +227,8 @@ def run_backtest(df: pd.DataFrame):
                 trade = {
                     "entry_time": open_trade["entry_time"],
                     "exit_time": ts,
-                    "entry": open_trade["entry"],
-                    "exit": price,
+                    "entry_price": open_trade["entry"],
+                    "exit_price": price,
                     "type": open_trade["type"],
                     "lot": partial_lot,
                     "pnl": partial_pnl - commission - spread_cost - slippage_cost,
@@ -263,8 +263,8 @@ def run_backtest(df: pd.DataFrame):
                     trade = {
                         "entry_time": open_trade["entry_time"],
                         "exit_time": ts,
-                        "entry": open_trade["entry"],
-                        "exit": price,
+                        "entry_price": open_trade["entry"],
+                        "exit_price": price,
                         "type": direction,
                         "lot": open_trade["lot"],
                         "pnl": pnl - commission - spread_cost - slippage_cost,
@@ -301,8 +301,8 @@ def run_backtest(df: pd.DataFrame):
                     trade = {
                         "entry_time": open_trade["entry_time"],
                         "exit_time": ts,
-                        "entry": open_trade["entry"],
-                        "exit": price,
+                        "entry_price": open_trade["entry"],
+                        "exit_price": price,
                         "type": direction,
                         "lot": open_trade["lot"],
                         "pnl": pnl - commission - spread_cost - slippage_cost,
