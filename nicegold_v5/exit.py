@@ -1,5 +1,18 @@
 import logging
 from datetime import timedelta
+import pandas as pd
+import numpy as np
+
+# [Patch v12.2.x] Auto session detection by timestamp (no config required)
+def detect_session_auto(timestamp):
+    hour = pd.to_datetime(timestamp).hour
+    if 3 <= hour <= 7:
+        return "Asia"
+    elif 8 <= hour <= 14:
+        return "London"
+    elif 15 <= hour <= 23 or hour == 0:
+        return "NY"
+    return "Unknown"
 
 TSL_TRIGGER_GAIN = 2.0  # [Patch v12.1.x] เริ่ม trail เร็วขึ้น
 BE_TRIGGER_GAIN = 1.0   # [Patch v12.1.x] Trigger BE เร็วขึ้น
@@ -104,10 +117,6 @@ def should_exit(trade, row):
 
 # [Patch v12.1.x] simulate_partial_tp_safe + BE/TSL Integration
 
-from datetime import timedelta
-import pandas as pd
-import numpy as np
-
 
 def simulate_partial_tp_safe(df: pd.DataFrame, capital: float = 1000.0):
     trades = []
@@ -117,6 +126,8 @@ def simulate_partial_tp_safe(df: pd.DataFrame, capital: float = 1000.0):
     for i, row in df.iterrows():
         if pd.isna(row.get("entry_signal")):
             continue
+
+        row_session = detect_session_auto(row["timestamp"])
 
         if open_position is None:
             entry_price = row["close"]
@@ -139,10 +150,26 @@ def simulate_partial_tp_safe(df: pd.DataFrame, capital: float = 1000.0):
                 "risk_mode": "normal",
                 "tsl_activated": False,
                 "breakeven": False,
+                "tp1_hit": False,
+                "session": row_session,
             }
             continue
 
         if open_position:
+            # [Patch v12.2.x] Enhanced: wait TP2 if TP1 hit recently
+            price_now = row["close"]
+            direction = open_position["type"]
+            tp1_hit = price_now >= open_position["tp1"] if direction == "buy" else price_now <= open_position["tp1"]
+            if tp1_hit:
+                open_position["tp1_hit"] = True
+
+            if open_position["tp1_hit"] and not open_position["tsl_activated"]:
+                if direction == "buy":
+                    open_position["trailing_sl"] = max(row["high"] - row.get("atr", 1.0), open_position["sl"])
+                else:
+                    open_position["trailing_sl"] = min(row["low"] + row.get("atr", 1.0), open_position["sl"])
+                open_position["tsl_activated"] = True
+
             exit_triggered, reason = should_exit(open_position, row)
             if exit_triggered:
                 exit_price = row["close"]
@@ -158,6 +185,7 @@ def simulate_partial_tp_safe(df: pd.DataFrame, capital: float = 1000.0):
                     "sl_price": open_position["sl"],
                     "lot": open_position["lot"],
                     "exit_reason": reason,
+                    "session": open_position["session"],
                     "duration_min": duration,
                     "mfe": mfe,
                     "pnl": round((exit_price - open_position["entry"] if open_position["type"] == "buy" else open_position["entry"] - exit_price) * 10 * open_position["lot"], 2),

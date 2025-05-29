@@ -406,3 +406,7 @@
 ## 2025-10-17
 - เพิ่มฟังก์ชัน `simulate_partial_tp_safe` และปรับ `should_exit` ให้รองรับ BE/TSL แบบใหม่ (Patch v12.1.x)
 
+## 2025-10-18
+- ปรับปรุง `simulate_partial_tp_safe` ให้ตรวจเซสชันอัตโนมัติและเปิด Trailing SL หลัง TP1
+  (Patch v12.2.x)
+
