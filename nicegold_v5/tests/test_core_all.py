@@ -1206,3 +1206,20 @@ def test_entry_simulate_partial_tp_safe_basic():
     assert len(trades) == 1
     assert trades['exit_reason'].iloc[0] == 'tp1'
 
+
+def test_generate_pattern_signals():
+    from nicegold_v5.entry import generate_pattern_signals
+
+    df = pd.DataFrame([
+        {"open": 1.2, "close": 1.0, "high": 1.25, "low": 0.95},  # red
+        {"open": 0.9, "close": 1.3, "high": 1.35, "low": 0.85},  # bullish engulf
+        {"open": 1.4, "close": 1.5, "high": 1.55, "low": 1.35},  # green
+        {"open": 1.6, "close": 1.1, "high": 1.65, "low": 1.05},  # bearish engulf
+    ])
+
+    out = generate_pattern_signals(df)
+    assert out.loc[1, "pattern_signal"] == "bullish_engulfing"
+    assert out.loc[1, "entry_signal"] == "buy"
+    assert out.loc[3, "pattern_signal"] == "bearish_engulfing"
+    assert out.loc[3, "entry_signal"] == "sell"
+

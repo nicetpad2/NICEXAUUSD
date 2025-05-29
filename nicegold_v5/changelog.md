@@ -475,3 +475,7 @@
 ## 2025-11-06
 - ปรับปรุง `safe_calculate_net_change` ใช้คอลัมน์ direction/side เพื่อคำนวณกำไรสุทธิอย่างถูกต้อง และอัปเดต unit test
 
+## 2025-11-07
+- เพิ่ม `generate_pattern_signals` สำหรับตรวจจับ Engulfing และ Inside Bar
+- อัปเดตชุดทดสอบรองรับฟังก์ชันใหม่ (Patch v16.0.0)
+

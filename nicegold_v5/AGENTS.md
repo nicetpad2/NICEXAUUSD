@@ -498,3 +498,7 @@
 ### 2025-11-06
 - ปรับปรุง `safe_calculate_net_change` ให้พิจารณาทิศทาง Buy/Sell และอัปเดตชุดทดสอบ
 
+### 2025-11-07
+- เพิ่มฟังก์ชัน `generate_pattern_signals` ตรวจจับ Engulfing และ Inside Bar
+- เพิ่มการทดสอบ unit test สำหรับฟังก์ชันใหม่ (Patch v16.0.0)
+
