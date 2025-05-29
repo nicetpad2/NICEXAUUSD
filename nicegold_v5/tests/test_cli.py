@@ -20,7 +20,7 @@ def test_autorun_simulate(monkeypatch, capsys, tmp_path):
     monkeypatch.setattr(main, 'generate_signals', lambda df: df)
     monkeypatch.setattr(main, 'generate_signals', lambda df: df)
     monkeypatch.setattr(
-        'nicegold_v5.entry.simulate_trades_with_tp',
+        'nicegold_v5.exit.simulate_partial_tp_safe',
         lambda df: ([{'exit_reason': 'tp1'}], [])
     )
     monkeypatch.setattr(main, 'safe_calculate_net_change', lambda df: 5.0)
@@ -50,7 +50,7 @@ def test_autorun_string_timestamp(monkeypatch, capsys, tmp_path):
     monkeypatch.setattr(main, 'validate_indicator_inputs', lambda df: None)
     monkeypatch.setattr(main, 'generate_signals', lambda df: df)
 
-    monkeypatch.setattr('nicegold_v5.entry.simulate_trades_with_tp', fake_simulate)
+    monkeypatch.setattr('nicegold_v5.exit.simulate_partial_tp_safe', fake_simulate)
     monkeypatch.setattr(main, 'safe_calculate_net_change', lambda df: 7.0)
     main.welcome()
     output = capsys.readouterr().out
@@ -109,7 +109,7 @@ def test_autorun_relax_fallback(monkeypatch, capsys, tmp_path):
     monkeypatch.setattr(main, 'generate_signals', fake_generate)
     monkeypatch.setattr('nicegold_v5.entry.generate_signals', fake_generate)
     monkeypatch.setattr(
-        'nicegold_v5.entry.simulate_trades_with_tp',
+        'nicegold_v5.exit.simulate_partial_tp_safe',
         lambda df: ([{'exit_reason': 'tp1'}], [])
     )
     monkeypatch.setattr(main, 'safe_calculate_net_change', lambda df: 1.0)
@@ -155,7 +155,7 @@ def test_autorun_diagnostic_fallback(monkeypatch, capsys, tmp_path):
     monkeypatch.setattr(main, 'generate_signals', fake_generate)
     monkeypatch.setattr('nicegold_v5.entry.generate_signals', fake_generate)
     monkeypatch.setattr(
-        'nicegold_v5.entry.simulate_trades_with_tp',
+        'nicegold_v5.exit.simulate_partial_tp_safe',
         lambda df: ([{'exit_reason': 'tp1'}], [])
     )
     monkeypatch.setattr(main, 'safe_calculate_net_change', lambda df: 2.0)

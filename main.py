@@ -319,7 +319,7 @@ def welcome():
     show_progress_bar("📡 เตรียมระบบ", steps=2)
 
     # [Patch v12.0.1] Fail-Proof TP1/TP2 Simulation ด้วย logic v12.0
-    from nicegold_v5.entry import simulate_trades_with_tp
+    from nicegold_v5.exit import simulate_partial_tp_safe
     from nicegold_v5.config import SNIPER_CONFIG_Q3_TUNED
     from nicegold_v5.utils import safe_calculate_net_change
 
@@ -364,8 +364,8 @@ def welcome():
     if not pd.api.types.is_datetime64_any_dtype(df["timestamp"]):
         raise ValueError("[Patch QA] ❌ timestamp ต้องแปลงเป็น datetime ก่อน simulate")
 
-    show_progress_bar("🚀 รัน simulate_trades_with_tp", steps=2)
-    trades, logs = simulate_trades_with_tp(df)
+    show_progress_bar("🚀 รัน simulate_partial_tp_safe", steps=2)
+    trades, logs = simulate_partial_tp_safe(df)
     trade_df = pd.DataFrame(trades)
 
     if trade_df.empty or trade_df["exit_reason"].isnull().all():
