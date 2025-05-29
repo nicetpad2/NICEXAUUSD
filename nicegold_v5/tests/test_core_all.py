@@ -978,7 +978,15 @@ def test_session_filter():
 
 def test_trade_log_fields():
     required = {
-        'tp1_price', 'tp2_price', 'mfe', 'duration_min', 'entry_tier', 'signal_name'
+        'tp1_price',
+        'tp2_price',
+        'mfe',
+        'duration_min',
+        'entry_tier',
+        'signal_name',
+        'pnl',  # [Patch v12.8.3]
+        'planned_risk',  # [Patch v12.8.3]
+        'r_multiple',  # [Patch v12.8.3]
     }
     assert required.issubset(set(trade_log_fields))
 
@@ -1010,6 +1018,9 @@ def test_simulate_trades_with_tp():
     assert trade['entry_tier'] == 'C'
     assert trade['signal_name'] == 'RSI_InsideBar'
     assert isinstance(trade['mfe'], float)
+    assert trade['pnl'] > 0  # [Patch v12.8.3]
+    assert trade['planned_risk'] == 0.5  # [Patch v12.8.3]
+    assert trade['r_multiple'] > 2.0  # [Patch v12.8.3]
 
 
 def test_parse_timestamp_safe_logs(capsys):

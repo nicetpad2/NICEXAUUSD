@@ -60,8 +60,21 @@ trade_log_fields = [
     "entry_signal",
     "signal_name",
     "entry_tier",
+    "lot",  # [Patch v12.8.3] new field
+    "pnl",  # [Patch v12.8.3]
+    "planned_risk",  # [Patch v12.8.3]
+    "r_multiple",  # [Patch v12.8.3]
+    "commission",  # [Patch v12.8.3]
+    "spread_cost",  # [Patch v12.8.3]
+    "slippage_cost",  # [Patch v12.8.3]
     "mfe",
     "duration_min",
+    "gain_z",  # [Patch v12.8.3]
+    "rsi",  # [Patch v12.8.3]
+    "ema_slope",  # [Patch v12.8.3]
+    "atr",  # [Patch v12.8.3]
+    "pattern",  # [Patch v12.8.3]
+    "entry_score",  # [Patch v12.8.3]
 ]
 
 
@@ -636,14 +649,11 @@ def simulate_trades_with_tp(df: pd.DataFrame, sl_distance: float = 5.0):
     df = df.copy()
     df["timestamp"] = pd.to_datetime(df["timestamp"])
 
-    from nicegold_v5.utils import safe_calculate_net_change
-
     capital = 100.0
-    logs: list[dict] = []
     trades: list[dict] = []
+    logs: list[dict] = []
 
     it = tqdm(df.iterrows(), total=len(df), desc="🚀 Simulating", unit="bar")
-
     for i, (_, row) in enumerate(it, 1):
         if not session_filter(row):
             continue
@@ -653,34 +663,39 @@ def simulate_trades_with_tp(df: pd.DataFrame, sl_distance: float = 5.0):
         window = df[(df["timestamp"] >= entry_time) & (df["timestamp"] <= exit_window)]
 
         entry_price = row["close"]
-        direction = 1 if row.get("signal") == "long" else -1
-        sl = entry_price - sl_distance if direction == 1 else entry_price + sl_distance
+        direction = (row.get("entry_signal") or row.get("signal") or "buy").lower()
+        if direction == "long":
+            direction = "buy"
+        elif direction == "short":
+            direction = "sell"
+        sl_price = entry_price - sl_distance if direction == "buy" else entry_price + sl_distance
 
         entry_signal = generate_entry_signal(row, logs)
         signal_name = row.get("signal_name", row.get("entry_signal", entry_signal))  # [Patch v12.8.2]
         entry_tier = row.get("entry_tier", "C")
 
-        # Dynamic RR2 based on session
         session = row.get("session")
         rr2 = 2.5 if session == "Asia" else 3.0 if session == "London" else 3.5
-        tp1_price = entry_price + 1.5 * sl_distance * direction
-        tp2_price = entry_price + rr2 * abs(entry_price - sl) if direction == 1 else entry_price - rr2 * abs(entry_price - sl)
+        tp1_price = entry_price + 1.5 * sl_distance if direction == "buy" else entry_price - 1.5 * sl_distance
+        tp2_price = (
+            entry_price + rr2 * abs(entry_price - sl_price)
+            if direction == "buy"
+            else entry_price - rr2 * abs(entry_price - sl_price)
+        )
 
         exit_price = tp1_price
         exit_reason = "tp1"
         exit_time = window["timestamp"].iloc[-1]
 
-        # --- MFE Calculation ---
         mfe = 0.0
-
         for _, bar in window.iterrows():
             high = bar.get("high", bar["close"])
             low = bar.get("low", bar["close"])
-            interim_pnl = (high - entry_price) if direction == 1 else (entry_price - low)
+            interim_pnl = (high - entry_price) if direction == "buy" else (entry_price - low)
             mfe = max(mfe, interim_pnl)
-            if direction == 1:
-                if low <= sl:
-                    exit_price = sl
+            if direction == "buy":
+                if low <= sl_price:
+                    exit_price = sl_price
                     exit_reason = "sl"
                     exit_time = bar["timestamp"]
                     break
@@ -695,8 +710,8 @@ def simulate_trades_with_tp(df: pd.DataFrame, sl_distance: float = 5.0):
                     exit_time = bar["timestamp"]
                     break
             else:
-                if high >= sl:
-                    exit_price = sl
+                if high >= sl_price:
+                    exit_price = sl_price
                     exit_reason = "sl"
                     exit_time = bar["timestamp"]
                     break
@@ -713,24 +728,55 @@ def simulate_trades_with_tp(df: pd.DataFrame, sl_distance: float = 5.0):
 
         duration_min = (exit_time - entry_time).total_seconds() / 60.0
 
-        trade = {
-            "timestamp": entry_time,
-            "exit_time": exit_time,
-            "entry_price": entry_price,
-            "tp1_price": tp1_price,
-            "tp2_price": tp2_price,
-            "sl_price": sl,
-            "exit_price": exit_price,
-            "exit_reason": exit_reason,
-            "entry_signal": entry_signal,
-            "signal_name": signal_name,
-            "entry_tier": entry_tier,
-            "session": session,
-            "risk_mode": row.get("risk_mode", "normal"),
-            "mfe": round(mfe, 4),
-            "duration_min": round(duration_min, 2),
-        }
-        trades.append(trade)
+        lot = float(row.get("lot", 0.01))
+        point_value = 0.1
+        atr_val = row.get("atr", sl_distance)
+        planned_risk = abs(entry_price - sl_price) * point_value * (lot / 0.01)
+        if planned_risk == 0:
+            planned_risk = 0.01  # [Patch v12.8.3] fallback to avoid div0
+        commission = 0.07 * (lot / 0.01)
+        spread_cost = 0.2 * lot
+        slippage_cost = 0.1 * lot
+
+        pnl = (
+            exit_price - entry_price if direction == "buy" else entry_price - exit_price
+        )
+        pnl = pnl * point_value * (lot / 0.01) - commission - spread_cost - slippage_cost
+        r_multiple = pnl / planned_risk if planned_risk else 0.0
+
+        capital += pnl
+        trades.append(
+            {
+                "timestamp": entry_time,
+                "exit_time": exit_time,
+                "entry_price": entry_price,
+                "exit_price": exit_price,
+                "tp1_price": tp1_price,
+                "tp2_price": tp2_price,
+                "sl_price": sl_price,
+                "exit_reason": exit_reason,
+                "entry_signal": direction,
+                "signal_name": signal_name,
+                "entry_tier": entry_tier,
+                "session": session,
+                "risk_mode": row.get("risk_mode", "normal"),
+                "lot": lot,
+                "pnl": round(pnl, 4),
+                "planned_risk": round(planned_risk, 4),
+                "r_multiple": round(r_multiple, 2),
+                "commission": round(commission, 4),
+                "spread_cost": round(spread_cost, 4),
+                "slippage_cost": round(slippage_cost, 4),
+                "duration_min": round(duration_min, 2),
+                "mfe": round(mfe, 4),
+                "gain_z": row.get("gain_z"),
+                "rsi": row.get("rsi"),
+                "ema_slope": row.get("ema_slope"),
+                "atr": atr_val,
+                "pattern": row.get("pattern"),
+                "entry_score": row.get("entry_score"),
+            }
+        )
 
     return trades, logs
 
