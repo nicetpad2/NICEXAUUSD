@@ -483,3 +483,7 @@
 - ปรับปรุง `fix_engine.auto_fix_logic` ตรวจจับกำไรสุทธิเป็นลบและปรับ RR/SL
   อัตโนมัติ เพิ่มการใช้ Dynamic TSL และเวลา hold ขั้นต่ำ (Patch v16.1.0)
 
+
+## 2025-11-09
+- เพิ่ม fallback Diagnostic ใน welcome() หาก RELAX_CONFIG_Q3 ไม่พบสัญญาณ
+- ผ่อนปรนเงื่อนไขเปิดออเดอร์ใน simulate_partial_tp_safe (Patch v16.1.1)

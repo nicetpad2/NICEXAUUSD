@@ -158,7 +158,8 @@ def simulate_partial_tp_safe(df: pd.DataFrame, capital: float = 1000.0):
 
             # [Patch v15.8.0] กรองกราฟนิ่งและ momentum ต่ำ
             gain_z_entry = getattr(row, "gain_z_entry", getattr(row, "gain_z", 1.0))
-            if atr < 0.15 or gain_z_entry < 0.3:
+            # [Patch v16.1.1] ผ่อนปรนเงื่อนไขเปิดออเดอร์หาก ATR หรือตัวชี้วัด momentum สูง
+            if atr < 0.15 and gain_z_entry < 0.3:
                 continue
 
             # [Patch v12.3.2] ✅ Adaptive SL/TP by ATR Level
