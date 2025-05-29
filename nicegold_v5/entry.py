@@ -35,7 +35,7 @@ def generate_entry_signal(row: dict, log_list: list) -> str | None:
     elif row.get("pattern") == "bearish_engulfing":
         signal = "BearishEngulfing"
 
-    # ✅ [Patch v12.9.2] fallback sell: หาก momentum ลงแรง
+    # ✅ [Patch v12.9.2] Fallback Sell: หาก momentum ลงแรง
     elif row.get("gain_z", 0) < 0 and row.get("ema_slope", 0) < 0:
         signal = "fallback_sell"
 
@@ -697,15 +697,11 @@ def simulate_trades_with_tp(df: pd.DataFrame, sl_distance: float = 5.0):
             else entry_price - rr2 * abs(entry_price - sl_price)
         )
 
-        # ✅ [Patch v12.9.3] ปิด TP1 หาก entry_score > 4.5 และ mfe > 3
-        tp1_allowed = True
+        # ✅ [Patch v12.9.6] ปิด TP1 หากไม้มีศักยภาพ TP2 จริง
         entry_score = row.get("entry_score", 0)
         pre_mfe = row.get("mfe", 0)
-        if entry_score > 4.5 and pre_mfe > 3:
-            tp1_allowed = False
-            exit_reason = "tp2_only_candidate"
-        else:
-            exit_reason = "tp1"
+        tp1_allowed = not (entry_score > 4.5 and pre_mfe > 3)
+        exit_reason = "tp2_only_candidate" if not tp1_allowed else "tp1"
 
         exit_price = tp1_price
         exit_time = window["timestamp"].iloc[-1]
@@ -725,13 +721,20 @@ def simulate_trades_with_tp(df: pd.DataFrame, sl_distance: float = 5.0):
             gain = (close_price - entry_price) if direction == "buy" else (entry_price - close_price)
             gain_r = gain / abs(entry_price - sl_price) if abs(entry_price - sl_price) else 0
 
-            # ✅ [Patch v12.9.4] Trigger BE / TSL
+            # ✅ [Patch v12.9.6] Dynamic BE/TSL Trigger
             if gain_r >= 1.2 and duration >= 15 and not breakeven:
                 breakeven = True
                 exit_reason = "be_triggered"
+
             if gain_r >= 2.0 and duration >= 30 and not tsl_activated:
                 tsl_activated = True
-                trailing_sl = entry_price
+                # ✅ Dynamic trailing_sl: ใช้ max(high) - atr * 1.2
+                window_slice = window[(window["timestamp"] <= bar["timestamp"])]
+                atr_buffer = row.get("atr", 1.0) * 1.2
+                if direction == "buy":
+                    trailing_sl = window_slice["high"].rolling(5).max().iloc[-1] - atr_buffer
+                else:
+                    trailing_sl = window_slice["low"].rolling(5).min().iloc[-1] + atr_buffer
                 exit_reason = "tsl_triggered"
 
             # ตรวจ TSL แบบ trailing

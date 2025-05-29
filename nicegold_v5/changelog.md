@@ -400,3 +400,6 @@
 - simulate_trades_with_tp ปรับ skip TP1 เมื่อ entry_score > 4.5 และ MFE > 3 (Patch v12.9.3)
 - เพิ่มตรรกะ Breakeven และ Trailing SL ภายใน simulate_trades_with_tp (Patch v12.9.4)
 
+## 2025-10-16
+- simulate_trades_with_tp ปรับ BE/TSL แบบไดนามิกตามค่า ATR และราคาในหน้าต่าง (Patch v12.9.6)
+
