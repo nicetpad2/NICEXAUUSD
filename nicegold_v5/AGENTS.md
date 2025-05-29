@@ -473,4 +473,7 @@
 - เพิ่มการ export trade log และ config เป็น JSON ใน `run_clean_backtest`
 - บันทึก QA Summary ต่อไฟล์และแสดงผลสรุป TP1/TP2
 - เพิ่มตัวอย่างเมนู choice 7 ใน `welcome()` (คอมเมนต์ไว้)
+### 2025-10-30
+- เพิ่มฟังก์ชัน `simulate_partial_tp_safe` แบบดีบักใน `entry.py`
+- ปรับโหมด CLI ให้เรียกใช้ฟังก์ชันนี้ในขั้นตอนทดสอบ
 

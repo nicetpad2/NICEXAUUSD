@@ -451,4 +451,7 @@
 - อัพเดต `run_clean_backtest` ให้ export trade log และ config เป็น JSON
 - สรุปผล QA ต่อไฟล์ `qa_summary_<ts>.json` และแสดงบนหน้าจอ
 - เพิ่มคอมเมนต์เมนู choice 7 สำหรับ CleanBacktest ใน `welcome()`
+## 2025-10-30
+- เพิ่มเวอร์ชันดีบักของ `simulate_partial_tp_safe` ใน `entry.py`
+- ปรับ `welcome()` ให้ใช้ฟังก์ชันนี้เมื่อรันโหมด CLI
 

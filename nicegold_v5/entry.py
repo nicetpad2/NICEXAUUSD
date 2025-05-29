@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
-from .exit import simulate_partial_tp_safe
 
 # --- CONFIG FLAGS (Patch v11.1) ---
 ENABLE_TP1_TP2 = True
@@ -920,3 +919,53 @@ def generate_signals_v12_0(df: pd.DataFrame, config: dict | None = None) -> pd.D
     coverage = df["entry_signal"].notnull().mean() * 100
     print(f"[Patch v12.0] 📊 Entry Signal Coverage: {coverage:.2f}%")
     return df
+
+
+def simulate_partial_tp_safe(df: pd.DataFrame):
+    """ฟังก์ชันจำลองการเข้าออกออเดอร์แบบง่ายสำหรับโหมดดีบัก"""
+    df = df.copy()
+    trade_log = []
+    for _, row in df.iterrows():
+        if not row.get("entry_signal"):
+            continue
+        entry_price = row["close"]
+        atr = row.get("atr", 1.0)
+        timestamp = row["timestamp"]
+        direction = "buy" if row.get("ema_slope", 0) >= 0 else "sell"
+        tp1 = entry_price + atr * 1.5 if direction == "buy" else entry_price - atr * 1.5
+        tp2 = entry_price + atr * 2.5 if direction == "buy" else entry_price - atr * 2.5
+        sl = entry_price - atr * 1.2 if direction == "buy" else entry_price + atr * 1.2
+
+        exit_price = tp1  # สมมติชน TP1 เสมอ
+        exit_reason = "tp1"
+
+        trade_log.append({
+            "timestamp": timestamp,
+            "entry_price": entry_price,
+            "tp1_price": tp1,
+            "tp2_price": tp2,
+            "sl_price": sl,
+            "exit_price": exit_price,
+            "exit_reason": exit_reason,
+            "session": row.get("session", "Unknown"),
+            "risk_mode": row.get("risk_mode", "normal"),
+            "entry_signal": row.get("entry_signal"),
+            "signal_name": row.get("pattern", "debug"),
+            "entry_tier": row.get("entry_tier", "C"),
+            "lot": 0.01,
+            "pnl": round((exit_price - entry_price) * 10 if direction == "buy" else (entry_price - exit_price) * 10, 2),
+            "planned_risk": abs(entry_price - sl) * 10,
+            "r_multiple": round(((exit_price - entry_price) / (entry_price - sl)), 2) if direction == "buy" else round(((entry_price - exit_price) / (sl - entry_price)), 2),
+            "commission": 0.07,
+            "spread_cost": 0.0,
+            "slippage_cost": 0.0,
+            "mfe": abs(tp1 - entry_price),
+            "duration_min": 5.0,
+            "gain_z": row.get("gain_z", 0),
+            "rsi": row.get("rsi", 50),
+            "ema_slope": row.get("ema_slope", 0.01),
+            "atr": atr,
+            "pattern": row.get("pattern", "inside_bar"),
+            "entry_score": row.get("entry_score", 1.0),
+        })
+    return pd.DataFrame(trade_log), []
