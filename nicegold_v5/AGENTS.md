@@ -502,3 +502,7 @@
 - เพิ่มฟังก์ชัน `generate_pattern_signals` ตรวจจับ Engulfing และ Inside Bar
 - เพิ่มการทดสอบ unit test สำหรับฟังก์ชันใหม่ (Patch v16.0.0)
 
+### 2025-11-08
+- ปรับปรุง `fix_engine.auto_fix_logic` ให้คำนวณ `net_pnl` และเปิด Dynamic TSL
+  อัตโนมัติเมื่อกำไรสุทธิเป็นลบ พร้อมเพิ่มเงื่อนไขขยาย SL และเพิ่ม hold time
+
