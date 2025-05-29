@@ -9,6 +9,7 @@
 | **GoldSurvivor_RnD**   | Strategy Analyst   | Analyzes TP1/TP2, SL, spike, pattern, verifies entry/exit correctness                                                                         |
 | **ML_Innovator**       | Advanced ML        | Researches SHAP, Meta Classifier, feature engineering, reinforcement learning                                                                 |
 | **Model_Inspector**    | Model Diagnostics  | Checks overfitting, noise, data leakage, fallback correctness, metrics drift                                                                  |
+| **RL_Scalper_AI**      | Self-Learning Scalper | Learns trading policy via Q-learning and adapts to new market data |
 
 ---
 
@@ -490,4 +491,7 @@
 ### 2025-11-04
 - ปรับ simulate_partial_tp_safe เพิ่ม RR1 เป็น 1.8 กรอง ATR < 0.15 และ gain_z_entry < 0.3
   พร้อมตรวจ TP1 จาก high/low (Patch v15.8.0)
+
+### 2025-11-05
+- เพิ่ม RL_Scalper_AI และโมดูล rl_agent สำหรับการเรียนรู้แบบ Q-learning
 
