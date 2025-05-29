@@ -1189,3 +1189,20 @@ def test_simulate_partial_tp_safe_session(monkeypatch):
     assert trades['session'].iloc[0] == 'London'
     assert trades['exit_reason'].iloc[0] == 'tsl'
 
+
+def test_entry_simulate_partial_tp_safe_basic():
+    from nicegold_v5 import entry
+
+    df = pd.DataFrame({
+        'timestamp': pd.date_range('2025-01-01', periods=1, freq='min'),
+        'close': [100.0],
+        'entry_signal': ['buy'],
+        'atr': [1.0],
+        'ema_slope': [0.1],
+    })
+
+    trades = entry.simulate_partial_tp_safe(df)
+    assert isinstance(trades, pd.DataFrame)
+    assert len(trades) == 1
+    assert trades['exit_reason'].iloc[0] == 'tp1'
+

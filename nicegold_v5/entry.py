@@ -925,7 +925,7 @@ def simulate_partial_tp_safe(df: pd.DataFrame):
     """ฟังก์ชันจำลองการเข้าออกออเดอร์แบบง่ายสำหรับโหมดดีบัก"""
     df = df.copy()
     trade_log = []
-    for _, row in df.iterrows():
+    for i, row in df.iterrows():
         if not row.get("entry_signal"):
             continue
         entry_price = row["close"]
@@ -936,7 +936,8 @@ def simulate_partial_tp_safe(df: pd.DataFrame):
         tp2 = entry_price + atr * 2.5 if direction == "buy" else entry_price - atr * 2.5
         sl = entry_price - atr * 1.2 if direction == "buy" else entry_price + atr * 1.2
 
-        exit_price = tp1  # สมมติชน TP1 เสมอ
+        # [Patch v12.0.2] 🛠 Force simulate TP1 สำหรับ debug QA
+        exit_price = tp1
         exit_reason = "tp1"
 
         trade_log.append({
@@ -968,4 +969,4 @@ def simulate_partial_tp_safe(df: pd.DataFrame):
             "pattern": row.get("pattern", "inside_bar"),
             "entry_score": row.get("entry_score", 1.0),
         })
-    return pd.DataFrame(trade_log), []
+    return pd.DataFrame(trade_log)

@@ -477,3 +477,6 @@
 - เพิ่มฟังก์ชัน `simulate_partial_tp_safe` แบบดีบักใน `entry.py`
 - ปรับโหมด CLI ให้เรียกใช้ฟังก์ชันนี้ในขั้นตอนทดสอบ
 
+
+### 2025-10-31
+- ปรับ simulate_partial_tp_safe ให้คืนค่า DataFrame เดียวและเพิ่ม unit test ใหม่
