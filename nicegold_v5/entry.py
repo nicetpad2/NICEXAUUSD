@@ -18,12 +18,22 @@ def apply_tp_logic(entry_price: float, direction: str, rr1: float = 1.5, rr2: fl
 def generate_entry_signal(row: dict, log_list: list) -> str | None:
     """ระบุตำแหน่งเข้าเทรดและบันทึกลง log"""
     signal = None
+
+    # ✅ ฝั่ง BUY (เดิม)
     if row.get("rsi", 50) < 30 and row.get("pattern") == "inside_bar":
         signal = "RSI_InsideBar"
     elif row.get("pattern") == "qm":
         signal = "QM"
     elif row.get("pattern") == "fractal_v":
         signal = "FractalV"
+
+    # ✅ [Patch v12.9.0] เพิ่ม SELL SIGNAL ใหม่
+    elif row.get("rsi", 50) > 70 and row.get("pattern") == "inside_bar":
+        signal = "RSI70_InsideBar"
+    elif row.get("pattern") == "qm_bearish":
+        signal = "QM_Bearish"
+    elif row.get("pattern") == "bearish_engulfing":
+        signal = "BearishEngulfing"
 
     if ENABLE_SIGNAL_LOG:
         log_list.append(

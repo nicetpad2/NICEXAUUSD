@@ -416,3 +416,6 @@
 ### 2025-10-12
 - เพิ่มกำไรสุทธิและ Risk Metrics ใน simulate_trades_with_tp และรองรับ Sell ครบระบบ (Patch v12.8.3)
 
+### 2025-10-13
+- ปรับ generate_entry_signal เพิ่มสัญญาณ SELL เช่น RSI70_InsideBar, QM_Bearish และ BearishEngulfing (Patch v12.9.0)
+
