@@ -455,3 +455,6 @@
 - เพิ่มเวอร์ชันดีบักของ `simulate_partial_tp_safe` ใน `entry.py`
 - ปรับ `welcome()` ให้ใช้ฟังก์ชันนี้เมื่อรันโหมด CLI
 
+
+## 2025-10-31
+- ปรับ simulate_partial_tp_safe คืนค่า DataFrame และเพิ่มการทดสอบใหม่
