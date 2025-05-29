@@ -157,15 +157,35 @@ def run_backtest(df: pd.DataFrame):
     if MAX_RAM_MODE:
         df = df.astype({col: np.float32 for col in df.select_dtypes(include="number").columns})
 
-    it = df.itertuples(index=False)
+    timestamps = pd.to_datetime(df["timestamp"]).values
+    close_arr = df["close"].values
+    atr_arr = df["atr"].fillna(1.0).values if "atr" in df.columns else np.ones(len(df), dtype=np.float32)
+    gain_z_arr = df["gain_z"].fillna(0).values if "gain_z" in df.columns else np.zeros(len(df), dtype=np.float32)
+    entry_signal_arr = df.get("entry_signal", pd.Series([None] * len(df))).fillna("").values
+    tp_rr_arr = df.get("tp_rr_ratio", 4.8)
+    if not isinstance(tp_rr_arr, pd.Series):
+        tp_rr_arr = pd.Series([tp_rr_arr] * len(df))
+    tp_rr_arr = tp_rr_arr.fillna(4.8).values
+
     bar_count = len(df)
-    for i, row in enumerate(
-        tqdm(it, total=bar_count, desc="⏱️ Running Backtest", unit="rows")
-    ):
-        ts = pd.to_datetime(row.timestamp)
-        price = row.close
-        atr_val = row.atr if hasattr(row, "atr") else 1.0
-        gain_z = getattr(row, "gain_z", 0)
+    if "entry_tier" in df.columns:
+        entry_tier_arr = df["entry_tier"].fillna("").astype(str).values
+    else:
+        entry_tier_arr = np.array([""] * len(df))
+
+    pbar = tqdm(range(bar_count), total=bar_count, desc="⏱️ Running Backtest", unit="rows")
+    for i in pbar:
+        ts = pd.Timestamp(timestamps[i])
+        price = float(close_arr[i])
+        atr_val = float(atr_arr[i])
+        gain_z = float(gain_z_arr[i])
+        row_data = {
+            "close": price,
+            "gain_z": gain_z,
+            "atr": atr_val,
+            "atr_ma": last_atr if i > 0 else atr_val,
+            "timestamp": ts,
+        }
         # [Perf-A] เพิ่ม caching ATR เพื่อไม่เรียกซ้ำ
         if i == 0:
             last_atr = atr_val
@@ -228,7 +248,7 @@ def run_backtest(df: pd.DataFrame):
                 open_trade["lot"] = open_trade["lot"] * 0.5
 
             elif open_trade.get("tp1_hit"):
-                exit_now, reason = should_exit(open_trade, row)
+                exit_now, reason = should_exit(open_trade, row_data)
                 if exit_now or (direction == "buy" and gain >= tp2) or (direction == "sell" and gain >= tp2):
                     pnl = (price - open_trade["entry"] if direction == "buy" else open_trade["entry"] - price) * open_trade["lot"] * PNL_MULTIPLIER
                     if pnl > 0:
@@ -266,7 +286,7 @@ def run_backtest(df: pd.DataFrame):
                     open_trade = None
 
             else:
-                exit_now, reason = should_exit(open_trade, row)
+                exit_now, reason = should_exit(open_trade, row_data)
                 if exit_now:
                     pnl = (price - open_trade["entry"] if direction == "buy" else open_trade["entry"] - price) * open_trade["lot"] * PNL_MULTIPLIER
                     if pnl > 0:
@@ -303,18 +323,18 @@ def run_backtest(df: pd.DataFrame):
                         recovery_mode = False
                     open_trade = None
 
-        if not open_trade and getattr(row, "entry_signal", None) in ["buy", "sell"]:
+        if not open_trade and entry_signal_arr[i] in ["buy", "sell"]:
             session = "Asia" if ts.hour < 8 else "London" if ts.hour < 15 else "NY"  # [Patch v7.4]
             if recovery_mode:
                 lot = calc_lot_recovery(capital, atr_val, 1.5)
             else:
                 lot = calc_lot_risk(capital, atr_val, 1.5)
             lot = min(lot, 1.0)  # [Patch v6.7] ensure cap
-            rr_ratio = getattr(row, "tp_rr_ratio", 4.8)
+            rr_ratio = float(tp_rr_arr[i])
             open_trade = {
                 "entry": price,
                 "entry_time": ts,
-                "type": getattr(row, "entry_signal", None),
+                "type": entry_signal_arr[i],
                 "lot": lot,
                 "session": session,
                 "atr": atr_val,
@@ -322,8 +342,8 @@ def run_backtest(df: pd.DataFrame):
                 "tp_rr_ratio": rr_ratio,
             }
             logging.info(
-                f"[Patch] Lot={lot:.2f}, Tier={getattr(row, 'entry_tier', '')}, RR={rr_ratio}, "
-                f"GainZ={getattr(row, 'gain_z', 0):.2f}, Entry={getattr(row, 'entry_signal', '')}"
+                f"[Patch] Lot={lot:.2f}, Tier={entry_tier_arr[i]}, RR={rr_ratio}, "
+                f"GainZ={gain_z:.2f}, Entry={entry_signal_arr[i]}"
             )
 
     end = time.time()

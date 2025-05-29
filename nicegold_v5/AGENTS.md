@@ -410,3 +410,6 @@
 - ปรับ simulate_trades_with_tp ให้คำนวณ RR2 ตาม session และตรวจราคาในหน้าต่าง 60 นาที
 ### 2025-10-10
 - เพิ่ม field `signal_name` และ `entry_tier` ใน simulate_trades_with_tp พร้อมคำนวณ MFE (Patch v12.8.2)
+### 2025-10-11
+- ปรับปรุง run_backtest ใช้การอ่านข้อมูลแบบ array ลดเวลา loop (Patch Perf-E)
+
