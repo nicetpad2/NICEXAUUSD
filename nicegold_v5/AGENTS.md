@@ -457,3 +457,7 @@
   และ `simulate_and_autofix`
 - ปรับ `run_clean_backtest` ใช้ `simulate_and_autofix` เพื่อ Adaptive Simulation
 
+### 2025-10-26
+- เพิ่ม `autofix_fold_run`, `autorisk_adjust` และ `run_autofix_wfv` สำหรับ WFV
+- บันทึก trade log ต่อ fold และเพิ่มชุดทดสอบใหม่
+

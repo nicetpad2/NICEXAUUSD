@@ -435,3 +435,7 @@
 - เพิ่มโมดูล `fix_engine` สำหรับ Adaptive Fix Engine และ Self-Diagnostic
 - ปรับ `run_clean_backtest` ให้ใช้ `simulate_and_autofix` เพื่อปรับ config อัตโนมัติ
 
+## 2025-10-26
+- เพิ่มฟังก์ชัน `autofix_fold_run`, `autorisk_adjust` และ `run_autofix_wfv`
+- รองรับ export trade log ต่อ fold และเพิ่ม unit test ใหม่
+
