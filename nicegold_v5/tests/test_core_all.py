@@ -1136,3 +1136,27 @@ def test_load_csv_safe_fallback():
     path = '/invalid/path/XAUUSD_M1.csv'
     df = main.load_csv_safe(path)
     assert not df.empty
+
+def test_detect_session_auto():
+    from nicegold_v5.exit import detect_session_auto
+    assert detect_session_auto(pd.Timestamp('2025-01-01 04:00')) == 'Asia'
+    assert detect_session_auto(pd.Timestamp('2025-01-01 10:00')) == 'London'
+    assert detect_session_auto(pd.Timestamp('2025-01-01 16:00')) == 'NY'
+    assert detect_session_auto(pd.Timestamp('2025-01-01 02:00')) == 'Unknown'
+
+
+def test_simulate_partial_tp_safe_session(monkeypatch):
+    from nicegold_v5.exit import simulate_partial_tp_safe
+
+    df = pd.DataFrame([
+        {'timestamp': pd.Timestamp('2025-01-01 10:00'), 'close': 100.0, 'high': 100.6, 'low': 99.5, 'entry_signal': 'buy', 'atr': 1.0},
+        {'timestamp': pd.Timestamp('2025-01-01 10:05'), 'close': 101.6, 'high': 101.6, 'low': 100.5, 'entry_signal': 'buy', 'atr': 1.0},
+        {'timestamp': pd.Timestamp('2025-01-01 10:10'), 'close': 100.5, 'high': 100.7, 'low': 100.4, 'entry_signal': 'buy', 'atr': 1.0},
+    ])
+
+    trades, _ = simulate_partial_tp_safe(df)
+    assert not trades.empty
+    assert 'session' in trades.columns
+    assert trades['session'].iloc[0] == 'London'
+    assert trades['exit_reason'].iloc[0] == 'tsl'
+

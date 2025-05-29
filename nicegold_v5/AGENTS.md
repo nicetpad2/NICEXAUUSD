@@ -434,3 +434,5 @@
 ### 2025-10-18
 - ปรับ simulate_partial_tp_safe ตรวจจับเซสชันอัตโนมัติและเปิด TSL หลัง TP1 (Patch v12.2.x)
 
+### 2025-10-19
+- เพิ่ม unit test สำหรับ detect_session_auto และ simulate_partial_tp_safe (Patch QA)

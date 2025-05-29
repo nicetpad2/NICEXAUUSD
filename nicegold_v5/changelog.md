@@ -410,3 +410,6 @@
 - ปรับปรุง `simulate_partial_tp_safe` ให้ตรวจเซสชันอัตโนมัติและเปิด Trailing SL หลัง TP1
   (Patch v12.2.x)
 
+
+## 2025-10-19
+- เพิ่ม unit test สำหรับตรวจสอบ session auto และการทำงานของ simulate_partial_tp_safe
