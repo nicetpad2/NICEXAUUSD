@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import os
 from datetime import datetime
 from nicegold_v5.entry import generate_signals
@@ -238,14 +239,32 @@ def split_by_session(df: pd.DataFrame) -> dict:
 
 
 def safe_calculate_net_change(trade_df: pd.DataFrame) -> float:
-    """Calculate net price change safely, skipping rows with missing values."""
+    """Calculate net change considering trade direction if available."""
+
     if trade_df.empty or "entry_price" not in trade_df or "exit_price" not in trade_df:
         print("⚠️ trade_df ไม่มีข้อมูล entry_price หรือ exit_price")
         return 0.0
 
-    trade_df = trade_df.dropna(subset=["entry_price", "exit_price"])
-    net_change = trade_df["exit_price"].sub(trade_df["entry_price"]).sum()
-    return round(net_change, 4)
+    trade_df = trade_df.dropna(subset=["entry_price", "exit_price"]).copy()
+
+    if "direction" in trade_df.columns:
+        diffs = np.where(
+            trade_df["direction"].str.lower() == "sell",
+            trade_df["entry_price"] - trade_df["exit_price"],
+            trade_df["exit_price"] - trade_df["entry_price"],
+        )
+        net_change = diffs.sum()
+    elif "side" in trade_df.columns:
+        diffs = np.where(
+            trade_df["side"].str.lower() == "sell",
+            trade_df["entry_price"] - trade_df["exit_price"],
+            trade_df["exit_price"] - trade_df["entry_price"],
+        )
+        net_change = diffs.sum()
+    else:
+        net_change = trade_df["exit_price"].sub(trade_df["entry_price"]).sum()
+
+    return round(float(net_change), 4)
 
 
 def convert_thai_datetime(df: pd.DataFrame) -> pd.DataFrame:
