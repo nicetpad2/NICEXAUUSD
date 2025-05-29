@@ -983,6 +983,36 @@ def test_generate_entry_signal_sell():
     assert logs and logs[0]['signal'] == 'RSI70_InsideBar'
 
 
+def test_generate_entry_signal_bearish_patterns():
+    logs = []
+    row_qm = {
+        'pattern': 'qm_bearish',
+        'timestamp': pd.Timestamp('2025-01-01'),
+        'close': 100.0,
+        'session': 'London',
+    }
+    assert generate_entry_signal(row_qm, logs) == 'QM_Bearish'
+
+    logs.clear()
+    row_engulf = {
+        'pattern': 'bearish_engulfing',
+        'timestamp': pd.Timestamp('2025-01-01'),
+        'close': 100.0,
+        'session': 'London',
+    }
+    assert generate_entry_signal(row_engulf, logs) == 'BearishEngulfing'
+
+    logs.clear()
+    row_fb = {
+        'gain_z': -0.5,
+        'ema_slope': -0.1,
+        'timestamp': pd.Timestamp('2025-01-01'),
+        'close': 100.0,
+        'session': 'London',
+    }
+    assert generate_entry_signal(row_fb, logs) == 'fallback_sell'
+
+
 def test_session_filter():
     row_block = {'session': 'NY', 'ny_sl_count': 4}
     row_allow = {'session': 'NY', 'ny_sl_count': 1}
@@ -1035,6 +1065,28 @@ def test_simulate_trades_with_tp():
     assert trade['pnl'] > 0  # [Patch v12.8.3]
     assert trade['planned_risk'] == 0.5  # [Patch v12.8.3]
     assert trade['r_multiple'] > 2.0  # [Patch v12.8.3]
+
+
+def test_simulate_trades_with_tp_skip_tp1():
+    from nicegold_v5.entry import simulate_trades_with_tp
+
+    df = pd.DataFrame([
+        {
+            'timestamp': pd.Timestamp('2025-01-01 00:00:00'),
+            'close': 100.0,
+            'high': 120.0,
+            'low': 96.0,
+            'signal': 'long',
+            'session': 'London',
+            'rsi': 25,
+            'pattern': 'inside_bar',
+            'entry_score': 5.0,
+            'mfe': 4.0,
+        }
+    ])
+
+    trades, _ = simulate_trades_with_tp(df)
+    assert trades[0]['exit_reason'] == 'tp2'
 
 
 def test_parse_timestamp_safe_logs(capsys):

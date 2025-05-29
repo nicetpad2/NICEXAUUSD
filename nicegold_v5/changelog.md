@@ -396,3 +396,7 @@
 ## 2025-10-14
 - ปรับ run_parallel_wfv ใช้ multiprocessing จริง และ fallback แบบ sequential หากล้มเหลว (Patch Perf-F)
 
+## 2025-10-15
+- simulate_trades_with_tp ปรับ skip TP1 เมื่อ entry_score > 4.5 และ MFE > 3 (Patch v12.9.3)
+- เพิ่มตรรกะ Breakeven และ Trailing SL ภายใน simulate_trades_with_tp (Patch v12.9.4)
+

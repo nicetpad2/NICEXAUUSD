@@ -422,3 +422,7 @@
 ### 2025-10-14
 - ปรับ run_parallel_wfv ใช้ multiprocessing จริง พร้อม fallback หากล้มเหลว (Patch Perf-F)
 
+### 2025-10-15
+- เพิ่มตรรกะหยุด TP1 หาก entry_score สูงและ MFE มากใน simulate_trades_with_tp
+- ติดตั้งระบบ Breakeven และ Trailing SL แบบใหม่ (Patch v12.9.3-v12.9.4)
+

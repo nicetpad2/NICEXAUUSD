@@ -35,6 +35,10 @@ def generate_entry_signal(row: dict, log_list: list) -> str | None:
     elif row.get("pattern") == "bearish_engulfing":
         signal = "BearishEngulfing"
 
+    # ✅ [Patch v12.9.2] fallback sell: หาก momentum ลงแรง
+    elif row.get("gain_z", 0) < 0 and row.get("ema_slope", 0) < 0:
+        signal = "fallback_sell"
+
     if ENABLE_SIGNAL_LOG:
         log_list.append(
             {
@@ -693,16 +697,69 @@ def simulate_trades_with_tp(df: pd.DataFrame, sl_distance: float = 5.0):
             else entry_price - rr2 * abs(entry_price - sl_price)
         )
 
+        # ✅ [Patch v12.9.3] ปิด TP1 หาก entry_score > 4.5 และ mfe > 3
+        tp1_allowed = True
+        entry_score = row.get("entry_score", 0)
+        pre_mfe = row.get("mfe", 0)
+        if entry_score > 4.5 and pre_mfe > 3:
+            tp1_allowed = False
+            exit_reason = "tp2_only_candidate"
+        else:
+            exit_reason = "tp1"
+
         exit_price = tp1_price
-        exit_reason = "tp1"
         exit_time = window["timestamp"].iloc[-1]
 
         mfe = 0.0
+        breakeven = False
+        tsl_activated = False
+        trailing_sl = entry_price
         for _, bar in window.iterrows():
             high = bar.get("high", bar["close"])
             low = bar.get("low", bar["close"])
+            close_price = bar.get("close")
             interim_pnl = (high - entry_price) if direction == "buy" else (entry_price - low)
             mfe = max(mfe, interim_pnl)
+
+            duration = (bar["timestamp"] - entry_time).total_seconds() / 60.0
+            gain = (close_price - entry_price) if direction == "buy" else (entry_price - close_price)
+            gain_r = gain / abs(entry_price - sl_price) if abs(entry_price - sl_price) else 0
+
+            # ✅ [Patch v12.9.4] Trigger BE / TSL
+            if gain_r >= 1.2 and duration >= 15 and not breakeven:
+                breakeven = True
+                exit_reason = "be_triggered"
+            if gain_r >= 2.0 and duration >= 30 and not tsl_activated:
+                tsl_activated = True
+                trailing_sl = entry_price
+                exit_reason = "tsl_triggered"
+
+            # ตรวจ TSL แบบ trailing
+            if tsl_activated:
+                if direction == "buy":
+                    if close_price - sl_distance > trailing_sl:
+                        trailing_sl = close_price - sl_distance
+                    if low <= trailing_sl:
+                        exit_price = trailing_sl
+                        exit_reason = "tsl_exit"
+                        exit_time = bar["timestamp"]
+                        break
+                else:
+                    if close_price + sl_distance < trailing_sl:
+                        trailing_sl = close_price + sl_distance
+                    if high >= trailing_sl:
+                        exit_price = trailing_sl
+                        exit_reason = "tsl_exit"
+                        exit_time = bar["timestamp"]
+                        break
+
+            # ตรวจ BE แบบล็อคทุน
+            if breakeven:
+                if (direction == "buy" and low <= entry_price) or (direction == "sell" and high >= entry_price):
+                    exit_price = entry_price
+                    exit_reason = "be_sl"
+                    exit_time = bar["timestamp"]
+                    break
             if direction == "buy":
                 if low <= sl_price:
                     exit_price = sl_price
@@ -714,7 +771,7 @@ def simulate_trades_with_tp(df: pd.DataFrame, sl_distance: float = 5.0):
                     exit_reason = "tp2"
                     exit_time = bar["timestamp"]
                     break
-                if high >= tp1_price:
+                if tp1_allowed and high >= tp1_price:
                     exit_price = tp1_price
                     exit_reason = "tp1"
                     exit_time = bar["timestamp"]
@@ -730,7 +787,7 @@ def simulate_trades_with_tp(df: pd.DataFrame, sl_distance: float = 5.0):
                     exit_reason = "tp2"
                     exit_time = bar["timestamp"]
                     break
-                if low <= tp1_price:
+                if tp1_allowed and low <= tp1_price:
                     exit_price = tp1_price
                     exit_reason = "tp1"
                     exit_time = bar["timestamp"]
