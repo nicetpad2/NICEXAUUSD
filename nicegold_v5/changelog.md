@@ -431,3 +431,7 @@
 ## 2025-10-24
 - ปรับ welcome() ให้เรียก simulate_partial_tp_safe และปรับ unit test CLI ให้สอดคล้อง
 
+## 2025-10-25
+- เพิ่มโมดูล `fix_engine` สำหรับ Adaptive Fix Engine และ Self-Diagnostic
+- ปรับ `run_clean_backtest` ให้ใช้ `simulate_and_autofix` เพื่อปรับ config อัตโนมัติ
+

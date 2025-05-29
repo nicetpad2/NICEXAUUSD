@@ -253,16 +253,32 @@ def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
     leak_cols = [c for c in df.columns if "future" in c or "next_" in c or c.endswith("_lead")]
     df.drop(columns=leak_cols, errors="ignore", inplace=True)
 
-    print("\n🚀 Running simulate_partial_tp_safe() with TSL + BE + TP2 logic...")
-    trades, logs = simulate_partial_tp_safe(df)
+    # [Patch v12.3.7] ✅ ใช้ simulate_and_autofix() แทน simulate เดิม
+    from nicegold_v5.fix_engine import simulate_and_autofix
+
+    print("\n🚀 [Patch v12.3.7] Adaptive Simulation Pipeline started...")
+    trades_df, logs, config_used = simulate_and_autofix(
+        df,
+        simulate_partial_tp_safe,
+        SNIPER_CONFIG_Q3_TUNED,
+        session="London",
+    )
+    print("\n✅ [Patch v12.3.7] Simulation Completed with AutoFix Config:")
+    for k, v in config_used.items():
+        print(f"   ▸ {k}: {v}")
+
     output_path = os.path.join(TRADE_DIR, "trades_v12_tp1tp2.csv")
-    trades.to_csv(output_path, index=False)
-    print(f"✅ Exported {len(trades):,} trades to: {output_path}")
-    if 'exit_reason' in trades.columns:
-        print(f"📊 Exit reasons: \n{trades['exit_reason'].value_counts().to_string()}")
-    if 'session' in trades.columns:
-        print(f"🕒 Sessions covered: \n{trades['session'].value_counts().to_string()}")
-    return trades
+    trades_df.to_csv(output_path, index=False)
+    print(f"✅ Exported {len(trades_df):,} trades to: {output_path}")
+    if "exit_reason" in trades_df.columns:
+        print(
+            f"📊 Exit reasons: \n{trades_df['exit_reason'].value_counts().to_string()}"
+        )
+    if "session" in trades_df.columns:
+        print(
+            f"🕒 Sessions covered: \n{trades_df['session'].value_counts().to_string()}"
+        )
+    return trades_df
 
 def run_wfv_with_progress(df, features, label_col):
     from nicegold_v5.utils import split_by_session
