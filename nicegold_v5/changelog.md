@@ -462,4 +462,6 @@
 - ปรับ welcome() สร้าง trade_df จาก trades แทน logs และเพิ่มคอมเมนต์ (Patch v15.7.1)
 ## 2025-11-02
 - ปรับ simulate_partial_tp_safe ใช้คอลัมน์ entry_price แทน entry และเพิ่ม trade_entry (Patch v15.7.2)
+## 2025-11-03
+- ปรับ run_backtest ใช้คีย์ entry_price/exit_price ใน trade log (Patch v15.7.3)
 
