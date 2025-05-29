@@ -452,3 +452,8 @@
 ### 2025-10-24
 - ปรับ welcome() ใช้ simulate_partial_tp_safe และอัพเดตชุดทดสอบ CLI
 
+### 2025-10-25
+- เพิ่มโมดูล `fix_engine` พร้อมฟังก์ชัน `run_self_diagnostic`, `auto_fix_logic`,
+  และ `simulate_and_autofix`
+- ปรับ `run_clean_backtest` ใช้ `simulate_and_autofix` เพื่อ Adaptive Simulation
+
