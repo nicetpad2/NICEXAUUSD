@@ -867,6 +867,24 @@ def test_simulate_tp_exit():
 
     assert result.loc[0, 'exit_reason'] == 'TP1'
     assert result.loc[1, 'exit_reason'] == 'TP2'
+
+
+def test_build_trade_log_vectorized():
+    df = pd.DataFrame({'Open': [100, 101, 102, 103]}, index=pd.date_range('2025-01-01', periods=4, freq='min'))
+    position = {
+        'entry': 100,
+        'sl': 99,
+        'tp': 102,
+        'lot': 0.1,
+        'side': 'buy',
+        'entry_time': df.index[0],
+        'commission': 0.02,
+    }
+    timestamp = df.index[-1]
+    price = df.loc[timestamp, 'Open']
+    trade = wfv.build_trade_log(position, timestamp, price, False, False, 1000, 0, df)
+    assert trade['break_even_min'] == 1.0
+    assert trade['mfe'] == pytest.approx(2.98, rel=1e-2)
 import pandas as pd
 import warnings
 import importlib
