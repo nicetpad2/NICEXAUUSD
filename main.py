@@ -340,6 +340,111 @@ def show_progress_bar(task_desc, steps=5):
     for _ in trange(steps, desc=task_desc, unit="step"):
         pass
 
+
+def autopipeline():
+    """Run full ML + AutoFix WFV pipeline automatically."""
+    print("\n🚀 เริ่ม NICEGOLD AutoPipeline")
+    maximize_ram()
+
+    df = load_csv_safe(M1_PATH)
+    df = convert_thai_datetime(df)
+    df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
+    df = df.dropna(subset=["timestamp"])
+    df = df.sort_values("timestamp")
+    df = sanitize_price_columns(df)
+    try:
+        validate_indicator_inputs(df, min_rows=min(500, len(df)))
+    except TypeError:
+        validate_indicator_inputs(df)
+
+    df = generate_signals(df, config=SNIPER_CONFIG_Q3_TUNED)
+    if df["entry_signal"].isnull().mean() >= 1.0:
+        print("[AutoPipeline] ⚠️ ไม่มีสัญญาณ – fallback RELAX_CONFIG_Q3")
+        df = generate_signals(df, config=RELAX_CONFIG_Q3)
+
+    from nicegold_v5.ml_dataset_m1 import generate_ml_dataset_m1
+    from nicegold_v5.train_lstm_runner import load_dataset, train_lstm
+    import torch
+    try:
+        import psutil
+        ram_gb = psutil.virtual_memory().total / 1024 ** 3
+    except Exception:
+        ram_gb = 0
+    threads = cpu_count()
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    gpu_name = torch.cuda.get_device_name(0) if torch.cuda.is_available() else "CPU"
+    print(f"🖥️ Device: {gpu_name}")
+    print(f"💾 RAM: {ram_gb:.1f} GB | CPU Threads: {threads}")
+
+    if ram_gb >= 24:
+        batch_size, model_dim, n_folds, lr, opt = 256, 128, 8, 0.0005, "adam"
+    elif ram_gb >= 12:
+        batch_size, model_dim, n_folds, lr, opt = 128, 64, 6, 0.001, "adam"
+    else:
+        batch_size, model_dim, n_folds, lr, opt = 64, 32, 5, 0.01, "sgd"
+
+    print(
+        f"⚙️ Training LSTM hidden_dim={model_dim} batch_size={batch_size} lr={lr} optimizer={opt}"
+    )
+    generate_ml_dataset_m1()
+    X, y = load_dataset("data/ml_dataset_m1.csv")
+    model = train_lstm(
+        X,
+        y,
+        hidden_dim=model_dim,
+        epochs=1,
+        lr=lr,
+        batch_size=batch_size,
+        optimizer_name=opt,
+    )
+    os.makedirs("models", exist_ok=True)
+    torch.save(model.state_dict(), "models/model_lstm_tp2.pth")
+    print("✅ บันทึกโมเดลที่ models/model_lstm_tp2.pth")
+
+    df_feat = pd.read_csv("data/ml_dataset_m1.csv")
+    feat_cols = [
+        "gain_z",
+        "ema_slope",
+        "atr",
+        "rsi",
+        "volume",
+        "entry_score",
+        "pattern_label",
+    ]
+    data = df_feat[feat_cols].values
+    seq_len = 10
+    seqs = [data[i : i + seq_len] for i in range(len(data) - seq_len)]
+    if seqs:
+        X_tensor = torch.tensor(np.array(seqs), dtype=torch.float32)
+        if device == "cuda":
+            X_tensor = X_tensor.cuda()
+            model = model.cuda()
+        model.eval()
+        with torch.no_grad():
+            pred = model(X_tensor).squeeze().cpu().numpy()
+        df_feat["tp2_proba"] = np.concatenate([np.zeros(seq_len), pred])
+    else:
+        df_feat["tp2_proba"] = 0.0
+
+    df = df.merge(df_feat[["timestamp", "tp2_proba"]], on="timestamp", how="left")
+    df["tp2_guard_pass"] = df["tp2_proba"] >= 0.7
+    df = df[df["tp2_guard_pass"] | df["entry_signal"].isnull()]
+    print(f"✅ TP2 Guard Filter → เหลือ {df['entry_signal'].notnull().sum()} signals")
+
+    from nicegold_v5.utils import run_autofix_wfv
+    trades_df = run_autofix_wfv(
+        df,
+        simulate_partial_tp_safe,
+        SNIPER_CONFIG_Q3_TUNED,
+        n_folds=n_folds,
+    )
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    out_path = os.path.join(TRADE_DIR, f"trades_autopipeline_{ts}.csv")
+    trades_df.to_csv(out_path, index=False)
+    print(f"📦 Exported AutoPipeline trades → {out_path}")
+    maximize_ram()
+    return trades_df
+
 def welcome():
     print("\n🟡 NICEGOLD Assistant พร้อมให้บริการแล้ว (L4 GPU + QA Guard)")
     maximize_ram()
@@ -668,16 +773,13 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "clean":
         print("📥 Loading CSV...")
         df = load_csv_safe(M1_PATH)
-
-        # ✅ [Patch v11.9.18] รองรับ Date แบบพุทธศักราช
         df = convert_thai_datetime(df)
-
         df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
         df = df.dropna(subset=["timestamp"])
         run_clean_backtest(df)
         print("✅ Done: Clean Backtest Completed")
     else:
-        welcome()
+        autopipeline()
     # [Patch v12.4.1] Example of how choice 7 might be handled if menu was active
     # elif choice == 7:  # This would be part of the active menu loop in welcome()
     #     print("\n🚀 เริ่มรัน CleanBacktest ด้วย AutoFix + Export...")

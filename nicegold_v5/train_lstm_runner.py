@@ -23,7 +23,16 @@ def load_dataset(path="data/ml_dataset_m1.csv", seq_len=10):
     return X, y
 
 
-def train_lstm(X, y, hidden_dim=64, epochs=10, lr=0.001, batch_size=64):
+def train_lstm(
+    X,
+    y,
+    hidden_dim=64,
+    epochs=10,
+    lr=0.001,
+    batch_size=64,
+    optimizer_name="adam",
+):
+    """Train LSTM classifier with selectable optimizer."""
     model = LSTMClassifier(X.shape[2], hidden_dim)
     if torch.cuda.is_available():
         model = model.cuda()
@@ -31,7 +40,10 @@ def train_lstm(X, y, hidden_dim=64, epochs=10, lr=0.001, batch_size=64):
     dataset = TensorDataset(X, y)
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
     criterion = nn.BCELoss()
-    optimizer = optim.Adam(model.parameters(), lr=lr)
+    if optimizer_name == "sgd":
+        optimizer = optim.SGD(model.parameters(), lr=lr)
+    else:
+        optimizer = optim.Adam(model.parameters(), lr=lr)
 
     for epoch in range(epochs):
         total_loss = 0

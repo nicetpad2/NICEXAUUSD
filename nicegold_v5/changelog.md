@@ -552,3 +552,13 @@
 - เพิ่มโมดูลสร้างชุดข้อมูล ML และโมเดล LSTM สำหรับทำนาย TP2 (Patch v23.0.0-LSTM)
 ## 2025-12-04
 - ปรับ CLI เพิ่มเมนูฝึก TP2 Classifier และใช้โมเดล TP2 Guard ใน Simulator (Patch v22.2.0)
+## 2025-12-05
+- main.py เปลี่ยนเป็น AutoPipeline รันทันทีเมื่อสั่งรัน (Patch v22.2.1)
+## 2025-12-06
+- ตรวจสอบ GPU อัตโนมัติและแสดงชื่ออุปกรณ์ (Patch v22.2.2)
+## 2025-12-07
+- เพิ่ม AutoPipeline เทรน LSTM, ใช้ TP2 Guard และรัน run_autofix_wfv 5 fold (Patch v22.3.0)
+## 2025-12-08
+- แสดง RAM/CPU thread และปรับ batch_size, model_dim, n_folds ตาม RAM (Patch v22.3.1-v22.3.2)
+## 2025-12-09
+- ปรับ train_lstm ให้สลับ optimizer และ learning rate ตามระดับ RAM (Patch v22.3.5)
