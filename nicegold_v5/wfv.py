@@ -95,17 +95,17 @@ def build_trade_log(position, timestamp, price, hit_tp, hit_sl, equity, slippage
 
     window = df_test.loc[entry_time:timestamp]
     price_col = "Close" if "Close" in df_test.columns else "Open"
-    break_even_time, mfe = None, 0.0
-    for _, r in window.iterrows():
-        interim_pnl = (
-            r[price_col] - position["entry"]
-            if position["side"] == "buy"
-            else position["entry"] - r[price_col]
-        )
-        interim_pnl = interim_pnl * POINT_VALUE * (position["lot"] / 0.01) - position["commission"]
-        if interim_pnl >= 0 and break_even_time is None:
-            break_even_time = r.name
-        mfe = max(mfe, interim_pnl)
+    direction = 1 if position["side"] == "buy" else -1
+    interim = (window[price_col] - position["entry"]) * direction
+    interim = interim * POINT_VALUE * (position["lot"] / 0.01) - position["commission"]
+
+    if not interim.empty:
+        pos_idx = interim[interim >= 0].index
+        break_even_time = pos_idx[0] if len(pos_idx) else None
+        mfe = interim.max()
+    else:
+        break_even_time = None
+        mfe = 0.0
 
     break_even_min = (
         (break_even_time - entry_time).total_seconds() / 60 if break_even_time else None
