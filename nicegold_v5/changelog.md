@@ -595,3 +595,6 @@
 ## 2025-12-21
 - แก้ `autopipeline` ให้แปลง `timestamp` ใน ML dataset เป็น datetime64 ก่อน merge ป้องกัน ValueError (Patch v22.6.5)
 
+## 2025-12-22
+- เพิ่ม `pd.to_datetime` ใน autopipeline สำหรับทั้ง df และ df_feat ก่อน merge (Patch v22.6.6)
+
