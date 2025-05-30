@@ -603,3 +603,6 @@
 =======
 - ปรับ `build_trade_log` ให้คำนวณเวกเตอร์แทน iterrows ลดคอขวด และเพิ่ม unit test
 
+### 2025-12-18
+- ปรับ generate_ml_dataset_m1 สร้าง trade log อัตโนมัติเมื่อไม่พบไฟล์ และเพิ่ม error handling ใน autopipeline (Patch v22.4.3)
+

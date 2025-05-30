@@ -22,7 +22,7 @@ def test_autopipeline(monkeypatch, tmp_path, capsys):
     monkeypatch.setattr(main, 'validate_indicator_inputs', lambda df, required_cols=None, min_rows=500: None)
     monkeypatch.setattr(main, 'generate_signals', lambda df, config=None: df.assign(entry_signal=['long']*len(df)))
 
-    monkeypatch.setattr('nicegold_v5.ml_dataset_m1.generate_ml_dataset_m1', lambda: None)
+    monkeypatch.setattr('nicegold_v5.ml_dataset_m1.generate_ml_dataset_m1', lambda *a, **k: None)
     X_dummy = torch.zeros((1, 10, 7))
     y_dummy = torch.zeros((1, 1))
     monkeypatch.setattr('nicegold_v5.train_lstm_runner.load_dataset', lambda path: (X_dummy, y_dummy))

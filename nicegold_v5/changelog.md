@@ -583,3 +583,6 @@
 =======
 - ปรับ `build_trade_log` ให้เวกเตอร์ไลซ์ ลดเวลารัน และเพิ่มชุดทดสอบ
 
+## 2025-12-18
+- ปรับ generate_ml_dataset_m1 สร้าง trade log อัตโนมัติเมื่อไม่พบไฟล์ และเพิ่ม try/except ใน autopipeline (Patch v22.4.3)
+
