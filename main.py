@@ -394,24 +394,62 @@ def autopipeline(mode="default", train_epochs=1):
         print("\n🧠 [AI Master Pipeline] เริ่มทำงานแบบครบวงจร (SHAP + Optuna + Guard + WFV)")
         generate_ml_dataset_m1(csv_path=M1_PATH, out_path="data/ml_dataset_m1.csv")
         X, y = load_dataset("data/ml_dataset_m1.csv")
-        model = train_lstm(X, y, hidden_dim=model_dim, epochs=train_epochs, lr=lr, batch_size=batch_size, optimizer_name=opt)
+        model = train_lstm(
+            X,
+            y,
+            hidden_dim=model_dim,
+            epochs=train_epochs,
+            lr=lr,
+            batch_size=batch_size,
+            optimizer_name=opt,
+        )
         os.makedirs("models", exist_ok=True)
         torch.save(model.state_dict(), "models/model_lstm_tp2.pth")
         print("✅ บันทึกโมเดล LSTM แล้ว")
+
         try:
             import shap
+
             explainer = shap.DeepExplainer(model, X[:100])
             shap_vals = explainer.shap_values(X[:100])[0]
-            shap.summary_plot(shap_vals, X[:100], feature_names=["gain_z", "ema_slope", "atr", "rsi", "volume", "entry_score", "pattern_label"], show=False)
+            shap_mean = np.abs(shap_vals).mean(axis=0)
+            top_k_idx = np.argsort(shap_mean)[::-1][:5]
+            all_features = [
+                "gain_z",
+                "ema_slope",
+                "atr",
+                "rsi",
+                "volume",
+                "entry_score",
+                "pattern_label",
+            ]
+            top_features = [all_features[i] for i in top_k_idx]
+            print("📊 [Patch v22.7.2] SHAP Top Features:", top_features)
+
+            shap.summary_plot(shap_vals, X[:100], feature_names=top_features, show=False)
             import matplotlib.pyplot as plt
+
             plt.savefig("logs/shap_summary.png")
-            print("📊 บันทึก SHAP summary → logs/shap_summary.png")
+            print("📊 [Patch v22.7.2] บันทึก SHAP summary → logs/shap_summary.png")
+            with open("logs/shap_top_features.json", "w") as f:
+                json.dump(top_features, f, indent=2)
         except Exception as e:
-            print(f"⚠️ SHAP skipped: {e}")
+            print(f"⚠️ [Patch v22.7.2] SHAP skipped: {e}")
+            top_features = [
+                "gain_z",
+                "ema_slope",
+                "atr",
+                "rsi",
+                "volume",
+                "entry_score",
+                "pattern_label",
+            ]
 
         df_feat = pd.read_csv("data/ml_dataset_m1.csv")
+        df_feat = df_feat.dropna(subset=top_features)
+        df_feat = df_feat[top_features + ["timestamp", "tp2_hit"]]
         study = start_optimization(df_feat, n_trials=100)
-        print("✅ Optuna เสร็จสิ้น – บันทึก best trial")
+        print("✅ [Patch v22.7.2] Optuna เสร็จสิ้น – บันทึก best trial")
         with open("logs/optuna_best_config.json", "w") as f:
             json.dump(study.best_trial.params, f, indent=2)
 
@@ -422,8 +460,7 @@ def autopipeline(mode="default", train_epochs=1):
         df = generate_signals(df, config=study.best_trial.params)
 
         seq_len = 10
-        feat_cols = ["gain_z", "ema_slope", "atr", "rsi", "volume", "entry_score", "pattern_label"]
-        data = df_feat[feat_cols].values
+        data = df_feat[top_features].values
         seqs = [data[i : i + seq_len] for i in range(len(data) - seq_len)]
         device2 = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model.eval()
@@ -431,17 +468,21 @@ def autopipeline(mode="default", train_epochs=1):
             X_tensor = torch.tensor(np.array(seqs), dtype=torch.float32).to(device2)
             preds = model(X_tensor).squeeze().cpu().numpy()
         df_feat["tp2_proba"] = np.concatenate([np.zeros(seq_len), preds])
+
         df = df.merge(df_feat[["timestamp", "tp2_proba"]], on="timestamp", how="left")
         df["tp2_guard_pass"] = df["tp2_proba"] >= 0.7
+        print(
+            f"✅ [Patch v22.7.2] TP2 Guard Filter → เหลือ {df['entry_signal'].notnull().sum()} signals"
+        )
         df = df[df["tp2_guard_pass"] | df["entry_signal"].isnull()]
-        print(f"✅ TP2 Guard Filter → เหลือ {df['entry_signal'].notnull().sum()} signals")
 
         from nicegold_v5.utils import run_autofix_wfv
+
         trades_df = run_autofix_wfv(df, simulate_partial_tp_safe, SNIPER_CONFIG_Q3_TUNED)
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         out_path = os.path.join(TRADE_DIR, f"trades_ai_master_{ts}.csv")
         trades_df.to_csv(out_path, index=False)
-        print(f"📦 Exported trades → {out_path}")
+        print(f"📦 [Patch v22.7.2] Exported trades → {out_path}")
         return trades_df
 
     if torch is not None and mode in ["full", "ultra"]:

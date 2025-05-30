@@ -611,4 +611,8 @@
 =======
 - ปรับชุดทดสอบให้ทำงานได้แม้ไม่มี PyTorch โดยใช้ mock module
 
+## 2025-12-26
+- ปรับ `autopipeline` (ai_master) เพิ่มการเลือกฟีเจอร์จาก SHAP และบันทึก `shap_top_features.json`
+- ใช้ Optuna ร่วมกับฟีเจอร์ที่เลือกได้ และบันทึกผลลง `optuna_best_config.json`
+
 

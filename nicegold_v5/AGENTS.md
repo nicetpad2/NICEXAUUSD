@@ -632,4 +632,8 @@
 =======
 - เพิ่มเทสสำหรับ `autopipeline` และ `train_lstm` เมื่อไม่มี PyTorch โดยใช้ mock module
 
+### 2025-12-26
+- ปรับ autopipeline (ai_master) ใช้ SHAP FeatureSelector เลือก top features และบันทึก `shap_top_features.json` (Patch v22.7.2)
+- เพิ่มการใช้ Optuna กับฟีเจอร์ที่คัดแล้ว และบันทึก config ที่ดีที่สุด
+
 
