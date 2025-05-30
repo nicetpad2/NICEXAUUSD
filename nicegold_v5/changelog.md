@@ -503,3 +503,5 @@
 - ปรับเมนู 7 ให้ใช้ `run_wfv_with_progress` จากโมดูลภายใน (Patch vWFV.3)
 ## 2025-11-16
 - แก้เมนู 7 โหลดไฟล์ด้วย `load_csv_safe` และตั้งค่า `M15_PATH` เป็น path ภายใน repo (Patch vWFV.4)
+## 2025-11-17
+- ปรับ `run_parallel_wfv` เพิ่ม fallback สร้างคอลัมน์ 'Open' จาก 'close' หากไม่พบ 'open' หรือ 'Open' (Patch vWFV.3)
