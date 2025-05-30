@@ -572,3 +572,5 @@
 - ปรับ generate_ml_dataset_m1 ให้รับพาธจาก main.M1_PATH โดยอัตโนมัติ (Patch v22.4.1)
 ## 2025-12-14
 - เพิ่ม `get_resource_plan` ประเมิน RAM/GPU และใช้ใน AutoPipeline (Patch v22.3.8)
+## 2025-12-15
+- ย้าย `generate_ml_dataset_m1()` ไปหลังขั้นตอนแปลง timestamp ใน `autopipeline` เพื่อหลีกเลี่ยง KeyError (Patch v22.3.10)
