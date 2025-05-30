@@ -108,4 +108,9 @@ def autorisk_adjust(prev_config: dict, prev_summary: dict) -> dict:
     if prev_summary.get("sl_rate", 0) > 0.4:
         config["atr_multiplier"] = 1.6
         print("[AutoRiskAdjust] ขยาย SL → atr_multiplier 1.6")
+    if prev_summary.get("net_pnl", 0) <= 0:
+        config["enable_be"] = True
+        config["enable_trailing"] = True
+        config["use_dynamic_tsl"] = True
+        print("[AutoRiskAdjust] เปิด BE/TSL เนื่องจากกำไรสุทธิติดลบ")
     return config

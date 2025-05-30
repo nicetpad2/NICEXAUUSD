@@ -554,3 +554,6 @@
 
 ### 2025-11-27
 - ปรับ generate_signals_v12_0 เพิ่ม adaptive sell logic ลด volume_ratio เหลือ 0.3 และลด RSI >55 พร้อม fallback momentum (Patch v16.2.1)
+
+### 2025-11-28
+- ปรับ simulate_partial_tp_safe ให้ BE/TSL ทำงานตาม MFE เร็วขึ้น และเพิ่มเงื่อนไข fallback sell ต้องผ่าน confirm_zone (Patch v16.2.2)

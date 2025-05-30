@@ -941,7 +941,7 @@ def generate_signals_v12_0(df: pd.DataFrame, config: dict | None = None) -> pd.D
             signal = "sell"
 
         # ✅ [Fallback] Momentum-based Sell
-        elif gain_z < -0.3 and ema_fast < ema_slow and vol_pass:
+        elif gain_z < -0.3 and ema_fast < ema_slow and vol_pass and rsi > 55 and row.get("confirm_zone", True):
             signal = "sell"
 
         if signal == "buy" and config.get("disable_buy", False):

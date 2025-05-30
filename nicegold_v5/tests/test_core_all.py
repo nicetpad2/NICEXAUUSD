@@ -364,10 +364,11 @@ def test_autorisk_adjust():
     from nicegold_v5.fix_engine import autorisk_adjust
 
     cfg = {"tp1_rr_ratio": 1.5, "atr_multiplier": 1.0}
-    summary = {"tp_rate": 0.1, "sl_rate": 0.5}
+    summary = {"tp_rate": 0.1, "sl_rate": 0.5, "net_pnl": -1.0}
     new_cfg = autorisk_adjust(cfg, summary)
     assert new_cfg["tp1_rr_ratio"] == 1.2
     assert new_cfg["atr_multiplier"] == 1.6
+    assert new_cfg["enable_be"] and new_cfg["enable_trailing"] and new_cfg["use_dynamic_tsl"]
 
 
 def test_run_autofix_wfv(tmp_path):
@@ -1308,7 +1309,7 @@ def test_generate_signals_v12_0_pattern_sell(monkeypatch):
 
 
 def test_generate_signals_v12_0_fallback_sell(monkeypatch):
-    """ตรวจสอบ fallback momentum sell"""
+    """ตรวจสอบ fallback momentum sell ถูกบล็อกเมื่อ RSI ต่ำ"""
     from nicegold_v5.entry import generate_signals_v12_0
     monkeypatch.setattr(
         'nicegold_v5.entry.validate_indicator_inputs',
@@ -1316,7 +1317,7 @@ def test_generate_signals_v12_0_fallback_sell(monkeypatch):
     )
 
     rows = 25
-    close = [125.0] * 20 + list(np.linspace(124, 100, 5))
+    close = np.linspace(130, 100, rows)
     df = pd.DataFrame({
         'timestamp': pd.date_range('2025-01-01', periods=rows, freq='min'),
         'close': close,
@@ -1324,11 +1325,12 @@ def test_generate_signals_v12_0_fallback_sell(monkeypatch):
         'low': np.array(close) - 0.5,
         'volume': [100] * rows,
         'pattern': [None] * rows,
-        'rsi': [60] * rows,
+        'rsi': [50] * rows,
+        'confirm_zone': [True] * rows,
     })
 
     out = generate_signals_v12_0(df)
-    assert out['entry_signal'].notnull().any()
+    assert out['entry_signal'].isnull().all()
 
 
 def test_simulate_partial_tp_safe_be_exit():
