@@ -72,5 +72,8 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv"):
     tp2_entries = trades[trades["exit_reason"] == "tp2"]["entry_time"]
     df.loc[df["timestamp"].isin(tp2_entries), "tp2_hit"] = 1
     df = df.dropna().reset_index(drop=True)
+    out_dir = os.path.dirname(out_path)
+    if out_dir:
+        os.makedirs(out_dir, exist_ok=True)
     df.to_csv(out_path, index=False)
     print(f"[Patch v22.4.2] ✅ Saved ML dataset to: {out_path}")

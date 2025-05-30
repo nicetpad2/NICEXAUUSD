@@ -606,3 +606,6 @@
 ### 2025-12-18
 - ปรับ generate_ml_dataset_m1 สร้าง trade log อัตโนมัติเมื่อไม่พบไฟล์ และเพิ่ม error handling ใน autopipeline (Patch v22.4.3)
 
+### 2025-12-19
+- แก้ generate_ml_dataset_m1 สร้างโฟลเดอร์ out_path อัตโนมัติก่อนบันทึกไฟล์ (Patch v22.4.4)
+
