@@ -626,3 +626,6 @@
 - เพิ่มโหมด `ai_master` ใน `autopipeline` ใช้งาน SHAP, Optuna, TP2 Guard และ AutoFix WFV (Patch v22.7.1)
 - ปรับ welcome() เป็น NICEGOLD Supreme Menu และเรียก `autopipeline(mode="ai_master")` (Patch v22.7.1)
 
+### 2025-12-25
+- แก้ autopipeline เมื่อไม่มี PyTorch ให้โหลดข้อมูลและสร้างสัญญาณก่อนรัน AutoFix WFV (Patch v22.7.2)
+
