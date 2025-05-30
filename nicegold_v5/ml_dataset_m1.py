@@ -18,10 +18,16 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv"):
         if os.path.exists(alt):
             csv_path = alt
 
+    from nicegold_v5.utils import convert_thai_datetime, parse_timestamp_safe
+    print("[Patch v22.4.1] 🛠️ Loading and sanitizing CSV from:", csv_path)
     df = pd.read_csv(csv_path)
-    df["timestamp"] = pd.to_datetime(df["timestamp"])
+    df = convert_thai_datetime(df)
+    if "timestamp" not in df.columns:
+        raise KeyError("[Patch v22.4.1] ❌ ไม่มีคอลัมน์ timestamp หลังแปลง – หยุดการทำงาน")
+    df["timestamp"] = parse_timestamp_safe(df["timestamp"])
     df = df.dropna(subset=["timestamp", "high", "low", "close", "volume"])
     df = df.sort_values("timestamp").reset_index(drop=True)
+    print(f"[Patch v22.4.1] ✅ Sanitize timestamp success – {len(df)} rows")
 
     # Basic Indicators
     df["gain"] = df["close"].diff()
@@ -48,7 +54,8 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv"):
     trades["entry_time"] = pd.to_datetime(trades["entry_time"])
 
     df["tp2_hit"] = 0
-    df.loc[df["timestamp"].isin(trades[trades["exit_reason"] == "tp2"]["entry_time"]), "tp2_hit"] = 1
+    tp2_entries = trades[trades["exit_reason"] == "tp2"]["entry_time"]
+    df.loc[df["timestamp"].isin(tp2_entries), "tp2_hit"] = 1
     df = df.dropna().reset_index(drop=True)
     df.to_csv(out_path, index=False)
-    print(f"✅ Saved ML dataset to: {out_path}")
+    print(f"[Patch v22.4.1] ✅ Saved ML dataset to: {out_path}")
