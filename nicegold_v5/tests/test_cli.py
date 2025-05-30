@@ -21,7 +21,7 @@ def test_autorun_simulate(monkeypatch, capsys, tmp_path):
     monkeypatch.setattr(main, 'generate_signals', lambda df: df)
     monkeypatch.setattr(
         'nicegold_v5.exit.simulate_partial_tp_safe',
-        lambda df: ([{'exit_reason': 'tp1'}], [])
+        lambda df: pd.DataFrame([{'exit_reason': 'tp1'}])
     )
     monkeypatch.setattr(main, 'safe_calculate_net_change', lambda df: 5.0)
     main.welcome()
@@ -45,7 +45,7 @@ def test_autorun_string_timestamp(monkeypatch, capsys, tmp_path):
 
     def fake_simulate(df):
         assert pd.api.types.is_datetime64_any_dtype(df['timestamp'])
-        return ([{'exit_reason': 'tp2'}], [])
+        return pd.DataFrame([{'exit_reason': 'tp2'}])
     monkeypatch.setattr('nicegold_v5.entry.validate_indicator_inputs', lambda df, required_cols=None, min_rows=500: None)
     monkeypatch.setattr(main, 'validate_indicator_inputs', lambda df: None)
     monkeypatch.setattr(main, 'generate_signals', lambda df: df)
@@ -110,7 +110,7 @@ def test_autorun_relax_fallback(monkeypatch, capsys, tmp_path):
     monkeypatch.setattr('nicegold_v5.entry.generate_signals', fake_generate)
     monkeypatch.setattr(
         'nicegold_v5.exit.simulate_partial_tp_safe',
-        lambda df: ([{'exit_reason': 'tp1'}], [])
+        lambda df: pd.DataFrame([{'exit_reason': 'tp1'}])
     )
     monkeypatch.setattr(main, 'safe_calculate_net_change', lambda df: 1.0)
 
@@ -156,7 +156,7 @@ def test_autorun_diagnostic_fallback(monkeypatch, capsys, tmp_path):
     monkeypatch.setattr('nicegold_v5.entry.generate_signals', fake_generate)
     monkeypatch.setattr(
         'nicegold_v5.exit.simulate_partial_tp_safe',
-        lambda df: ([{'exit_reason': 'tp1'}], [])
+        lambda df: pd.DataFrame([{'exit_reason': 'tp1'}])
     )
     monkeypatch.setattr(main, 'safe_calculate_net_change', lambda df: 2.0)
 

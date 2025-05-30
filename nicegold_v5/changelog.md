@@ -490,3 +490,6 @@
 
 ## 2025-11-10
 - แก้ simulate_partial_tp_safe ใน entry.py ใช้ high/low ตรวจ TP1/TP2/SL (Patch v16.1.2)
+
+## 2025-11-11
+- ปรับ welcome() ให้รับ DataFrame จาก simulate_partial_tp_safe โดยตรง (Patch v16.1.3)
