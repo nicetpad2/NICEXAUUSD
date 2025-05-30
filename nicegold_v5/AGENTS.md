@@ -542,4 +542,6 @@
 - แก้ run_wfv_with_progress รองรับคอลัมน์ 'open' หรือ 'close' เป็น 'Open' (Patch vWFV.7)
 ### 2025-11-23
 - ปรับเมนู 7 ใช้ `run_autofix_wfv` และ `simulate_partial_tp_safe` ร่วมกับ `SNIPER_CONFIG_Q3_TUNED` บนไฟล์ M1 (Patch v21.2.1)
+### 2025-11-24
+- แก้เมนู 7 ให้สร้างสัญญาณและตรวจสอบอินดิเคเตอร์ก่อนรัน `run_autofix_wfv` (Patch v21.2.2)
 

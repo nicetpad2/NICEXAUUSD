@@ -577,17 +577,33 @@ def welcome():
         maximize_ram()
     elif choice == 7:
         show_progress_bar("🧠 เตรียม Walk-Forward", steps=2)
-        print("\n🚀 [Patch v21.2.1] เริ่ม AutoFix WFV แบบเทพ...")
+        print("\n🚀 [Patch v21.2.2] เริ่ม AutoFix WFV แบบเทพ...")
 
         df = load_csv_safe(M1_PATH)
         df = convert_thai_datetime(df)
         df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
         df = sanitize_price_columns(df)
+
+        try:
+            validate_indicator_inputs(df, min_rows=min(500, len(df)))
+        except TypeError:
+            validate_indicator_inputs(df)
+
+        df = generate_signals(df, config=SNIPER_CONFIG_Q3_TUNED)
+        if df["entry_signal"].isnull().mean() >= 1.0:
+            print("[Patch CLI] ⚠️ ไม่มีสัญญาณ – fallback RELAX_CONFIG_Q3")
+            df = generate_signals(df, config=RELAX_CONFIG_Q3)
+
         from nicegold_v5.utils import run_autofix_wfv
         from nicegold_v5.config import SNIPER_CONFIG_Q3_TUNED
         from nicegold_v5.exit import simulate_partial_tp_safe
 
-        trades_df = run_autofix_wfv(df, simulate_partial_tp_safe, SNIPER_CONFIG_Q3_TUNED, n_folds=5)
+        trades_df = run_autofix_wfv(
+            df,
+            simulate_partial_tp_safe,
+            SNIPER_CONFIG_Q3_TUNED,
+            n_folds=5,
+        )
         out_path = os.path.join(TRADE_DIR, "wfv_autofix_result.csv")
         trades_df.to_csv(out_path, index=False)
         print(f"📦 บันทึกผล AutoFix WFV ที่: {out_path}")
