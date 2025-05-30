@@ -396,7 +396,11 @@ def autopipeline():
             f"⚙️ Training LSTM hidden_dim={model_dim} batch_size={batch_size} lr={lr} optimizer={opt}"
         )
         # Step 2: Generate ML Dataset safely (after timestamp is confirmed)
-        generate_ml_dataset_m1(csv_path=M1_PATH, out_path="data/ml_dataset_m1.csv")
+        try:
+            generate_ml_dataset_m1(csv_path=M1_PATH, out_path="data/ml_dataset_m1.csv")
+        except Exception as e:
+            print("❌ ไม่สามารถสร้าง dataset ได้:", e)
+            return
 
         # Step 3: Train LSTM Classifier
         X, y = load_dataset("data/ml_dataset_m1.csv")

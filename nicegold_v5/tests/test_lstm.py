@@ -39,6 +39,24 @@ def test_generate_ml_dataset_m1(tmp_path, monkeypatch):
     assert 'tp2_hit' in out_df.columns
 
 
+def test_generate_ml_dataset_auto_trade_log(tmp_path, monkeypatch):
+    df = sample_m1_data()
+    csv_path = tmp_path / 'XAUUSD_M1.csv'
+    df.to_csv(csv_path, index=False)
+    out_dir = tmp_path / 'data'
+    out_dir.mkdir()
+    out_csv = out_dir / 'ml_dataset_m1.csv'
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df: df)
+    monkeypatch.setattr(
+        'nicegold_v5.exit.simulate_partial_tp_safe',
+        lambda df: pd.DataFrame({'entry_time': df['entry_time'], 'exit_reason': ['tp2'] * len(df)})
+    )
+    generate_ml_dataset_m1(str(csv_path), str(out_csv))
+    assert out_csv.exists()
+    assert (tmp_path / 'logs' / 'trades_v12_tp1tp2.csv').exists()
+
+
 def test_train_lstm(tmp_path, monkeypatch):
     df = sample_m1_data()
     csv_path = tmp_path / 'XAUUSD_M1.csv'
