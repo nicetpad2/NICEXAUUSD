@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
+from multiprocessing import cpu_count
 from datetime import datetime
 from nicegold_v5.entry import (
     generate_signals,
@@ -70,6 +71,45 @@ TRADE_DIR = "/content/drive/MyDrive/NICEGOLD/logs"
 # os.makedirs(TRADE_DIR, exist_ok=True)  # handled externally
 M1_PATH = "/content/drive/MyDrive/NICEGOLD/XAUUSD_M1.csv"
 M15_PATH = "/content/drive/MyDrive/NICEGOLD/XAUUSD_M15.csv"
+
+
+def get_resource_plan() -> dict:
+    """Return resource-aware training plan for LSTM and WFV."""
+    try:
+        import psutil
+        ram_gb = psutil.virtual_memory().total / 1024 ** 3
+    except Exception:
+        ram_gb = 0.0
+
+    try:
+        import torch
+        has_gpu = torch.cuda.is_available()
+        device = "cuda" if has_gpu else "cpu"
+        gpu_name = torch.cuda.get_device_name(0) if has_gpu else "CPU"
+    except Exception:
+        device = "cpu"
+        gpu_name = "CPU"
+
+    threads = cpu_count()
+
+    if ram_gb >= 24:
+        batch_size, model_dim, n_folds, lr, opt = 256, 128, 8, 0.0005, "adam"
+    elif ram_gb >= 12:
+        batch_size, model_dim, n_folds, lr, opt = 128, 64, 6, 0.001, "adam"
+    else:
+        batch_size, model_dim, n_folds, lr, opt = 64, 32, 5, 0.01, "sgd"
+
+    return {
+        "device": device,
+        "gpu": gpu_name,
+        "ram": ram_gb,
+        "threads": threads,
+        "batch_size": batch_size,
+        "model_dim": model_dim,
+        "n_folds": n_folds,
+        "optimizer": opt,
+        "lr": lr,
+    }
 
 
 def load_data(path):

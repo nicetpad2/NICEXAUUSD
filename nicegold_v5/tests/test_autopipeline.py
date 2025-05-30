@@ -36,6 +36,18 @@ def test_autopipeline(monkeypatch, tmp_path, capsys):
     monkeypatch.setattr('nicegold_v5.train_lstm_runner.train_lstm', lambda *a, **k: DummyModel())
     monkeypatch.setattr('torch.save', lambda *a, **k: None)
     monkeypatch.setattr('nicegold_v5.utils.run_autofix_wfv', lambda df, sim, cfg, n_folds=5: pd.DataFrame({'pnl':[0.0]}))
+    plan = {
+        'device': 'cpu',
+        'gpu': 'CPU',
+        'ram': 8.0,
+        'threads': 2,
+        'batch_size': 64,
+        'model_dim': 32,
+        'n_folds': 5,
+        'optimizer': 'sgd',
+        'lr': 0.01,
+    }
+    monkeypatch.setattr(main, 'get_resource_plan', lambda: plan)
 
     trades = main.autopipeline()
     out = capsys.readouterr().out
