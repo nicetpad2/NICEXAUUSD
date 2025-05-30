@@ -235,12 +235,21 @@ def simulate_partial_tp_safe(df: pd.DataFrame, capital: float = 1000.0):
             mfe = max(mfe, cur_mfe)
             open_position["mfe"] = mfe
 
-            if mfe >= rr1 * 1.5 and open_position.get("breakeven") is False:
-                open_position["sl"] = open_position["entry"]  # [Patch v16.1.9] Move SL to BE
+            # [Patch v16.2.2] Trigger BE เร็วขึ้นเมื่อ MFE ≥ RR1 × 1.2
+            if mfe >= rr1 * 1.2 and not open_position.get("breakeven"):
+                open_position["sl"] = open_position["entry"]
                 open_position["breakeven"] = True
                 sl = open_position["sl"]
-
-            if mfe >= rr1 and open_position.get("tsl_activated"):
+            # [Patch v16.2.2] เปิด TSL เมื่อ MFE ≥ RR1 × 0.9
+            if mfe >= rr1 * 0.9 and not open_position.get("tsl_activated"):
+                adj = (tp1 - open_position["entry"]) * 0.5
+                if direction == "buy":
+                    open_position["sl"] = open_position["entry"] + adj
+                else:
+                    open_position["sl"] = open_position["entry"] - adj
+                open_position["tsl_activated"] = True
+                sl = open_position["sl"]
+            elif mfe >= rr1 and open_position.get("tsl_activated"):
                 adj = (tp1 - open_position["entry"]) * 0.5
                 if direction == "buy":
                     open_position["sl"] = max(open_position["sl"], open_position["entry"] + adj)

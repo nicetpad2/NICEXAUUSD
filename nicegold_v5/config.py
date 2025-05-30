@@ -149,3 +149,13 @@ USE_META_META_CLASSIFIER = True  # [Patch v9.0]
 FOLD_SPECIFIC_THRESHOLD_TUNING = True
 ENABLE_AUTO_THRESHOLD_TUNING = True
 TUNE_L2_THRESHOLD = True
+
+# [Patch v16.2.2] AutoFix WFV Base Config เปิด BE และ Trailing SL
+AUTOFIX_WFV_CONFIG = {
+    "enable_be": True,
+    "enable_trailing": True,
+    "use_dynamic_tsl": True,
+    "tp2_delay_min": 10,
+    "breakeven_rr_trigger": 1.2,
+    "trailing_rr_trigger": 0.9,
+}
