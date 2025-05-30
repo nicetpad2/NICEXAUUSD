@@ -146,10 +146,18 @@ def run_walkforward_backtest(df, features, label_col, side='buy', n_folds=3, per
         X_train = df_train[features].astype(float)
         y_train = df_train[label_col]
 
-        model = Pipeline([
-            ("scaler", StandardScaler()),
-            ("rf", RandomForestClassifier(n_estimators=100, random_state=42))
-        ])
+        if y_train.nunique() < 2:
+            print(
+                f"[{strategy_name}] Fold {fold + 1}: insufficient class variety – skipping"
+            )
+            continue
+
+        model = Pipeline(
+            [
+                ("scaler", StandardScaler()),
+                ("rf", RandomForestClassifier(n_estimators=100, random_state=42)),
+            ]
+        )
         model.fit(X_train, y_train)
 
         df_test['entry_prob'] = model.predict_proba(df_test[features].astype(float))[:, 1]
