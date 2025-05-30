@@ -83,12 +83,18 @@ def should_exit(trade, row):
 
     if trade.get("tsl_activated"):
         tsl = trade.get("trailing_sl")
-        if (direction == "buy" and price_now <= tsl) or (direction == "sell" and price_now >= tsl):
+        if tsl is not None and (
+            (direction == "buy" and price_now <= tsl)
+            or (direction == "sell" and price_now >= tsl)
+        ):
             logging.info(f"[{recovery_prefix.upper()}TSL] Triggered @ {price_now:.2f}")
             return True, f"{recovery_prefix}tsl"
         high = _rget(row, "high", price_now) if direction == "buy" else _rget(row, "low", price_now)
         new_trail = high - atr if direction == "buy" else high + atr
-        if (direction == "buy" and new_trail > tsl) or (direction == "sell" and new_trail < tsl):
+        if tsl is not None and (
+            (direction == "buy" and new_trail > tsl)
+            or (direction == "sell" and new_trail < tsl)
+        ):
             trade["trailing_sl"] = new_trail
             logging.debug(f"[TSL] Updated trail to {new_trail:.2f}")
 
