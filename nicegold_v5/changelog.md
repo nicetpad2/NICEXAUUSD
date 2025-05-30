@@ -566,3 +566,5 @@
 - ปรับ autopipeline ตัดจำนวนแถว CSV ด้วย ROW_LIMIT ลดเวลารัน (Patch v22.3.6)
 ## 2025-12-11
 - ลบตัวแปร ROW_LIMIT ใน autopipeline ใช้ข้อมูล CSV แบบเต็ม (Patch v22.3.7)
+## 2025-12-12
+- เพิ่มฟังก์ชัน `prepare_csv_auto` รวมขั้นตอนแปลงและตรวจสอบ CSV อัตโนมัติ (Patch v22.4.0)

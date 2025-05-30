@@ -1198,6 +1198,28 @@ def test_load_csv_safe_fallback():
     df = main.load_csv_safe(path)
     assert not df.empty
 
+
+def test_prepare_csv_auto(monkeypatch):
+    import importlib
+    main = importlib.reload(importlib.import_module('main'))
+    utils = importlib.reload(importlib.import_module('nicegold_v5.utils'))
+    df = pd.DataFrame({
+        'timestamp': ['2025-01-01 00:00:00', '2025-01-01 01:00:00'],
+        'open': ['1', '2'],
+        'high': ['2', '3'],
+        'low': ['0', '1'],
+        'close': ['1', '2'],
+        'volume': ['1', '1'],
+    })
+    monkeypatch.setattr(main, 'load_csv_safe', lambda p: df)
+    monkeypatch.setattr(main, 'convert_thai_datetime', lambda d: d)
+    monkeypatch.setattr(main, 'parse_timestamp_safe', lambda s, fmt: pd.to_datetime(s))
+    monkeypatch.setattr(main, 'sanitize_price_columns', lambda d: d)
+    monkeypatch.setattr(main, 'validate_indicator_inputs', lambda df, required_cols=None, min_rows=500: None)
+    out = utils.prepare_csv_auto('dummy.csv')
+    assert len(out) == 2
+    assert pd.api.types.is_datetime64_any_dtype(out['timestamp'])
+
 def test_detect_session_auto():
     from nicegold_v5.exit import detect_session_auto
     assert detect_session_auto(pd.Timestamp('2025-01-01 04:00')) == 'Asia'

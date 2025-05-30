@@ -2,7 +2,11 @@ import pandas as pd
 import numpy as np
 import os
 from datetime import datetime
-from nicegold_v5.entry import generate_signals
+from nicegold_v5.entry import (
+    generate_signals,
+    sanitize_price_columns,
+    validate_indicator_inputs,
+)
 from nicegold_v5.backtester import run_backtest
 from nicegold_v5.wfv import run_autofix_wfv  # re-export for CLI (Patch v21.2.1)
 
@@ -383,4 +387,22 @@ def simulate_tp_exit(
     df_trades["exit_reason"] = exit_reasons
     df_trades["exit_price"] = exit_prices
     return df_trades
+
+
+def prepare_csv_auto(path: str, datetime_format: str = "%Y-%m-%d %H:%M:%S") -> pd.DataFrame:
+    """โหลดไฟล์ CSV แล้วแปลงและตรวจสอบให้พร้อมใช้งาน"""
+    import importlib
+
+    main = importlib.import_module("main")
+    df = main.load_csv_safe(path)
+    df = convert_thai_datetime(df)
+    if "timestamp" in df.columns:
+        df["timestamp"] = parse_timestamp_safe(df["timestamp"], datetime_format)
+        df = df.dropna(subset=["timestamp"]).sort_values("timestamp")
+    df = sanitize_price_columns(df)
+    try:
+        validate_indicator_inputs(df, min_rows=min(500, len(df)))
+    except TypeError:
+        validate_indicator_inputs(df)
+    return df
 
