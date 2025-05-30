@@ -601,3 +601,7 @@
 ## 2025-12-23
 - เพิ่ม unit test ตรวจสอบ debug trailing_sl และ Entry Signal Blocked
 
+## 2025-12-24
+- เพิ่มโหมด `ai_master` ใน `autopipeline` ใช้งาน SHAP, Optuna, TP2 Guard และ AutoFix WFV (Patch v22.7.1)
+- ปรับ welcome() และข้อความเมนูเป็น NICEGOLD Supreme Menu (Patch v22.7.1)
+

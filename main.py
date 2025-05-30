@@ -38,6 +38,7 @@ from nicegold_v5.config import (  # [Patch v12.3.9] Import SNIPER_CONFIG_Q3_TUNE
     SNIPER_CONFIG_Q3_TUNED,
     RELAX_CONFIG_Q3,
 )
+from nicegold_v5.optuna_tuner import start_optimization
 from nicegold_v5.qa import run_qa_guard, auto_qa_after_backtest
 from nicegold_v5.utils import (
     safe_calculate_net_change,
@@ -348,24 +349,6 @@ def autopipeline(mode="default", train_epochs=1):
     print("\n🚀 เริ่ม NICEGOLD AutoPipeline")
     maximize_ram()
 
-    # Step 1: Load and Prepare M1 CSV
-    df = load_csv_safe(M1_PATH)
-    df = convert_thai_datetime(df)
-    df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
-    df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
-    df = df.dropna(subset=["timestamp"])
-    df = df.sort_values("timestamp")
-    df = sanitize_price_columns(df)
-    try:
-        validate_indicator_inputs(df, min_rows=min(500, len(df)))
-    except TypeError:
-        validate_indicator_inputs(df)
-
-    df = generate_signals(df, config=SNIPER_CONFIG_Q3_TUNED)
-    if df["entry_signal"].isnull().mean() >= 1.0:
-        print("[AutoPipeline] ⚠️ ไม่มีสัญญาณ – fallback RELAX_CONFIG_Q3")
-        df = generate_signals(df, config=RELAX_CONFIG_Q3)
-
     try:
         from nicegold_v5.ml_dataset_m1 import generate_ml_dataset_m1
         from nicegold_v5.train_lstm_runner import load_dataset, train_lstm
@@ -376,6 +359,7 @@ def autopipeline(mode="default", train_epochs=1):
         load_dataset = None
         train_lstm = None
         print("⚠️ PyTorch ไม่พร้อมใช้งาน - ข้ามขั้นตอน LSTM")
+
     plan = get_resource_plan()
     device = plan["device"]
     DEVICE = torch.device(device) if torch else None
@@ -391,6 +375,60 @@ def autopipeline(mode="default", train_epochs=1):
     print(
         f"⚙️ Auto Config → batch_size={batch_size}, model_dim={model_dim}, n_folds={n_folds}, optimizer={opt}, lr={lr}"
     )
+
+    if mode == "ai_master" and torch is not None:
+        print("\n🧠 [AI Master Pipeline] เริ่มทำงานแบบครบวงจร (SHAP + Optuna + Guard + WFV)")
+        generate_ml_dataset_m1(csv_path=M1_PATH, out_path="data/ml_dataset_m1.csv")
+        X, y = load_dataset("data/ml_dataset_m1.csv")
+        model = train_lstm(X, y, hidden_dim=model_dim, epochs=train_epochs, lr=lr, batch_size=batch_size, optimizer_name=opt)
+        os.makedirs("models", exist_ok=True)
+        torch.save(model.state_dict(), "models/model_lstm_tp2.pth")
+        print("✅ บันทึกโมเดล LSTM แล้ว")
+        try:
+            import shap
+            explainer = shap.DeepExplainer(model, X[:100])
+            shap_vals = explainer.shap_values(X[:100])[0]
+            shap.summary_plot(shap_vals, X[:100], feature_names=["gain_z", "ema_slope", "atr", "rsi", "volume", "entry_score", "pattern_label"], show=False)
+            import matplotlib.pyplot as plt
+            plt.savefig("logs/shap_summary.png")
+            print("📊 บันทึก SHAP summary → logs/shap_summary.png")
+        except Exception as e:
+            print(f"⚠️ SHAP skipped: {e}")
+
+        df_feat = pd.read_csv("data/ml_dataset_m1.csv")
+        study = start_optimization(df_feat, n_trials=100)
+        print("✅ Optuna เสร็จสิ้น – บันทึก best trial")
+        with open("logs/optuna_best_config.json", "w") as f:
+            json.dump(study.best_trial.params, f, indent=2)
+
+        df = load_csv_safe(M1_PATH)
+        df = convert_thai_datetime(df)
+        df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
+        df = sanitize_price_columns(df)
+        df = generate_signals(df, config=study.best_trial.params)
+
+        seq_len = 10
+        feat_cols = ["gain_z", "ema_slope", "atr", "rsi", "volume", "entry_score", "pattern_label"]
+        data = df_feat[feat_cols].values
+        seqs = [data[i : i + seq_len] for i in range(len(data) - seq_len)]
+        device2 = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model.eval()
+        with torch.no_grad():
+            X_tensor = torch.tensor(np.array(seqs), dtype=torch.float32).to(device2)
+            preds = model(X_tensor).squeeze().cpu().numpy()
+        df_feat["tp2_proba"] = np.concatenate([np.zeros(seq_len), preds])
+        df = df.merge(df_feat[["timestamp", "tp2_proba"]], on="timestamp", how="left")
+        df["tp2_guard_pass"] = df["tp2_proba"] >= 0.7
+        df = df[df["tp2_guard_pass"] | df["entry_signal"].isnull()]
+        print(f"✅ TP2 Guard Filter → เหลือ {df['entry_signal'].notnull().sum()} signals")
+
+        from nicegold_v5.utils import run_autofix_wfv
+        trades_df = run_autofix_wfv(df, simulate_partial_tp_safe, SNIPER_CONFIG_Q3_TUNED)
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        out_path = os.path.join(TRADE_DIR, f"trades_ai_master_{ts}.csv")
+        trades_df.to_csv(out_path, index=False)
+        print(f"📦 Exported trades → {out_path}")
+        return trades_df
 
     if torch is not None and mode in ["full", "ultra"]:
         print(
@@ -469,16 +507,17 @@ def welcome():
     print("\n🟡 NICEGOLD Assistant พร้อมให้บริการแล้ว (L4 GPU + QA Guard)")
     maximize_ram()
 
-    print("\n🟡 NICEGOLD AI Menu (v22.6.4 – Ultimate Mode)")
-    print("\n🚀 เลือกสิ่งที่คุณอยากให้ AI จัดการให้คุณ:\n")
-    print("1. 🧠 เทรดแบบ AI ครบวงจร (Train + SHAP + Guard + Optuna + WFV)")
-    print("   [✓ LSTM 50 รอบ + SHAP + TP2 Guard + AutoFix + Export]")
+    print("\n🟡 NICEGOLD Supreme Menu (v22.7.1 – AI Infinity Mode)")
+    print("\n🚀 ให้ AI ทำงานทุกอย่างแบบอัจฉริยะ:\n")
+    print("1. 🧠 AI Master Pipeline")
+    print("   [✓ LSTM 50 รอบ + SHAP วิเคราะห์ feature สำคัญ + Optuna AutoTune กลยุทธ์")
+    print("    + TP2 Guard + AutoFix WFV + Export ครบทุกมิติ]")
     print("0. ❌ ออก")
     choice = input("👉 เลือกเมนู (0–1): ").strip()
     if choice == "1":
         from main import autopipeline
-        print("\n🧠 NICEGOLD AI กำลังดำเนินการทั้งหมดให้คุณแบบอัตโนมัติ...")
-        autopipeline(mode="full", train_epochs=50)
+        print("\n🧠 NICEGOLD AI Supreme กำลังจัดการทุกอย่างให้คุณ...")
+        autopipeline(mode="ai_master", train_epochs=50)
         return
     elif choice == "0":
         return
