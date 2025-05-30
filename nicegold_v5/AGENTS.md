@@ -622,3 +622,7 @@
 - เพิ่ม unit test ตรวจสอบข้อความ debug การอัปเดต trailing_sl ใน should_exit
 - เพิ่ม unit test ตรวจสอบข้อความ "Entry Signal Blocked" เมื่อรัน generate_signals
 
+### 2025-12-24
+- เพิ่มโหมด `ai_master` ใน `autopipeline` ใช้งาน SHAP, Optuna, TP2 Guard และ AutoFix WFV (Patch v22.7.1)
+- ปรับ welcome() เป็น NICEGOLD Supreme Menu และเรียก `autopipeline(mode="ai_master")` (Patch v22.7.1)
+
