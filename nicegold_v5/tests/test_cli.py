@@ -5,6 +5,7 @@ import pytest
 
 def test_autorun_simulate(monkeypatch, capsys, tmp_path):
     main = importlib.import_module('main')
+    monkeypatch.setattr('builtins.input', lambda _: '5')
     monkeypatch.setattr(main, "TRADE_DIR", str(tmp_path))
     monkeypatch.setattr(main, "load_csv_safe", lambda path: pd.DataFrame({
         'timestamp': pd.date_range('2024-01-01', periods=2, freq='h'),
@@ -32,6 +33,7 @@ def test_autorun_simulate(monkeypatch, capsys, tmp_path):
 
 def test_autorun_string_timestamp(monkeypatch, capsys, tmp_path):
     main = importlib.import_module('main')
+    monkeypatch.setattr('builtins.input', lambda _: '5')
     monkeypatch.setattr(main, "TRADE_DIR", str(tmp_path))
     monkeypatch.setattr(main, "load_csv_safe", lambda path: pd.DataFrame({
         'timestamp': ['2024-01-01 00:00:00', '2024-01-01 01:00:00'],
@@ -59,6 +61,7 @@ def test_autorun_string_timestamp(monkeypatch, capsys, tmp_path):
 
 def test_autorun_missing_entry_time(monkeypatch, tmp_path):
     main = importlib.import_module('main')
+    monkeypatch.setattr('builtins.input', lambda _: '5')
     monkeypatch.setattr(main, "TRADE_DIR", str(tmp_path))
     monkeypatch.setattr(main, "load_csv_safe", lambda path: pd.DataFrame({
         'timestamp': pd.date_range('2024-01-01', periods=1, freq='h'),
@@ -78,6 +81,7 @@ def test_autorun_missing_entry_time(monkeypatch, tmp_path):
 
 def test_autorun_relax_fallback(monkeypatch, capsys, tmp_path):
     main = importlib.import_module('main')
+    monkeypatch.setattr('builtins.input', lambda _: '5')
     monkeypatch.setattr(main, "TRADE_DIR", str(tmp_path))
 
     # DataFrame without entry_signal column to trigger auto-generation
@@ -121,6 +125,7 @@ def test_autorun_relax_fallback(monkeypatch, capsys, tmp_path):
 
 def test_autorun_diagnostic_fallback(monkeypatch, capsys, tmp_path):
     main = importlib.import_module('main')
+    monkeypatch.setattr('builtins.input', lambda _: '5')
     monkeypatch.setattr(main, "TRADE_DIR", str(tmp_path))
 
     monkeypatch.setattr(
