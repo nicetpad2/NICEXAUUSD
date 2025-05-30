@@ -562,3 +562,5 @@
 - แสดง RAM/CPU thread และปรับ batch_size, model_dim, n_folds ตาม RAM (Patch v22.3.1-v22.3.2)
 ## 2025-12-09
 - ปรับ train_lstm ให้สลับ optimizer และ learning rate ตามระดับ RAM (Patch v22.3.5)
+## 2025-12-10
+- ปรับ autopipeline ตัดจำนวนแถว CSV ด้วย ROW_LIMIT ลดเวลารัน (Patch v22.3.6)
