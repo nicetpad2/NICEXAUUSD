@@ -77,3 +77,13 @@ def test_train_lstm(tmp_path, monkeypatch):
     X, y = load_dataset(str(out_csv), seq_len=5)
     model = train_lstm(X, y, hidden_dim=8, epochs=1, batch_size=2, optimizer_name='adam')
     assert isinstance(model, torch.nn.Module)
+
+
+def test_generate_ml_dataset_creates_dir(tmp_path, monkeypatch):
+    df = sample_m1_data()
+    csv_path = tmp_path / 'XAUUSD_M1.csv'
+    df.to_csv(csv_path, index=False)
+    out_csv = tmp_path / 'newdir' / 'ml_dataset_m1.csv'
+    monkeypatch.chdir(tmp_path)
+    generate_ml_dataset_m1(str(csv_path), str(out_csv))
+    assert out_csv.exists()
