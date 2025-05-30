@@ -1196,6 +1196,8 @@ def test_entry_simulate_partial_tp_safe_basic():
     df = pd.DataFrame({
         'timestamp': pd.date_range('2025-01-01', periods=1, freq='min'),
         'close': [100.0],
+        'high': [101.6],
+        'low': [99.0],
         'entry_signal': ['buy'],
         'atr': [1.0],
         'ema_slope': [0.1],
