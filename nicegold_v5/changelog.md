@@ -568,3 +568,5 @@
 - ลบตัวแปร ROW_LIMIT ใน autopipeline ใช้ข้อมูล CSV แบบเต็ม (Patch v22.3.7)
 ## 2025-12-12
 - เพิ่มฟังก์ชัน `prepare_csv_auto` รวมขั้นตอนแปลงและตรวจสอบ CSV อัตโนมัติ (Patch v22.4.0)
+## 2025-12-13
+- ปรับ generate_ml_dataset_m1 ให้รับพาธจาก main.M1_PATH โดยอัตโนมัติ (Patch v22.4.1)

@@ -1,9 +1,23 @@
 import pandas as pd
 import numpy as np
 import os
+import importlib
 
 
-def generate_ml_dataset_m1(csv_path="XAUUSD_M1.csv", out_path="data/ml_dataset_m1.csv"):
+def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv"):
+    """สร้างชุดข้อมูล ML จากไฟล์ M1 โดยดึงพาธจาก main.M1_PATH หากไม่ได้ระบุ"""
+    if csv_path is None:
+        try:
+            main = importlib.import_module("main")
+            csv_path = getattr(main, "M1_PATH", "XAUUSD_M1.csv")
+        except Exception:
+            csv_path = "XAUUSD_M1.csv"
+
+    if not os.path.exists(csv_path):
+        alt = os.path.join(os.path.dirname(__file__), os.path.basename(csv_path))
+        if os.path.exists(alt):
+            csv_path = alt
+
     df = pd.read_csv(csv_path)
     df["timestamp"] = pd.to_datetime(df["timestamp"])
     df = df.dropna(subset=["timestamp", "high", "low", "close", "volume"])
