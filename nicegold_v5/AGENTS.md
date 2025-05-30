@@ -516,3 +516,5 @@
 - ปรับ welcome() ใช้ simulate_partial_tp_safe คืนค่า DataFrame เดียว (Patch v16.1.3)
 ### 2025-11-12
 - ปรับปรุง simulate_partial_tp_safe ใน exit.py ให้คืนค่า DataFrame เดียวและตรวจ TP1/TP2 จาก high/low จริง (Patch v16.1.4)
+### 2025-11-13
+- เพิ่มเมนู Walk-Forward Validation ใน main.py และฟังก์ชันเรียกใช้งาน (Patch vWFV.1)
