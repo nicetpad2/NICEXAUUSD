@@ -606,5 +606,9 @@
 - ปรับ welcome() และข้อความเมนูเป็น NICEGOLD Supreme Menu (Patch v22.7.1)
 
 ## 2025-12-25
+
 - แก้ `autopipeline` ให้ทำงานได้แม้ไม่มี PyTorch โดยโหลดข้อมูลและสร้างสัญญาณก่อนรัน AutoFix WFV (Patch v22.7.2)
+=======
+- ปรับชุดทดสอบให้ทำงานได้แม้ไม่มี PyTorch โดยใช้ mock module
+
 
