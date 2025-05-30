@@ -138,9 +138,15 @@ def _run_fold(args):
 def run_parallel_wfv(df: pd.DataFrame, features: list, label_col: str, n_folds: int = 5):
     print("\n⚡ Parallel Walk-Forward (Full RAM Mode)")
     df = df.copy(deep=False)  # [Perf-C] ลด RAM ใช้ deepcopy
-    if 'open' in df.columns and 'Open' not in df.columns:
-        df.rename(columns={'open': 'Open'}, inplace=True)
-        features = ['Open' if f == 'open' else f for f in features]
+    # [Patch vWFV.3] Fallback ปัญหาไม่มี 'Open'
+    if "Open" not in df.columns:
+        if "open" in df.columns:
+            df.rename(columns={'open': 'Open'}, inplace=True)
+            features = ['Open' if f == 'open' else f for f in features]
+        elif "close" in df.columns:
+            df["Open"] = df["close"]  # fallback สมจริง
+        else:
+            raise ValueError("\u274c \u0e44\u0e21\u0e48\u0e1e\u0e1a column \u0e17\u0e35\u0e48\u0e43\u0e0a\u0e49\u0e2a\u0e23\u0e49\u0e32\u0e07 'Open' \u0e44\u0e14\u0e49\u0e40\u0e25\u0e22")
     df = df.astype({col: np.float32 for col in features if col in df.columns})
     df[label_col] = df[label_col].astype(np.uint8)
     required_cols = ['open']  # [Patch] Include lowercase 'open' for renaming
