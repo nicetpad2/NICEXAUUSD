@@ -521,4 +521,6 @@
 - แก้ run_wfv_with_progress ให้ fallback คอลัมน์ 'Open' จาก 'open' หรือ 'close' (Patch vWFV.7)
 ## 2025-11-23
 - ปรับเมนู 7 เรียก `run_autofix_wfv` ทำ Walk-Forward แบบ AutoFix และบันทึก wfv_autofix_result.csv (Patch v21.2.1)
+## 2025-11-24
+- แก้เมนู 7 ให้สร้างสัญญาณก่อนรัน `run_autofix_wfv` และ fallback RELAX_CONFIG_Q3 หากไม่มีสัญญาณ (Patch v21.2.2)
 
