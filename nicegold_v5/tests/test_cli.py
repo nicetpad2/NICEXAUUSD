@@ -169,3 +169,41 @@ def test_autorun_diagnostic_fallback(monkeypatch, capsys, tmp_path):
     output = capsys.readouterr().out
     assert 'Summary (TP1/TP2)' in output
 
+
+def test_cli_autofix_wfv(monkeypatch, capsys, tmp_path):
+    import importlib
+    main = importlib.import_module('main')
+    monkeypatch.setattr('builtins.input', lambda _: '7')
+    monkeypatch.setattr(main, 'TRADE_DIR', str(tmp_path))
+    monkeypatch.setattr(main, 'maximize_ram', lambda: None)
+
+    df = pd.DataFrame({
+        'timestamp': pd.date_range('2024-01-01', periods=2, freq='h'),
+        'open': [1, 1],
+        'high': [1, 1],
+        'low': [1, 1],
+        'close': [1, 1],
+        'volume': [1, 1],
+    })
+    monkeypatch.setattr(main, 'load_csv_safe', lambda path: df)
+    monkeypatch.setattr(main, 'convert_thai_datetime', lambda d: d)
+    monkeypatch.setattr(main, 'parse_timestamp_safe', lambda s, fmt: s)
+    monkeypatch.setattr(main, 'sanitize_price_columns', lambda d: d)
+    monkeypatch.setattr('nicegold_v5.entry.validate_indicator_inputs', lambda df, required_cols=None, min_rows=500: None)
+    monkeypatch.setattr(main, 'validate_indicator_inputs', lambda df, required_cols=None, min_rows=500: None)
+    monkeypatch.setattr(main, 'generate_signals', lambda df, config=None: df.assign(entry_signal=['long'] * len(df)))
+
+    called = {}
+
+    def fake_run(df_arg, sim_fn, cfg, n_folds=5):
+        called['n_folds'] = n_folds
+        return pd.DataFrame({'fold': [1], 'pnl': [0.0]})
+
+    monkeypatch.setattr('nicegold_v5.utils.run_autofix_wfv', fake_run)
+    monkeypatch.setattr('nicegold_v5.exit.simulate_partial_tp_safe', lambda d: pd.DataFrame({'exit_reason': ['tp1']}))
+
+    main.welcome()
+    output = capsys.readouterr().out
+    assert 'AutoFix WFV' in output
+    assert called.get('n_folds') == 5
+

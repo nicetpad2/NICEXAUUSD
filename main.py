@@ -577,21 +577,20 @@ def welcome():
         maximize_ram()
     elif choice == 7:
         show_progress_bar("🧠 เตรียม Walk-Forward", steps=2)
-        print("\n🚀 เริ่มรัน Walk-Forward Validation (WFV)...")
+        print("\n🚀 [Patch v21.2.1] เริ่ม AutoFix WFV แบบเทพ...")
 
-        df = load_csv_safe(M15_PATH)
+        df = load_csv_safe(M1_PATH)
         df = convert_thai_datetime(df)
         df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
-        df["EMA_50"] = df["close"].ewm(span=50).mean()
-        df["RSI_14"] = rsi(df["close"], 14)
-        df["ATR_14"] = (df["high"] - df["low"]).rolling(14).mean()
-        df["target"] = (df["close"].shift(-10) > df["close"]).astype(int)
-        features = ["EMA_50", "RSI_14", "ATR_14"]
+        df = sanitize_price_columns(df)
+        from nicegold_v5.utils import run_autofix_wfv
+        from nicegold_v5.config import SNIPER_CONFIG_Q3_TUNED
+        from nicegold_v5.exit import simulate_partial_tp_safe
 
-        trades_df = run_wfv_with_progress(df, features, "target")
-        out_path = os.path.join(TRADE_DIR, "wfv_results.csv")
+        trades_df = run_autofix_wfv(df, simulate_partial_tp_safe, SNIPER_CONFIG_Q3_TUNED, n_folds=5)
+        out_path = os.path.join(TRADE_DIR, "wfv_autofix_result.csv")
         trades_df.to_csv(out_path, index=False)
-        print(f"📦 บันทึกผล WFV ที่: {out_path}")
+        print(f"📦 บันทึกผล AutoFix WFV ที่: {out_path}")
         maximize_ram()
     else:
         print("❌ เลือกเมนูไม่ถูกต้อง")
