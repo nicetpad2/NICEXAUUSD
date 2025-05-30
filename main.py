@@ -395,6 +395,7 @@ def welcome():
     print(f"   ▸ Net PnL       : {total_pnl:.2f} USD")
     maximize_ram()
     # print("6. TP1/TP2 Backtest Mode (v11.2+)")  # [Patch v12.4.1] Existing menu item
+    print("7. Run Walk-Forward Validation (WFV) แบบเทพ")  # [Patch vWFV.1]
     # print("7. Run CleanBacktest (AutoFix, Export, Summary)")  # [Patch v12.4.1] New menu item
     # choice = input("👉 เลือกเมนู (1-6): ")
     # try:
@@ -533,6 +534,28 @@ def welcome():
         print(f"   ▸ SL Count      : {sl_hits}")
         print(f"   ▸ Net PnL       : {total_pnl:.2f} USD")
 
+        maximize_ram()
+    elif choice == 7:
+        show_progress_bar("🧠 เตรียม Walk-Forward", steps=2)
+        print("\n🚀 เริ่มรัน Walk-Forward Validation (WFV)...")
+
+        sys.path.append("/mnt/data/wfv_extracted")
+
+        from wfv import run_wfv_with_progress
+
+        df = pd.read_csv(M15_PATH, parse_dates=["timestamp"])
+        df["EMA_50"] = df["close"].ewm(span=50).mean()
+        df["RSI_14"] = df["close"].rolling(14).apply(
+            lambda x: 100 - (100 / (1 + ((x.diff().clip(lower=0).mean()) /
+            (-x.diff().clip(upper=0).mean() + 1e-9)))), raw=False)
+        df["ATR_14"] = (df["high"] - df["low"]).rolling(14).mean()
+        df["target"] = (df["close"].shift(-10) > df["close"]).astype(int)
+        features = ["EMA_50", "RSI_14", "ATR_14"]
+
+        trades_df = run_wfv_with_progress(df, features, "target")
+        out_path = os.path.join(TRADE_DIR, "wfv_results.csv")
+        trades_df.to_csv(out_path, index=False)
+        print(f"📦 บันทึกผล WFV ที่: {out_path}")
         maximize_ram()
     else:
         print("❌ เลือกเมนูไม่ถูกต้อง")
