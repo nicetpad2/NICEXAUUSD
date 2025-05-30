@@ -26,6 +26,7 @@ from .utils import (
     create_summary_dict,
     safe_calculate_net_change,
     convert_thai_datetime,
+    prepare_csv_auto,
     simulate_tp_exit,
     
 )
