@@ -514,3 +514,6 @@
 - เพิ่ม config.disable_buy และตัวกรอง volume ใน generate_signals_v12_0 (Patch v16.0.2, v16.1.9)
 - ปรับ simulate_partial_tp_safe ให้ย้าย SL ไป BE และใช้ Trailing SL หลัง TP1 (Patch v16.1.9)
 - อัปเดต SNIPER_CONFIG_Q3_TUNED รองรับตัวเลือกใหม่
+
+## 2025-11-21
+- ปรับ main.py เมนู 7 ใช้ฟังก์ชัน rsi แบบเวกเตอร์ ลดเวลาคำนวณ WFV (Patch vWFV.6)

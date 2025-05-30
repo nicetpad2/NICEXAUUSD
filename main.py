@@ -30,6 +30,7 @@ from nicegold_v5.entry import (
     generate_signals_v12_0 as generate_signals,  # [Patch v12.3.9] ensure import
     sanitize_price_columns,
     validate_indicator_inputs,
+    rsi,
 )
 from nicegold_v5.exit import simulate_partial_tp_safe  # [Patch v12.2.x]
 from nicegold_v5.config import (  # [Patch v12.3.9] Import SNIPER_CONFIG_Q3_TUNED
@@ -436,7 +437,7 @@ def welcome():
         show_progress_bar("🚧 เตรียมฟีเจอร์", steps=5)
         df.set_index("timestamp", inplace=True)
         df["EMA_50"] = df["Close"].ewm(span=50).mean()
-        df["RSI_14"] = df["Close"].rolling(14).apply(lambda x: 100 - (100 / (1 + ((x.diff().clip(lower=0).mean()) / (-x.diff().clip(upper=0).mean() + 1e-9)))), raw=False)
+        df["RSI_14"] = rsi(df["Close"], 14)
         df["ATR_14"] = (df["High"] - df["Low"]).rolling(14).mean()
         df["ATR_14_MA50"] = df["ATR_14"].rolling(50).mean()
         df["EMA_50_slope"] = df["EMA_50"].diff()
@@ -571,9 +572,7 @@ def welcome():
         df = convert_thai_datetime(df)
         df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
         df["EMA_50"] = df["close"].ewm(span=50).mean()
-        df["RSI_14"] = df["close"].rolling(14).apply(
-            lambda x: 100 - (100 / (1 + ((x.diff().clip(lower=0).mean()) /
-            (-x.diff().clip(upper=0).mean() + 1e-9)))), raw=False)
+        df["RSI_14"] = rsi(df["close"], 14)
         df["ATR_14"] = (df["high"] - df["low"]).rolling(14).mean()
         df["target"] = (df["close"].shift(-10) > df["close"]).astype(int)
         features = ["EMA_50", "RSI_14", "ATR_14"]
