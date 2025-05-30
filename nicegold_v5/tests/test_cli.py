@@ -59,7 +59,7 @@ def test_autorun_string_timestamp(monkeypatch, capsys, tmp_path):
     assert 'TP2 Triggered' in output
 
 
-def test_autorun_missing_entry_time(monkeypatch, tmp_path):
+def test_autorun_missing_entry_time(monkeypatch, capsys, tmp_path):
     main = importlib.import_module('main')
     monkeypatch.setattr('builtins.input', lambda _: '5')
     monkeypatch.setattr(main, "TRADE_DIR", str(tmp_path))
@@ -75,8 +75,9 @@ def test_autorun_missing_entry_time(monkeypatch, tmp_path):
     monkeypatch.setattr(main, 'validate_indicator_inputs', lambda df: None)
     monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df, config=None: df)
     monkeypatch.setattr(main, 'generate_signals', lambda df: df)
-    with pytest.raises(RuntimeError):
-        main.welcome()
+    main.welcome()
+    output = capsys.readouterr().out
+    assert 'ไม่มีข้อมูลครบสำหรับ simulate' in output
 
 
 def test_autorun_relax_fallback(monkeypatch, capsys, tmp_path):

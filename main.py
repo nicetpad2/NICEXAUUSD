@@ -398,33 +398,32 @@ def welcome():
     required = ["timestamp", "entry_signal", "entry_time"]
     df = df.dropna(subset=required)
     df["signal"] = df["entry_signal"].apply(lambda x: "long" if pd.notnull(x) else None)
+    trade_df = pd.DataFrame()
     if df.empty:
-        raise RuntimeError("[Patch QA] ❌ ไม่มีแถวที่มีข้อมูลครบสำหรับ simulate")
-    if not pd.api.types.is_datetime64_any_dtype(df["timestamp"]):
-        raise ValueError("[Patch QA] ❌ timestamp ต้องแปลงเป็น datetime ก่อน simulate")
+        print("[Patch CLI] ⚠️ ไม่มีข้อมูลครบสำหรับ simulate – ข้ามขั้นตอนนี้")
+    else:
+        if not pd.api.types.is_datetime64_any_dtype(df["timestamp"]):
+            raise ValueError("[Patch QA] ❌ timestamp ต้องแปลงเป็น datetime ก่อน simulate")
+        show_progress_bar("🚀 รัน simulate_partial_tp_safe", steps=2)
+        trade_df = simulate_partial_tp_safe(df)  # ✅ [Patch v12.0.2] ใช้ logic ใหม่ TP1/TP2 จากราคาแท่งจริง
 
-    show_progress_bar("🚀 รัน simulate_partial_tp_safe", steps=2)
-    trade_df = simulate_partial_tp_safe(df)  # ✅ [Patch v12.0.2] ใช้ logic ใหม่ TP1/TP2 จากราคาแท่งจริง
+    if trade_df.empty or trade_df.get("exit_reason").isnull().all():
+        print("[Patch QA] ⚠️ simulate_trades_with_tp ไม่พบ trade ที่ถูกยิงจริง - ข้ามสรุปผล")
+    else:
+        out_path = os.path.join(TRADE_DIR, "trades_v12_tp1tp2.csv")
+        trade_df.to_csv(out_path, index=False)
+        print(f"[Patch v12.0.1] ✅ บันทึกผล TP1/TP2 Trade log ที่: {out_path}")
 
-    if trade_df.empty or trade_df["exit_reason"].isnull().all():
-        print("[Patch QA] ⚠️ simulate_trades_with_tp ไม่พบ trade ที่ถูกยิงจริง")
-        maximize_ram()
-        return
+        tp1_hits = trade_df["exit_reason"].eq("tp1").sum()
+        tp2_hits = trade_df["exit_reason"].eq("tp2").sum()
+        sl_hits = trade_df["exit_reason"].eq("sl").sum()
+        total_pnl = safe_calculate_net_change(trade_df)
 
-    out_path = os.path.join(TRADE_DIR, "trades_v12_tp1tp2.csv")
-    trade_df.to_csv(out_path, index=False)
-    print(f"[Patch v12.0.1] ✅ บันทึกผล TP1/TP2 Trade log ที่: {out_path}")
-
-    tp1_hits = trade_df["exit_reason"].eq("tp1").sum()
-    tp2_hits = trade_df["exit_reason"].eq("tp2").sum()
-    sl_hits = trade_df["exit_reason"].eq("sl").sum()
-    total_pnl = safe_calculate_net_change(trade_df)
-
-    print("\n📊 [Patch QA] Summary (TP1/TP2):")
-    print(f"   ▸ TP1 Triggered : {tp1_hits}")
-    print(f"   ▸ TP2 Triggered : {tp2_hits}")
-    print(f"   ▸ SL Count      : {sl_hits}")
-    print(f"   ▸ Net PnL       : {total_pnl:.2f} USD")
+        print("\n📊 [Patch QA] Summary (TP1/TP2):")
+        print(f"   ▸ TP1 Triggered : {tp1_hits}")
+        print(f"   ▸ TP2 Triggered : {tp2_hits}")
+        print(f"   ▸ SL Count      : {sl_hits}")
+        print(f"   ▸ Net PnL       : {total_pnl:.2f} USD")
     maximize_ram()
 
     print("\n🧩 เลือกเมนูต่อไป:")
