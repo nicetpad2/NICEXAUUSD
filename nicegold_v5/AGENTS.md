@@ -584,3 +584,5 @@
 - ปรับ train_lstm สลับ optimizer และ learning rate อัตโนมัติตาม RAM (Patch v22.3.5)
 ### 2025-12-10
 - ปรับ autopipeline ให้ตัดจำนวนแถวจากไฟล์ CSV ด้วยตัวแปร ROW_LIMIT เพื่อประหยัดเวลา
+### 2025-12-11
+- ลบตัวแปร ROW_LIMIT ใน autopipeline ใช้ข้อมูล CSV เต็ม (Patch v22.3.7)

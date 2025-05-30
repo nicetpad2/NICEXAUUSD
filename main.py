@@ -108,7 +108,6 @@ M15_PATH = os.getenv(
     "M15_PATH",
     os.path.join(ROOT_DIR, "nicegold_v5", "XAUUSD_M15.csv"),
 )
-ROW_LIMIT = int(os.getenv("ROW_LIMIT", "5000"))  # จำกัดจำนวนแถว CSV เพื่อลดเวลารัน
 DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 os.makedirs(TRADE_DIR, exist_ok=True)
 
@@ -348,8 +347,6 @@ def autopipeline():
     maximize_ram()
 
     df = load_csv_safe(M1_PATH)
-    if ROW_LIMIT > 0:
-        df = df.head(ROW_LIMIT)
     df = convert_thai_datetime(df)
     df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
     df = df.dropna(subset=["timestamp"])
