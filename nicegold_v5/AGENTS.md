@@ -538,3 +538,5 @@
 
 ### 2025-11-21
 - ปรับ main.py เมนู 7 ใช้ฟังก์ชัน rsi แบบเวกเตอร์ ลดเวลา WFV (Patch vWFV.6)
+### 2025-11-22
+- แก้ run_wfv_with_progress รองรับคอลัมน์ 'open' หรือ 'close' เป็น 'Open' (Patch vWFV.7)
