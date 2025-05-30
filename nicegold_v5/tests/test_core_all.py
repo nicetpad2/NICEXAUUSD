@@ -1265,21 +1265,46 @@ def test_generate_signals_disable_buy_volume_guard(monkeypatch):
     from nicegold_v5.entry import generate_signals_v12_0
     monkeypatch.setattr('nicegold_v5.entry.validate_indicator_inputs', lambda df, required_cols=None, min_rows=500: None)
 
+    rows = 25
     df = pd.DataFrame({
-        'timestamp': pd.date_range('2025-01-01', periods=2, freq='min'),
-        'close': [100.0, 99.0],
-        'high': [100.5, 99.5],
-        'low': [99.5, 98.5],
-        'volume': [1.0, 1.0],
-        'pattern': ['inside_bar', 'qm_bearish'],
-        'rsi': [20, 80],
-        'gain_z': [0.1, -0.1],
+        'timestamp': pd.date_range('2025-01-01', periods=rows, freq='min'),
+        'close': np.linspace(100, 125, rows),
+        'high': np.linspace(100.5, 125.5, rows),
+        'low': np.linspace(99.5, 124.5, rows),
+        'volume': [1.0] * rows,
+        'pattern': ['inside_bar'] + [None]*19 + ['qm_bearish'] + [None]*(rows-21),
+        'rsi': [20] + [50]*19 + [80] + [50]*(rows-21),
+        'gain_z': [0.1] + [0.0]*(rows-1),
     })
 
     config = {'disable_buy': True, 'min_volume': 0.5}
     out = generate_signals_v12_0(df, config)
     assert pd.isna(out['entry_signal'].iloc[0])
-    assert out['entry_signal'].iloc[1] == 'sell'
+    assert out['entry_signal'].iloc[20] == 'sell'
+
+
+def test_generate_signals_v12_0_pattern_sell(monkeypatch):
+    """ตรวจสอบเงื่อนไขขายจาก pattern + Volume + RSI"""
+    from nicegold_v5.entry import generate_signals_v12_0
+    monkeypatch.setattr(
+        'nicegold_v5.entry.validate_indicator_inputs',
+        lambda df, required_cols=None, min_rows=500: None,
+    )
+
+    rows = 25
+    df = pd.DataFrame({
+        'timestamp': pd.date_range('2025-01-01', periods=rows, freq='min'),
+        'close': np.linspace(100, 125, rows),
+        'high': np.linspace(100.5, 125.5, rows),
+        'low': np.linspace(99.5, 124.5, rows),
+        'volume': [100]*20 + [150] + [100]*(rows-21),
+        'pattern': [None]*20 + ['bearish_engulfing'] + [None]*(rows-21),
+        'rsi': [50]*20 + [70] + [50]*(rows-21),
+        'gain_z': [0.0]*rows,
+    })
+
+    out = generate_signals_v12_0(df, {'volume_ratio': 0.5})
+    assert out.loc[20, 'entry_signal'] == 'sell'
 
 
 def test_simulate_partial_tp_safe_be_exit():

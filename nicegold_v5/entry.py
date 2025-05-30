@@ -926,19 +926,17 @@ def generate_signals_v12_0(df: pd.DataFrame, config: dict | None = None) -> pd.D
         gain_z = row.get("gain_z", 0)
         rsi = row.get("rsi", 50)
 
-        if rsi < 30 and row.get("pattern") == "inside_bar":
-            signal = "buy"
-        elif row.get("pattern") == "qm":
-            signal = "buy"
-        elif row.get("pattern") == "fractal_v":
-            signal = "buy"
-        elif gain_z > 0.3 and ema_fast > ema_slow:
-            signal = "buy"
-        elif rsi > 70 and row.get("pattern") == "inside_bar":
+        # [Patch v16.2.0] ✅ Pattern Sell + Volume + RSI
+        vol = row.get("volume", 0)
+        vol_ma = row.get("volume_ma", 1)
+        vol_pass = vol > vol_ma * config.get("volume_ratio", 0.5)
+        rsi_pass = rsi > 60
+
+        if row.get("pattern") == "bearish_engulfing" and rsi >= 65 and vol_pass:
             signal = "sell"
-        elif row.get("pattern") == "qm_bearish":
+        elif row.get("pattern") == "inside_bar" and rsi >= 70 and vol_pass:
             signal = "sell"
-        elif row.get("pattern") == "bearish_engulfing":
+        elif row.get("pattern") == "qm_bearish" and vol_pass:
             signal = "sell"
 
         if signal == "buy" and config.get("disable_buy", False):

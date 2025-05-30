@@ -524,3 +524,6 @@
 ## 2025-11-24
 - แก้เมนู 7 ให้สร้างสัญญาณก่อนรัน `run_autofix_wfv` และ fallback RELAX_CONFIG_Q3 หากไม่มีสัญญาณ (Patch v21.2.2)
 
+## 2025-11-25
+- ปรับ generate_signals_v12_0 ใช้เงื่อนไข Sell จาก pattern + Volume + RSI (Patch v16.2.0)
+
