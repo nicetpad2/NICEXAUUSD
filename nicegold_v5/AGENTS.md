@@ -594,3 +594,5 @@
 - เพิ่มฟังก์ชัน `get_resource_plan` เชื่อมการตั้งค่ากับ GPU/RAM ใน `autopipeline` (Patch v22.3.8)
 ### 2025-12-15
 - ย้าย `generate_ml_dataset_m1()` หลังแปลง timestamp ใน `autopipeline` ป้องกัน KeyError (Patch v22.3.10)
+### 2025-12-16
+- แก้ `generate_ml_dataset_m1` รองรับ timestamp แบบ พ.ศ. และ sanitize ปลอดภัย (Patch v22.4.1 Hotfix)
