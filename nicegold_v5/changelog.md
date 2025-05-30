@@ -510,3 +510,7 @@
 
 ## 2025-11-19
 - ปรับ `_run_fold` และ `run_parallel_wfv` ให้ใช้ fallback สร้างคอลัมน์ 'Open' จาก 'open' หรือ 'close' พร้อมข้อความแจ้งเตือน (Patch v16.0.1)
+## 2025-11-20
+- เพิ่ม config.disable_buy และตัวกรอง volume ใน generate_signals_v12_0 (Patch v16.0.2, v16.1.9)
+- ปรับ simulate_partial_tp_safe ให้ย้าย SL ไป BE และใช้ Trailing SL หลัง TP1 (Patch v16.1.9)
+- อัปเดต SNIPER_CONFIG_Q3_TUNED รองรับตัวเลือกใหม่
