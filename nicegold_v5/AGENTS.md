@@ -557,3 +557,5 @@
 
 ### 2025-11-28
 - ปรับ simulate_partial_tp_safe ให้ BE/TSL ทำงานตาม MFE เร็วขึ้น และเพิ่มเงื่อนไข fallback sell ต้องผ่าน confirm_zone (Patch v16.2.2)
+### 2025-11-29
+- ปรับ simulate_partial_tp_safe ตั้ง SL สำรองเมื่อ tsl_activated แต่ sl ยังไม่มีค่า (Patch v16.2.3)

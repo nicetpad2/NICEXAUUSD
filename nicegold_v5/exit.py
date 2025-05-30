@@ -282,6 +282,15 @@ def simulate_partial_tp_safe(df: pd.DataFrame, capital: float = 1000.0):
 
             if exit_price is None:
                 exit_triggered, reason = should_exit(open_position, row)
+
+                # [Patch v16.2.3] ✅ ป้องกันกรณี tsl = None → เซ็ต fallback SL หากยังไม่ได้ตั้ง
+                if open_position.get("tsl_activated") and open_position.get("sl") is None:
+                    if direction == "buy":
+                        open_position["sl"] = open_position["entry"] + atr * 0.5
+                    else:
+                        open_position["sl"] = open_position["entry"] - atr * 0.5
+                    sl = open_position["sl"]
+
                 if exit_triggered:
                     exit_price = row.close
 
