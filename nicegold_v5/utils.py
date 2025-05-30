@@ -4,6 +4,7 @@ import os
 from datetime import datetime
 from nicegold_v5.entry import generate_signals
 from nicegold_v5.backtester import run_backtest
+from nicegold_v5.wfv import run_autofix_wfv  # re-export for CLI (Patch v21.2.1)
 
 
 def print_qa_summary(trades: pd.DataFrame, equity: pd.DataFrame) -> dict:

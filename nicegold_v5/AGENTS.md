@@ -540,3 +540,6 @@
 - ปรับ main.py เมนู 7 ใช้ฟังก์ชัน rsi แบบเวกเตอร์ ลดเวลา WFV (Patch vWFV.6)
 ### 2025-11-22
 - แก้ run_wfv_with_progress รองรับคอลัมน์ 'open' หรือ 'close' เป็น 'Open' (Patch vWFV.7)
+### 2025-11-23
+- ปรับเมนู 7 ใช้ `run_autofix_wfv` และ `simulate_partial_tp_safe` ร่วมกับ `SNIPER_CONFIG_Q3_TUNED` บนไฟล์ M1 (Patch v21.2.1)
+

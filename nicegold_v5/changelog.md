@@ -519,3 +519,6 @@
 - ปรับ main.py เมนู 7 ใช้ฟังก์ชัน rsi แบบเวกเตอร์ ลดเวลาคำนวณ WFV (Patch vWFV.6)
 ## 2025-11-22
 - แก้ run_wfv_with_progress ให้ fallback คอลัมน์ 'Open' จาก 'open' หรือ 'close' (Patch vWFV.7)
+## 2025-11-23
+- ปรับเมนู 7 เรียก `run_autofix_wfv` ทำ Walk-Forward แบบ AutoFix และบันทึก wfv_autofix_result.csv (Patch v21.2.1)
+
