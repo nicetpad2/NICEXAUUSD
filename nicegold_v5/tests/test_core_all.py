@@ -1363,3 +1363,38 @@ def test_generate_pattern_signals():
     assert out.loc[3, "pattern_signal"] == "bearish_engulfing"
     assert out.loc[3, "entry_signal"] == "sell"
 
+
+def test_simulate_partial_tp_safe_fallback_sl(monkeypatch):
+    """ตรวจสอบ fallback SL เมื่อ tsl_activated แต่ sl เป็น None"""
+    from nicegold_v5.exit import simulate_partial_tp_safe
+
+    def fake_should_exit(trade, row):
+        trade["sl"] = None
+        trade["tsl_activated"] = True
+        return True, "manual"
+
+    monkeypatch.setattr("nicegold_v5.exit.should_exit", fake_should_exit)
+
+    df = pd.DataFrame([
+        {
+            "timestamp": pd.Timestamp("2025-01-01 00:00"),
+            "close": 100.0,
+            "high": 100.3,
+            "low": 99.7,
+            "entry_signal": "buy",
+            "atr": 1.0,
+        },
+        {
+            "timestamp": pd.Timestamp("2025-01-01 00:01"),
+            "close": 100.1,
+            "high": 100.2,
+            "low": 99.9,
+            "entry_signal": "buy",
+            "atr": 1.0,
+        },
+    ])
+
+    trades = simulate_partial_tp_safe(df)
+    assert not trades.empty
+    assert trades.loc[0, "sl_price"] == 100.0 + 0.5
+

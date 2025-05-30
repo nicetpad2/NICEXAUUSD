@@ -537,3 +537,5 @@
 ## 2025-11-28
 - ปรับ simulate_partial_tp_safe เปิด BE เมื่อ MFE ≥ RR1.2 และเปิด TSL ที่ RR1×0.9
 - ปรับ fallback sell ให้ตรวจ rsi >55 และ confirm_zone (Patch v16.2.2)
+## 2025-11-29
+- ปรับ simulate_partial_tp_safe เซ็ต SL สำรองหาก tsl_activated แต่ sl ยังไม่ได้ตั้ง (Patch v16.2.3)
