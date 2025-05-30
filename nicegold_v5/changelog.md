@@ -530,3 +530,6 @@
 
 ## 2025-11-26
 - ปรับ welcome() ข้ามขั้นตอน simulate หากไม่มีข้อมูลหลังสร้างสัญญาณ และพิมพ์คำเตือนแทนการหยุดโปรแกรม (Patch v21.2.3)
+
+## 2025-11-27
+- ปรับ generate_signals_v12_0 เป็น Adaptive Sell Logic ลดเงื่อนไข volume_ratio เหลือ 0.3 และ RSI >55 พร้อม fallback momentum (Patch v16.2.1)

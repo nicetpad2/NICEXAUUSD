@@ -1307,6 +1307,30 @@ def test_generate_signals_v12_0_pattern_sell(monkeypatch):
     assert out.loc[20, 'entry_signal'] == 'sell'
 
 
+def test_generate_signals_v12_0_fallback_sell(monkeypatch):
+    """ตรวจสอบ fallback momentum sell"""
+    from nicegold_v5.entry import generate_signals_v12_0
+    monkeypatch.setattr(
+        'nicegold_v5.entry.validate_indicator_inputs',
+        lambda df, required_cols=None, min_rows=500: None,
+    )
+
+    rows = 25
+    close = [125.0] * 20 + list(np.linspace(124, 100, 5))
+    df = pd.DataFrame({
+        'timestamp': pd.date_range('2025-01-01', periods=rows, freq='min'),
+        'close': close,
+        'high': np.array(close) + 0.5,
+        'low': np.array(close) - 0.5,
+        'volume': [100] * rows,
+        'pattern': [None] * rows,
+        'rsi': [60] * rows,
+    })
+
+    out = generate_signals_v12_0(df)
+    assert out['entry_signal'].notnull().any()
+
+
 def test_simulate_partial_tp_safe_be_exit():
     from nicegold_v5.exit import simulate_partial_tp_safe
 

@@ -551,3 +551,6 @@
 
 ### 2025-11-26
 - ปรับ welcome() ให้ข้าม simulate_partial_tp_safe เมื่อไม่มีข้อมูล และยังเปิดเมนูใช้งานได้ (Patch v21.2.3)
+
+### 2025-11-27
+- ปรับ generate_signals_v12_0 เพิ่ม adaptive sell logic ลด volume_ratio เหลือ 0.3 และลด RSI >55 พร้อม fallback momentum (Patch v16.2.1)
