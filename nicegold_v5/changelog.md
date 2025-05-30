@@ -598,3 +598,6 @@
 ## 2025-12-22
 - เพิ่ม `pd.to_datetime` ใน autopipeline สำหรับทั้ง df และ df_feat ก่อน merge (Patch v22.6.6)
 
+## 2025-12-23
+- เพิ่ม unit test ตรวจสอบ debug trailing_sl และ Entry Signal Blocked
+
