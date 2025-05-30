@@ -372,8 +372,7 @@ def welcome():
         raise ValueError("[Patch QA] ❌ timestamp ต้องแปลงเป็น datetime ก่อน simulate")
 
     show_progress_bar("🚀 รัน simulate_partial_tp_safe", steps=2)
-    trades, logs = simulate_partial_tp_safe(df)
-    trade_df = pd.DataFrame(trades)  # ✅ [Patch v15.7.1] ใช้ trades แทน logs เพื่อให้มี entry/exit
+    trade_df = simulate_partial_tp_safe(df)  # ✅ [Patch v12.0.2] ใช้ logic ใหม่ TP1/TP2 จากราคาแท่งจริง
 
     if trade_df.empty or trade_df["exit_reason"].isnull().all():
         print("[Patch QA] ⚠️ simulate_trades_with_tp ไม่พบ trade ที่ถูกยิงจริง")
