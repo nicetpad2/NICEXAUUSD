@@ -47,3 +47,12 @@ from .qa import (
     auto_qa_after_backtest,
 )
 from .rl_agent import RLScalper
+from .ml_dataset_m1 import generate_ml_dataset_m1
+
+try:
+    from .deep_model_m1 import LSTMClassifier
+    from .train_lstm_runner import load_dataset, train_lstm
+except Exception:  # pragma: no cover - torch may be missing
+    LSTMClassifier = None
+    load_dataset = None
+    train_lstm = None

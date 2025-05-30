@@ -568,3 +568,5 @@
 - ปรับ fallback sell ใน generate_signals_v12_0 ให้ใช้ entry_score > 2.5 และ RSI >50 (Patch v16.2.4)
 ### 2025-12-02
 - ปรับ generate_signals_v12_0 เพิ่ม ultra override sell ใช้ gain_z < -0.01, entry_score >0.5 และ volume_ratio 0.05 (Patch v22.0.1-ultra)
+### 2025-12-03
+- เพิ่มโมดูลสร้างชุดข้อมูล ML และ LSTMClassifier สำหรับทำนาย TP2 (Patch v23.0.0-LSTM)
