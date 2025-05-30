@@ -592,3 +592,5 @@
 - ปรับ `generate_ml_dataset_m1` ให้ใช้พาธ M1_PATH อัตโนมัติ (Patch v22.4.1)
 ### 2025-12-14
 - เพิ่มฟังก์ชัน `get_resource_plan` เชื่อมการตั้งค่ากับ GPU/RAM ใน `autopipeline` (Patch v22.3.8)
+### 2025-12-15
+- ย้าย `generate_ml_dataset_m1()` หลังแปลง timestamp ใน `autopipeline` ป้องกัน KeyError (Patch v22.3.10)

@@ -348,6 +348,7 @@ def autopipeline():
     print("\n🚀 เริ่ม NICEGOLD AutoPipeline")
     maximize_ram()
 
+    # Step 1: Load and Prepare M1 CSV
     df = load_csv_safe(M1_PATH)
     df = convert_thai_datetime(df)
     df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
@@ -394,7 +395,10 @@ def autopipeline():
         print(
             f"⚙️ Training LSTM hidden_dim={model_dim} batch_size={batch_size} lr={lr} optimizer={opt}"
         )
-        generate_ml_dataset_m1()
+        # Step 2: Generate ML Dataset safely (after timestamp is confirmed)
+        generate_ml_dataset_m1(csv_path=M1_PATH, out_path="data/ml_dataset_m1.csv")
+
+        # Step 3: Train LSTM Classifier
         X, y = load_dataset("data/ml_dataset_m1.csv")
         model = train_lstm(
             X,
