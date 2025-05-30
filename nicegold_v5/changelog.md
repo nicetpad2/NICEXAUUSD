@@ -493,3 +493,5 @@
 
 ## 2025-11-11
 - ปรับ welcome() ให้รับ DataFrame จาก simulate_partial_tp_safe โดยตรง (Patch v16.1.3)
+## 2025-11-12
+- ปรับ simulate_partial_tp_safe ใน exit.py ให้ตรวจ TP1/TP2 จาก high/low และคืนค่า DataFrame เดียว (Patch v16.1.4)
