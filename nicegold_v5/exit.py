@@ -137,8 +137,12 @@ def should_exit(trade, row):
 
 
 def simulate_partial_tp_safe(df: pd.DataFrame, capital: float = 1000.0):
+    """จำลองการเทรดแบบ Partial TP พร้อม BE/TSL อย่างปลอดภัย
+
+    [Patch v12.0.2] ใช้ราคา high/low จริงเพื่อตรวจ TP1/TP2 และคืนค่าเป็น
+    DataFrame เดียว
+    """
     trades = []
-    logs = []
     open_position = None
     high_window = deque(maxlen=10)
     low_window = deque(maxlen=10)
@@ -215,28 +219,60 @@ def simulate_partial_tp_safe(df: pd.DataFrame, capital: float = 1000.0):
             if open_position.get("entry_score", 0) > 4.5 and duration < 15:
                 continue  # ห้าม exit ก่อน 15 นาที
 
-            exit_triggered, reason = should_exit(open_position, row)
-            if exit_triggered:
-                exit_price = row.close
+            exit_price = None
+            reason = None
+            tp1 = open_position["tp1"]
+            tp2 = open_position["tp2"]
+            sl = open_position["sl"]
+
+            # [Patch v12.0.2] ตรวจ TP1/TP2/SL จากราคาแท่งจริง
+            if direction == "buy":
+                if row.high >= tp2:
+                    exit_price = tp2
+                    reason = "tp2"
+                elif row.high >= tp1:
+                    exit_price = tp1
+                    reason = "tp1"
+                elif row.low <= sl:
+                    exit_price = sl
+                    reason = "sl"
+            else:
+                if row.low <= tp2:
+                    exit_price = tp2
+                    reason = "tp2"
+                elif row.low <= tp1:
+                    exit_price = tp1
+                    reason = "tp1"
+                elif row.high >= sl:
+                    exit_price = sl
+                    reason = "sl"
+
+            if exit_price is None:
+                exit_triggered, reason = should_exit(open_position, row)
+                if exit_triggered:
+                    exit_price = row.close
+
+            if exit_price is not None:
                 duration = (row.timestamp - open_position["entry_time"]).total_seconds() / 60
                 mfe = np.abs(row.high - open_position["entry"] if open_position["type"] == "buy" else open_position["entry"] - row.low)
-                trade_entry = open_position["entry"]  # 🛠 ตั้งชื่อให้สอดคล้อง
+                trade_entry = open_position["entry"]
+                pnl = (exit_price - trade_entry) * 10 * open_position["lot"] if direction == "buy" else (trade_entry - exit_price) * 10 * open_position["lot"]
                 trades.append({
                     "entry_time": open_position["entry_time"],
                     "exit_time": row.timestamp,
                     "entry_price": trade_entry,
                     "exit_price": exit_price,
-                    "tp1_price": open_position["tp1"],
-                    "tp2_price": open_position["tp2"],
-                    "sl_price": open_position["sl"],
+                    "tp1_price": tp1,
+                    "tp2_price": tp2,
+                    "sl_price": sl,
                     "lot": open_position["lot"],
                     "exit_reason": reason,
                     "session": open_position["session"],
                     "duration_min": duration,
                     "mfe": mfe,
-                    "pnl": round((exit_price - open_position["entry"] if open_position["type"] == "buy" else open_position["entry"] - exit_price) * 10 * open_position["lot"], 2),
+                    "pnl": round(pnl, 2),
                 })
                 open_position = None
 
-    return pd.DataFrame(trades), logs
+    return pd.DataFrame(trades)
 

@@ -489,7 +489,7 @@ def test_run_clean_backtest(monkeypatch, tmp_path):
 
     monkeypatch.setattr(main, 'TRADE_DIR', str(tmp_path))
     monkeypatch.setattr(main, 'generate_signals', lambda d, config=None: d.assign(entry_signal='buy'))
-    monkeypatch.setattr(main, 'simulate_partial_tp_safe', lambda d: (pd.DataFrame({'pnl': [1]}), []))
+    monkeypatch.setattr(main, 'simulate_partial_tp_safe', lambda d: pd.DataFrame({'pnl': [1]}))
     monkeypatch.setattr('nicegold_v5.utils.print_qa_summary', lambda *a, **k: {})
     monkeypatch.setattr('nicegold_v5.utils.export_chatgpt_ready_logs', lambda *a, **k: None)
 
@@ -522,7 +522,7 @@ def test_run_clean_backtest_thai_date(monkeypatch, tmp_path):
             pd.DataFrame({'timestamp': [pd.Timestamp('2023-01-01')], 'equity': [100]})
         )
 
-    monkeypatch.setattr(main, 'simulate_partial_tp_safe', lambda d: (pd.DataFrame({'pnl': [1]}), []))
+    monkeypatch.setattr(main, 'simulate_partial_tp_safe', lambda d: pd.DataFrame({'pnl': [1]}))
     monkeypatch.setattr(main, 'generate_signals', lambda d, config=None: d.assign(entry_signal='buy'))
     monkeypatch.setattr('nicegold_v5.utils.print_qa_summary', lambda *a, **k: {})
     monkeypatch.setattr('nicegold_v5.utils.export_chatgpt_ready_logs', lambda *a, **k: None)
@@ -556,7 +556,7 @@ def test_run_clean_backtest_lowercase_date(monkeypatch, tmp_path):
             pd.DataFrame({'timestamp': [pd.Timestamp('2023-01-01')], 'equity': [100]})
         )
 
-    monkeypatch.setattr(main, 'simulate_partial_tp_safe', lambda d: (pd.DataFrame({'pnl': [1]}), []))
+    monkeypatch.setattr(main, 'simulate_partial_tp_safe', lambda d: pd.DataFrame({'pnl': [1]}))
     monkeypatch.setattr(main, 'generate_signals', lambda d, config=None: d.assign(entry_signal='buy'))
     monkeypatch.setattr('nicegold_v5.utils.print_qa_summary', lambda *a, **k: {})
     monkeypatch.setattr('nicegold_v5.utils.export_chatgpt_ready_logs', lambda *a, **k: None)
@@ -592,7 +592,7 @@ def test_run_clean_backtest_fallback(monkeypatch, capsys, tmp_path):
             raise AssertionError('unexpected config')
 
     monkeypatch.setattr(main, 'generate_signals', fake_generate)
-    monkeypatch.setattr(main, 'simulate_partial_tp_safe', lambda d: (pd.DataFrame({'pnl': [1]}), []))
+    monkeypatch.setattr(main, 'simulate_partial_tp_safe', lambda d: pd.DataFrame({'pnl': [1]}))
     monkeypatch.setattr('nicegold_v5.utils.print_qa_summary', lambda *a, **k: {})
     monkeypatch.setattr('nicegold_v5.utils.export_chatgpt_ready_logs', lambda *a, **k: None)
     monkeypatch.setattr(main, 'TRADE_DIR', str(tmp_path))
@@ -1183,11 +1183,11 @@ def test_simulate_partial_tp_safe_session(monkeypatch):
         {'timestamp': pd.Timestamp('2025-01-01 10:30'), 'close': 100.8, 'high': 101.2, 'low': 100.6, 'entry_signal': 'buy', 'atr': 1.0},
     ])
 
-    trades, _ = simulate_partial_tp_safe(df)
+    trades = simulate_partial_tp_safe(df)
     assert not trades.empty
     assert 'session' in trades.columns
     assert trades['session'].iloc[0] == 'London'
-    assert trades['exit_reason'].iloc[0] == 'tsl'
+    assert trades['exit_reason'].iloc[0] == 'tp1'
 
 
 def test_entry_simulate_partial_tp_safe_basic():
@@ -1224,7 +1224,7 @@ def test_simulate_partial_tp_safe_low_atr_high_gainz():
         'gain_z_entry': [0.5, 0.5, 0.5],
     })
 
-    trades, _ = simulate_partial_tp_safe(df)
+    trades = simulate_partial_tp_safe(df)
     assert not trades.empty
 
 

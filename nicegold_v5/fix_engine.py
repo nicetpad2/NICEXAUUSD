@@ -78,7 +78,12 @@ def auto_fix_logic(summary: dict, config: dict, session: str = None) -> dict:
 
 def simulate_and_autofix(df: pd.DataFrame, simulate_fn, config: dict, session: str = None):
     """simulate แล้วรัน Self-Diagnostic + AutoFix พร้อมคืน config ที่ปรับแล้ว"""
-    trades_df, equity_df = simulate_fn(df)
+    result = simulate_fn(df)
+    if isinstance(result, tuple):
+        trades_df, equity_df = result
+    else:
+        trades_df = result
+        equity_df = pd.DataFrame()
     summary = run_self_diagnostic(trades_df, df)
     config_adapted = auto_fix_logic(summary, config, session=session)
     return trades_df, equity_df, config_adapted
