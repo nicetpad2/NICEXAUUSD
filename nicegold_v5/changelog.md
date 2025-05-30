@@ -501,3 +501,5 @@
 - เปิดเมนู CLI แบบ Interactive และตัวเลือก 7 รัน WFV (Patch vWFV.2)
 ## 2025-11-15
 - ปรับเมนู 7 ให้ใช้ `run_wfv_with_progress` จากโมดูลภายใน (Patch vWFV.3)
+## 2025-11-16
+- แก้เมนู 7 โหลดไฟล์ด้วย `load_csv_safe` และตั้งค่า `M15_PATH` เป็น path ภายใน repo (Patch vWFV.4)

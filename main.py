@@ -99,8 +99,14 @@ def run_csv_integrity_check():
     return True
 
 TRADE_DIR = "/content/drive/MyDrive/NICEGOLD/logs"
-M1_PATH = os.getenv("M1_PATH", "/content/drive/MyDrive/NICEGOLD/XAUUSD_M1.csv")
-M15_PATH = os.getenv("M15_PATH", "/content/drive/MyDrive/NICEGOLD/XAUUSD_M15.csv")
+M1_PATH = os.getenv(
+    "M1_PATH",
+    os.path.join(ROOT_DIR, "nicegold_v5", "XAUUSD_M1.csv"),
+)
+M15_PATH = os.getenv(
+    "M15_PATH",
+    os.path.join(ROOT_DIR, "nicegold_v5", "XAUUSD_M15.csv"),
+)
 DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 os.makedirs(TRADE_DIR, exist_ok=True)
 
@@ -547,7 +553,9 @@ def welcome():
         show_progress_bar("🧠 เตรียม Walk-Forward", steps=2)
         print("\n🚀 เริ่มรัน Walk-Forward Validation (WFV)...")
 
-        df = pd.read_csv(M15_PATH, parse_dates=["timestamp"])
+        df = load_csv_safe(M15_PATH)
+        df = convert_thai_datetime(df)
+        df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
         df["EMA_50"] = df["close"].ewm(span=50).mean()
         df["RSI_14"] = df["close"].rolling(14).apply(
             lambda x: 100 - (100 / (1 + ((x.diff().clip(lower=0).mean()) /

@@ -522,3 +522,5 @@
 - เปิดเมนู CLI แบบ Interactive และเลือกข้อ 7 เพื่อรัน WFV (Patch vWFV.2)
 ### 2025-11-15
 - ปรับเมนู [7] นำเข้า `run_wfv_with_progress` จากโมดูลภายใน (Patch vWFV.3)
+### 2025-11-16
+- แก้เมนู [7] ให้ใช้ `load_csv_safe` และตั้งค่าเริ่มต้น `M15_PATH` ชี้ไปยังไฟล์ใน repo (Patch vWFV.4)
