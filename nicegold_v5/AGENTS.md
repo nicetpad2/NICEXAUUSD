@@ -526,3 +526,5 @@
 - แก้เมนู [7] ให้ใช้ `load_csv_safe` และตั้งค่าเริ่มต้น `M15_PATH` ชี้ไปยังไฟล์ใน repo (Patch vWFV.4)
 ### 2025-11-17
 - ปรับ `run_parallel_wfv` เพิ่ม fallback สร้างคอลัมน์ 'Open' จาก 'close' หากไม่พบ 'open' หรือ 'Open' (Patch vWFV.3)
+### 2025-11-18
+- แก้ `run_walkforward_backtest` ข้าม fold ที่มีคลาสเดียว ป้องกัน IndexError ใน `predict_proba` (Patch vWFV.5)
