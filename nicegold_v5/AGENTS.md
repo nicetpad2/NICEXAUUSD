@@ -535,3 +535,6 @@
 - ปรับ generate_signals_v12_0 ให้ปิด Buy เมื่อ config.disable_buy และกรอง Volume (Patch v16.0.2, v16.1.9)
 - ปรับ simulate_partial_tp_safe ใน exit.py เพิ่ม BE และ Trailing SL หลัง TP1 (Patch v16.1.9)
 - อัปเดต SNIPER_CONFIG_Q3_TUNED เพิ่ม disable_buy, min_volume, enable_be และ enable_trailing
+
+### 2025-11-21
+- ปรับ main.py เมนู 7 ใช้ฟังก์ชัน rsi แบบเวกเตอร์ ลดเวลา WFV (Patch vWFV.6)
