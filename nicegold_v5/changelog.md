@@ -507,3 +507,6 @@
 - ปรับ `run_parallel_wfv` เพิ่ม fallback สร้างคอลัมน์ 'Open' จาก 'close' หากไม่พบ 'open' หรือ 'Open' (Patch vWFV.3)
 ## 2025-11-18
 - แก้ `run_walkforward_backtest` ข้าม fold ที่มีคลาสเดียว ป้องกัน IndexError ใน `predict_proba` (Patch vWFV.5)
+
+## 2025-11-19
+- ปรับ `_run_fold` และ `run_parallel_wfv` ให้ใช้ fallback สร้างคอลัมน์ 'Open' จาก 'open' หรือ 'close' พร้อมข้อความแจ้งเตือน (Patch v16.0.1)
