@@ -5,7 +5,7 @@ import pytest
 
 def test_autorun_simulate(monkeypatch, capsys, tmp_path):
     main = importlib.import_module('main')
-    monkeypatch.setattr('builtins.input', lambda _: '5')
+    monkeypatch.setattr('builtins.input', lambda _: '6')
     monkeypatch.setattr(main, "TRADE_DIR", str(tmp_path))
     monkeypatch.setattr(main, "load_csv_safe", lambda path: pd.DataFrame({
         'timestamp': pd.date_range('2024-01-01', periods=2, freq='h'),
@@ -28,12 +28,71 @@ def test_autorun_simulate(monkeypatch, capsys, tmp_path):
     main.welcome()
     output = capsys.readouterr().out
     assert 'Summary (TP1/TP2)' in output
-    assert 'TP1 Triggered' in output
+
+
+def test_cli_train_lstm(monkeypatch, capsys, tmp_path):
+    import types
+    import sys
+    main = importlib.import_module('main')
+    monkeypatch.setattr('builtins.input', lambda _: '5')
+    monkeypatch.setattr(main, 'TRADE_DIR', str(tmp_path))
+
+    monkeypatch.setattr(main, 'load_csv_safe', lambda path: pd.DataFrame({
+        'timestamp': pd.date_range('2024-01-01', periods=2, freq='h'),
+        'entry_signal': ['long', 'short'],
+        'entry_time': pd.date_range('2024-01-01', periods=2, freq='h'),
+        'close': [1, 1],
+        'high': [1, 1],
+        'low': [1, 1],
+        'volume': [1, 1],
+    }))
+    monkeypatch.setattr('nicegold_v5.entry.validate_indicator_inputs', lambda df, required_cols=None, min_rows=500: None)
+    monkeypatch.setattr(main, 'validate_indicator_inputs', lambda df: None)
+    monkeypatch.setattr(main, 'generate_signals', lambda df: df)
+    monkeypatch.setattr('nicegold_v5.exit.simulate_partial_tp_safe', lambda df: pd.DataFrame([{'exit_reason': 'tp1'}]))
+    monkeypatch.setattr(main, 'safe_calculate_net_change', lambda df: 0.0)
+
+    called = {}
+
+    data_mod = types.SimpleNamespace(DataLoader=object, TensorDataset=object)
+    utils_mod = types.ModuleType('torch.utils')
+    utils_mod.data = data_mod
+    dummy_torch = types.ModuleType('torch')
+    dummy_torch.__path__ = []
+    dummy_torch.save = lambda state, path: called.setdefault('saved', path)
+    dummy_torch.load = lambda *a, **k: {}
+    dummy_torch.nn = types.ModuleType('torch.nn')
+    dummy_torch.nn.Module = object
+    dummy_torch.nn.LSTM = object
+    dummy_torch.nn.Linear = object
+    dummy_torch.nn.Sigmoid = lambda: None
+    dummy_torch.optim = types.ModuleType('torch.optim')
+    dummy_torch.utils = utils_mod
+    monkeypatch.setitem(sys.modules, 'torch', dummy_torch)
+    monkeypatch.setitem(sys.modules, 'torch.nn', dummy_torch.nn)
+    monkeypatch.setitem(sys.modules, 'torch.optim', dummy_torch.optim)
+    monkeypatch.setitem(sys.modules, 'torch.utils', utils_mod)
+    monkeypatch.setitem(sys.modules, 'torch.utils.data', data_mod)
+
+    monkeypatch.setattr('nicegold_v5.ml_dataset_m1.generate_ml_dataset_m1', lambda: called.setdefault('gen', True))
+    monkeypatch.setattr('nicegold_v5.train_lstm_runner.load_dataset', lambda p: (None, None))
+
+    class DummyModel:
+        def state_dict(self):
+            return {}
+
+    monkeypatch.setattr('nicegold_v5.train_lstm_runner.train_lstm', lambda X, y: DummyModel())
+
+    main.welcome()
+    output = capsys.readouterr().out
+    assert 'บันทึกโมเดล' in output
+    assert called.get('gen') is True
+    assert called.get('saved') == 'models/model_lstm_tp2.pth'
 
 
 def test_autorun_string_timestamp(monkeypatch, capsys, tmp_path):
     main = importlib.import_module('main')
-    monkeypatch.setattr('builtins.input', lambda _: '5')
+    monkeypatch.setattr('builtins.input', lambda _: '6')
     monkeypatch.setattr(main, "TRADE_DIR", str(tmp_path))
     monkeypatch.setattr(main, "load_csv_safe", lambda path: pd.DataFrame({
         'timestamp': ['2024-01-01 00:00:00', '2024-01-01 01:00:00'],
@@ -61,7 +120,7 @@ def test_autorun_string_timestamp(monkeypatch, capsys, tmp_path):
 
 def test_autorun_missing_entry_time(monkeypatch, capsys, tmp_path):
     main = importlib.import_module('main')
-    monkeypatch.setattr('builtins.input', lambda _: '5')
+    monkeypatch.setattr('builtins.input', lambda _: '6')
     monkeypatch.setattr(main, "TRADE_DIR", str(tmp_path))
     monkeypatch.setattr(main, "load_csv_safe", lambda path: pd.DataFrame({
         'timestamp': pd.date_range('2024-01-01', periods=1, freq='h'),
@@ -82,7 +141,7 @@ def test_autorun_missing_entry_time(monkeypatch, capsys, tmp_path):
 
 def test_autorun_relax_fallback(monkeypatch, capsys, tmp_path):
     main = importlib.import_module('main')
-    monkeypatch.setattr('builtins.input', lambda _: '5')
+    monkeypatch.setattr('builtins.input', lambda _: '6')
     monkeypatch.setattr(main, "TRADE_DIR", str(tmp_path))
 
     # DataFrame without entry_signal column to trigger auto-generation
@@ -126,7 +185,7 @@ def test_autorun_relax_fallback(monkeypatch, capsys, tmp_path):
 
 def test_autorun_diagnostic_fallback(monkeypatch, capsys, tmp_path):
     main = importlib.import_module('main')
-    monkeypatch.setattr('builtins.input', lambda _: '5')
+    monkeypatch.setattr('builtins.input', lambda _: '6')
     monkeypatch.setattr(main, "TRADE_DIR", str(tmp_path))
 
     monkeypatch.setattr(

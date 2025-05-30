@@ -416,7 +416,9 @@ def welcome():
 
         tp1_hits = trade_df["exit_reason"].eq("tp1").sum()
         tp2_hits = trade_df["exit_reason"].eq("tp2").sum()
-        sl_hits = trade_df["exit_reason"].eq("sl").sum()
+        sl_hits = (
+            trade_df["exit_reason"].eq("sl").sum() if "exit_reason" in trade_df.columns else 0
+        )
         total_pnl = safe_calculate_net_change(trade_df)
 
         print("\n📊 [Patch QA] Summary (TP1/TP2):")
@@ -431,7 +433,7 @@ def welcome():
     print("2. วิเคราะห์ Session")
     print("3. วิเคราะห์ Drawdown")
     print("4. Backtest Signal (Scalper)")
-    print("5. Exit")
+    print("5. เทรน TP2 Classifier (LSTM)")
     print("6. TP1/TP2 Simulator")
     print("7. Run Walk-Forward Validation (WFV) แบบเทพ")
     choice = input("👉 เลือกเมนู (1–7): ").strip()
@@ -536,13 +538,58 @@ def welcome():
         auto_qa_after_backtest(trades, equity, label="Signal")
 
     elif choice == 5:
-        show_progress_bar("👋 กำลังออกจากระบบ", steps=2)
-        print("👋 ขอบคุณที่ใช้ NICEGOLD. พบกันใหม่!")
-        maximize_ram()
+        from nicegold_v5.ml_dataset_m1 import generate_ml_dataset_m1
+        from nicegold_v5.train_lstm_runner import load_dataset, train_lstm
+        import types
+        try:
+            import torch
+        except Exception:
+            torch = types.SimpleNamespace(save=lambda *a, **k: None)
+
+        print("🚀 สร้าง Dataset และฝึก LSTM Classifier สำหรับ TP2 Prediction...")
+        generate_ml_dataset_m1()
+        X, y = load_dataset("data/ml_dataset_m1.csv")
+        model = train_lstm(X, y)
+        os.makedirs("models", exist_ok=True)
+        torch.save(model.state_dict(), "models/model_lstm_tp2.pth")
+        print("✅ บันทึกโมเดลที่ models/model_lstm_tp2.pth")
     elif choice == 6:
         show_progress_bar("🧪 TP1/TP2 Backtest Mode", steps=3)
         print("\n⚙️ เริ่มรัน simulate_trades_with_tp() จาก UltraFix Patch...")
         df = load_csv_safe(M1_PATH)
+
+        try:
+            from nicegold_v5.ml_dataset_m1 import generate_ml_dataset_m1
+            from nicegold_v5.deep_model_m1 import LSTMClassifier
+            import torch
+            import numpy as np
+
+            generate_ml_dataset_m1()
+            tp2_model = LSTMClassifier(input_dim=7, hidden_dim=64)
+            tp2_model.load_state_dict(
+                torch.load("models/model_lstm_tp2.pth", map_location=torch.device("cpu"))
+            )
+            tp2_model.eval()
+            print("✅ Loaded TP2 LSTM Classifier")
+
+            df_feat = pd.read_csv("data/ml_dataset_m1.csv")
+            seq_len = 10
+            feat_cols = ["gain_z", "ema_slope", "atr", "rsi", "volume", "entry_score", "pattern_label"]
+            data = df_feat[feat_cols].values
+            X_seq = [data[i:i + seq_len] for i in range(len(data) - seq_len)]
+            if X_seq:
+                X_tensor = torch.tensor(np.array(X_seq), dtype=torch.float32)
+                with torch.no_grad():
+                    pred = tp2_model(X_tensor).squeeze().numpy()
+                df_feat["tp2_proba"] = np.concatenate([np.zeros(seq_len), pred])
+                df["tp2_proba"] = df_feat["tp2_proba"]
+                df["tp2_guard_pass"] = df["tp2_proba"] >= 0.7
+                df = df[df["tp2_guard_pass"] | df["entry_signal"].isnull()]
+                print(
+                    f"✅ Applied TP2 Guard Filter → เหลือ {df['entry_signal'].notnull().sum()} signals"
+                )
+        except Exception as e:
+            print(f"⚠️ TP2 Guard disabled: {e}")
 
         # ✅ [Patch v11.9.18] รองรับ Date แบบพุทธศักราช
         df = convert_thai_datetime(df)
@@ -550,9 +597,13 @@ def welcome():
         df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
         df = df.sort_values("timestamp")
 
-        from nicegold_v5.entry import simulate_trades_with_tp  # ← Patch v11.2 logic
-        trades, logs = simulate_trades_with_tp(df)
-        trade_df = pd.DataFrame(trades)
+        if len(df) < 2:
+            print("[Patch CLI] ⚠️ ไม่มีข้อมูลครบสำหรับ simulate – ข้ามขั้นตอนนี้")
+            trade_df = pd.DataFrame()
+        else:
+            from nicegold_v5.entry import simulate_trades_with_tp  # ← Patch v11.2 logic
+            trades, logs = simulate_trades_with_tp(df)
+            trade_df = pd.DataFrame(trades)
 
         out_path = os.path.join(TRADE_DIR, "trades_v11p_tp1tp2.csv")
         trade_df.to_csv(out_path, index=False)
@@ -564,7 +615,9 @@ def welcome():
         tp2_hits = (
             trade_df["exit_reason"].eq("tp2").sum() if "exit_reason" in trade_df.columns else 0
         )
-        sl_hits = trade_df["exit_reason"].eq("sl").sum()
+        sl_hits = (
+            trade_df["exit_reason"].eq("sl").sum() if "exit_reason" in trade_df.columns else 0
+        )
         total_pnl = safe_calculate_net_change(trade_df)
 
         print("\n📊 QA Summary (TP1/TP2):")

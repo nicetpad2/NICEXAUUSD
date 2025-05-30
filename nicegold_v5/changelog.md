@@ -550,3 +550,5 @@
 - ปรับ generate_signals_v12_0 เพิ่ม ultra override sell ใช้ gain_z < -0.01, entry_score >0.5 และลด volume_ratio เป็น 0.05 (Patch v22.0.1-ultra)
 ## 2025-12-03
 - เพิ่มโมดูลสร้างชุดข้อมูล ML และโมเดล LSTM สำหรับทำนาย TP2 (Patch v23.0.0-LSTM)
+## 2025-12-04
+- ปรับ CLI เพิ่มเมนูฝึก TP2 Classifier และใช้โมเดล TP2 Guard ใน Simulator (Patch v22.2.0)
