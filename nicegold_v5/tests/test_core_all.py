@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import logging
 from nicegold_v5.entry import generate_signals, rsi, generate_signals_qa_clean
 from nicegold_v5.backtester import (
     calc_lot,
@@ -1442,4 +1443,33 @@ def test_simulate_partial_tp_safe_fallback_sl(monkeypatch):
     trades = simulate_partial_tp_safe(df)
     assert not trades.empty
     assert trades.loc[0, "sl_price"] == 100.0 + 0.5
+
+
+def test_should_exit_trailing_debug(caplog):
+    trade = {
+        'entry': 100,
+        'type': 'buy',
+        'lot': 0.1,
+        'entry_time': pd.Timestamp('2025-01-01 00:00:00'),
+        'tsl_activated': True,
+        'trailing_sl': 99.5,
+    }
+    row = {
+        'close': 104.0,
+        'high': 105.0,
+        'low': 103.5,
+        'gain_z': 0.1,
+        'atr': 1.0,
+        'atr_ma': 1.0,
+        'timestamp': pd.Timestamp('2025-01-01 00:05:00'),
+    }
+    with caplog.at_level(logging.DEBUG):
+        should_exit(trade, row)
+    assert any('Updated trail' in rec.message for rec in caplog.records)
+
+def test_generate_signals_print_blocked_pct(capsys):
+    df = sample_df()
+    generate_signals(df)
+    out = capsys.readouterr().out
+    assert 'Entry Signal Blocked' in out
 
