@@ -376,6 +376,20 @@ def autopipeline(mode="default", train_epochs=1):
         f"⚙️ Auto Config → batch_size={batch_size}, model_dim={model_dim}, n_folds={n_folds}, optimizer={opt}, lr={lr}"
     )
 
+    # Load and prepare CSV for all pipeline modes
+    df = load_csv_safe(M1_PATH)
+    df = convert_thai_datetime(df)
+    df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
+    df = sanitize_price_columns(df)
+    try:
+        validate_indicator_inputs(df, min_rows=min(500, len(df)))
+    except TypeError:
+        validate_indicator_inputs(df)
+    df = generate_signals(df, config=SNIPER_CONFIG_Q3_TUNED)
+    if df["entry_signal"].isnull().mean() >= 1.0:
+        print("[AutoPipeline] ⚠️ ไม่มีสัญญาณ – fallback RELAX_CONFIG_Q3")
+        df = generate_signals(df, config=RELAX_CONFIG_Q3)
+
     if mode == "ai_master" and torch is not None:
         print("\n🧠 [AI Master Pipeline] เริ่มทำงานแบบครบวงจร (SHAP + Optuna + Guard + WFV)")
         generate_ml_dataset_m1(csv_path=M1_PATH, out_path="data/ml_dataset_m1.csv")

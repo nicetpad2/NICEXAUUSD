@@ -627,5 +627,9 @@
 - ปรับ welcome() เป็น NICEGOLD Supreme Menu และเรียก `autopipeline(mode="ai_master")` (Patch v22.7.1)
 
 ### 2025-12-25
+
+- แก้ autopipeline เมื่อไม่มี PyTorch ให้โหลดข้อมูลและสร้างสัญญาณก่อนรัน AutoFix WFV (Patch v22.7.2)
+=======
 - เพิ่มเทสสำหรับ `autopipeline` และ `train_lstm` เมื่อไม่มี PyTorch โดยใช้ mock module
+
 
