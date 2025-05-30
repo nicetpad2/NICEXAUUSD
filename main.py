@@ -108,6 +108,7 @@ M15_PATH = os.getenv(
     "M15_PATH",
     os.path.join(ROOT_DIR, "nicegold_v5", "XAUUSD_M15.csv"),
 )
+ROW_LIMIT = int(os.getenv("ROW_LIMIT", "5000"))  # จำกัดจำนวนแถว CSV เพื่อลดเวลารัน
 DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 os.makedirs(TRADE_DIR, exist_ok=True)
 
@@ -347,6 +348,8 @@ def autopipeline():
     maximize_ram()
 
     df = load_csv_safe(M1_PATH)
+    if ROW_LIMIT > 0:
+        df = df.head(ROW_LIMIT)
     df = convert_thai_datetime(df)
     df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
     df = df.dropna(subset=["timestamp"])
@@ -362,17 +365,26 @@ def autopipeline():
         print("[AutoPipeline] ⚠️ ไม่มีสัญญาณ – fallback RELAX_CONFIG_Q3")
         df = generate_signals(df, config=RELAX_CONFIG_Q3)
 
-    from nicegold_v5.ml_dataset_m1 import generate_ml_dataset_m1
-    from nicegold_v5.train_lstm_runner import load_dataset, train_lstm
-    import torch
+    try:
+        from nicegold_v5.ml_dataset_m1 import generate_ml_dataset_m1
+        from nicegold_v5.train_lstm_runner import load_dataset, train_lstm
+        import torch
+    except Exception:
+        torch = None
+        generate_ml_dataset_m1 = None
+        load_dataset = None
+        train_lstm = None
+        print("⚠️ PyTorch ไม่พร้อมใช้งาน - ข้ามขั้นตอน LSTM")
     try:
         import psutil
         ram_gb = psutil.virtual_memory().total / 1024 ** 3
     except Exception:
         ram_gb = 0
     threads = cpu_count()
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    gpu_name = torch.cuda.get_device_name(0) if torch.cuda.is_available() else "CPU"
+    device = "cuda" if torch and torch.cuda.is_available() else "cpu"
+    gpu_name = (
+        torch.cuda.get_device_name(0) if torch and torch.cuda.is_available() else "CPU"
+    )
     print(f"🖥️ Device: {gpu_name}")
     print(f"💾 RAM: {ram_gb:.1f} GB | CPU Threads: {threads}")
 
@@ -383,53 +395,56 @@ def autopipeline():
     else:
         batch_size, model_dim, n_folds, lr, opt = 64, 32, 5, 0.01, "sgd"
 
-    print(
-        f"⚙️ Training LSTM hidden_dim={model_dim} batch_size={batch_size} lr={lr} optimizer={opt}"
-    )
-    generate_ml_dataset_m1()
-    X, y = load_dataset("data/ml_dataset_m1.csv")
-    model = train_lstm(
-        X,
-        y,
-        hidden_dim=model_dim,
-        epochs=1,
-        lr=lr,
-        batch_size=batch_size,
-        optimizer_name=opt,
-    )
-    os.makedirs("models", exist_ok=True)
-    torch.save(model.state_dict(), "models/model_lstm_tp2.pth")
-    print("✅ บันทึกโมเดลที่ models/model_lstm_tp2.pth")
+    if torch is not None:
+        print(
+            f"⚙️ Training LSTM hidden_dim={model_dim} batch_size={batch_size} lr={lr} optimizer={opt}"
+        )
+        generate_ml_dataset_m1()
+        X, y = load_dataset("data/ml_dataset_m1.csv")
+        model = train_lstm(
+            X,
+            y,
+            hidden_dim=model_dim,
+            epochs=1,
+            lr=lr,
+            batch_size=batch_size,
+            optimizer_name=opt,
+        )
+        os.makedirs("models", exist_ok=True)
+        torch.save(model.state_dict(), "models/model_lstm_tp2.pth")
+        print("✅ บันทึกโมเดลที่ models/model_lstm_tp2.pth")
 
-    df_feat = pd.read_csv("data/ml_dataset_m1.csv")
-    feat_cols = [
-        "gain_z",
-        "ema_slope",
-        "atr",
-        "rsi",
-        "volume",
-        "entry_score",
-        "pattern_label",
-    ]
-    data = df_feat[feat_cols].values
-    seq_len = 10
-    seqs = [data[i : i + seq_len] for i in range(len(data) - seq_len)]
-    if seqs:
-        X_tensor = torch.tensor(np.array(seqs), dtype=torch.float32)
-        if device == "cuda":
-            X_tensor = X_tensor.cuda()
-            model = model.cuda()
-        model.eval()
-        with torch.no_grad():
-            pred = model(X_tensor).squeeze().cpu().numpy()
-        df_feat["tp2_proba"] = np.concatenate([np.zeros(seq_len), pred])
+        df_feat = pd.read_csv("data/ml_dataset_m1.csv")
+        feat_cols = [
+            "gain_z",
+            "ema_slope",
+            "atr",
+            "rsi",
+            "volume",
+            "entry_score",
+            "pattern_label",
+        ]
+        data = df_feat[feat_cols].values
+        seq_len = 10
+        seqs = [data[i : i + seq_len] for i in range(len(data) - seq_len)]
+        if seqs:
+            X_tensor = torch.tensor(np.array(seqs), dtype=torch.float32)
+            if device == "cuda":
+                X_tensor = X_tensor.cuda()
+                model = model.cuda()
+            model.eval()
+            with torch.no_grad():
+                pred = model(X_tensor).squeeze().cpu().numpy()
+            df_feat["tp2_proba"] = np.concatenate([np.zeros(seq_len), pred])
+        else:
+            df_feat["tp2_proba"] = 0.0
+
+        df = df.merge(df_feat[["timestamp", "tp2_proba"]], on="timestamp", how="left")
+        df["tp2_guard_pass"] = df["tp2_proba"] >= 0.7
+        df = df[df["tp2_guard_pass"] | df["entry_signal"].isnull()]
+        print(f"✅ TP2 Guard Filter → เหลือ {df['entry_signal'].notnull().sum()} signals")
     else:
-        df_feat["tp2_proba"] = 0.0
-
-    df = df.merge(df_feat[["timestamp", "tp2_proba"]], on="timestamp", how="left")
-    df["tp2_guard_pass"] = df["tp2_proba"] >= 0.7
-    df = df[df["tp2_guard_pass"] | df["entry_signal"].isnull()]
-    print(f"✅ TP2 Guard Filter → เหลือ {df['entry_signal'].notnull().sum()} signals")
+        n_folds = 5
 
     from nicegold_v5.utils import run_autofix_wfv
     trades_df = run_autofix_wfv(
