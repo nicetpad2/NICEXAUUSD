@@ -616,3 +616,7 @@
 - ใช้ Optuna ร่วมกับฟีเจอร์ที่เลือกได้ และบันทึกผลลง `optuna_best_config.json`
 
 
+## 2025-12-27
+- เพิ่มโหมด `fusion_ai` ใน `autopipeline` รวม LSTM + SHAP + MetaClassifier + RL fallback
+- ปรับ `autopipeline` โหมด `ai_master` ฝึก MetaClassifier และ RL Agent และบันทึกฟีเจอร์ SHAP
+- เพิ่มโมดูล `meta_classifier.py` และชุดทดสอบใหม่

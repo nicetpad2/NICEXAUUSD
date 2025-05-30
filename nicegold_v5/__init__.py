@@ -48,6 +48,7 @@ from .qa import (
     auto_qa_after_backtest,
 )
 from .rl_agent import RLScalper
+from .meta_classifier import MetaClassifier
 from .ml_dataset_m1 import generate_ml_dataset_m1
 
 try:

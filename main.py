@@ -424,17 +424,14 @@ def autopipeline(mode="default", train_epochs=1):
                 "pattern_label",
             ]
             top_features = [all_features[i] for i in top_k_idx]
-            print("📊 [Patch v22.7.2] SHAP Top Features:", top_features)
-
+            print("📊 [Patch v24.1.0] SHAP Top Features:", top_features)
             shap.summary_plot(shap_vals, X[:100], feature_names=top_features, show=False)
             import matplotlib.pyplot as plt
-
             plt.savefig("logs/shap_summary.png")
-            print("📊 [Patch v22.7.2] บันทึก SHAP summary → logs/shap_summary.png")
             with open("logs/shap_top_features.json", "w") as f:
                 json.dump(top_features, f, indent=2)
         except Exception as e:
-            print(f"⚠️ [Patch v22.7.2] SHAP skipped: {e}")
+            print(f"⚠️ [Patch v24.1.0] SHAP skipped: {e}")
             top_features = [
                 "gain_z",
                 "ema_slope",
@@ -444,6 +441,47 @@ def autopipeline(mode="default", train_epochs=1):
                 "entry_score",
                 "pattern_label",
             ]
+
+        # [Patch v24.1.0] ✅ เทรน MetaClassifier จาก trade log
+        try:
+            from sklearn.ensemble import RandomForestClassifier
+            import joblib
+            trades_meta = pd.read_csv("logs/trades_v12_tp1tp2.csv")
+            trades_meta = trades_meta.dropna(subset=["exit_reason", "entry_score"])
+            trades_meta["target"] = trades_meta["exit_reason"].eq("tp2").astype(int)
+            features = ["gain_z", "ema_slope", "atr", "rsi", "entry_score"]
+            clf = RandomForestClassifier(n_estimators=100, random_state=42)
+            clf.fit(trades_meta[features], trades_meta["target"])
+            os.makedirs("models", exist_ok=True)
+            joblib.dump(clf, "models/meta_exit.pkl")
+            print("✅ [MetaClassifier] บันทึก model → models/meta_exit.pkl")
+        except Exception as e:
+            print(f"⚠️ [MetaClassifier] Training Failed: {e}")
+
+        # [Patch v24.1.0] ✅ เทรน RL Agent จาก trade log
+        try:
+            from nicegold_v5.rl_agent import RLScalper
+            trades_rl = trades_meta.copy()
+            agent = RLScalper()
+            for i in range(len(trades_rl) - 1):
+                s = int(trades_rl.iloc[i]["gain_z"] > 0)
+                ns = int(trades_rl.iloc[i + 1]["gain_z"] > 0)
+                reward = (
+                    1
+                    if trades_rl.iloc[i]["exit_reason"] == "tp2"
+                    else -1
+                    if "sl" in trades_rl.iloc[i]["exit_reason"]
+                    else 0.5
+                )
+                action = 0 if trades_rl.iloc[i]["entry_signal"] == "buy" else 1
+                agent.update(s, action, reward, ns)
+            import pickle
+
+            with open("models/rl_agent.pkl", "wb") as f:
+                pickle.dump(agent, f)
+            print("✅ [RL Agent] บันทึก model → models/rl_agent.pkl")
+        except Exception as e:
+            print(f"⚠️ [RL Trainer] Failed: {e}")
 
         df_feat = pd.read_csv("data/ml_dataset_m1.csv")
         df_feat = df_feat.dropna(subset=top_features)
@@ -483,6 +521,69 @@ def autopipeline(mode="default", train_epochs=1):
         out_path = os.path.join(TRADE_DIR, f"trades_ai_master_{ts}.csv")
         trades_df.to_csv(out_path, index=False)
         print(f"📦 [Patch v22.7.2] Exported trades → {out_path}")
+        return trades_df
+
+    # [Patch v24.0.0] ✅ เพิ่ม AI Fusion Mode: LSTM + SHAP + Meta + RL Fallback
+    if mode == "fusion_ai" and torch is not None:
+        print("\n🚀 [Fusion AI] เริ่ม Pipeline แบบ AI Fusion Strategy Engine")
+        from nicegold_v5.ml_dataset_m1 import generate_ml_dataset_m1
+        from nicegold_v5.train_lstm_runner import load_dataset, train_lstm
+        import shap
+
+        generate_ml_dataset_m1(csv_path=M1_PATH, out_path="data/ml_dataset_m1.csv")
+        X, y = load_dataset("data/ml_dataset_m1.csv")
+        model = train_lstm(X, y, epochs=train_epochs)
+        os.makedirs("models", exist_ok=True)
+        torch.save(model.state_dict(), "models/model_lstm_tp2.pth")
+        print("✅ บันทึกโมเดล TP2 LSTM แล้ว")
+
+        explainer = shap.DeepExplainer(model, X[:100])
+        shap_vals = explainer.shap_values(X[:100])[0]
+        shap_mean = np.abs(shap_vals).mean(axis=0)
+        all_features = ["gain_z", "ema_slope", "atr", "rsi", "volume", "entry_score", "pattern_label"]
+        top_k_idx = np.argsort(shap_mean)[::-1][:5]
+        top_features = [all_features[i] for i in top_k_idx]
+        print("📊 [SHAP] Top Features:", top_features)
+        with open("logs/shap_top_features.json", "w") as f:
+            json.dump(top_features, f)
+
+        df_feat = pd.read_csv("data/ml_dataset_m1.csv")
+        df_feat["tp2_proba"] = np.concatenate([np.zeros(10), model(X).detach().cpu().numpy().flatten()])
+        df_feat = df_feat[["timestamp", "tp2_proba"] + top_features]
+
+        df_raw = load_csv_safe(M1_PATH)
+        df_raw = sanitize_price_columns(df_raw)
+        df_raw = generate_signals(df_raw, config=SNIPER_CONFIG_Q3_TUNED)
+        df = df_raw.merge(df_feat, on="timestamp", how="left")
+        df["tp2_guard_pass"] = df["tp2_proba"] >= 0.7
+        df = df[df["tp2_guard_pass"] | df["entry_signal"].isnull()]
+        print(f"✅ TP2 Guard Filter → เหลือ {df['entry_signal'].notnull().sum()} signals")
+
+        try:
+            from nicegold_v5.meta_classifier import MetaClassifier
+            meta = MetaClassifier("model/meta_exit.pkl")
+            df_meta = df[df["entry_signal"].notnull()].copy()
+            df_meta["meta_decision"] = meta.predict(df_meta)
+            df = df_meta[df_meta["meta_decision"] == 1]
+            print(f"✅ MetaClassifier เหลือ {len(df)} signals")
+        except Exception:
+            print("⚠️ MetaClassifier ไม่พร้อม → ข้าม")
+
+        if df.empty:
+            from nicegold_v5.rl_agent import RLScalper
+            agent = RLScalper()
+            df_rl = load_csv_safe(M1_PATH)
+            agent.train(df_rl)
+            print("✅ RL Fallback ยิงไม้แบบ Q-Learning")
+            df_rl["entry_signal"] = df_rl.apply(lambda r: "buy" if agent.act(int(r["close"] > r["open"])) == 0 else "sell", axis=1)
+            df = df_rl
+
+        from nicegold_v5.utils import run_autofix_wfv
+        trades_df = run_autofix_wfv(df, simulate_partial_tp_safe, SNIPER_CONFIG_Q3_TUNED, n_folds=5)
+        out_path = os.path.join(TRADE_DIR, "trades_fusion_ai_" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".csv")
+        trades_df.to_csv(out_path, index=False)
+        print(f"📦 Exported FusionAI trades → {out_path}")
+        maximize_ram()
         return trades_df
 
     if torch is not None and mode in ["full", "ultra"]:
