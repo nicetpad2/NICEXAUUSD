@@ -572,3 +572,13 @@
 - เพิ่มโมดูลสร้างชุดข้อมูล ML และ LSTMClassifier สำหรับทำนาย TP2 (Patch v23.0.0-LSTM)
 ### 2025-12-04
 - ปรับเมนู welcome() เพิ่มตัวเลือกเทรน TP2 Classifier และใช้ TP2 Guard ในโหมด Simulator (Patch v22.2.0)
+### 2025-12-05
+- เปลี่ยน main.py เป็น AutoPipeline รันทันทีเมื่อสั่ง `python main.py` (Patch v22.2.1)
+### 2025-12-06
+- ตรวจสอบ GPU ด้วย torch.cuda.is_available() และแสดงชื่ออุปกรณ์ (Patch v22.2.2)
+### 2025-12-07
+- เพิ่ม AutoPipeline สร้าง dataset, เทรน LSTM, ใช้ TP2 Guard และรัน run_autofix_wfv (Patch v22.3.0)
+### 2025-12-08
+- แสดง RAM และ CPU threads พร้อมปรับ batch_size/model_dim/n_folds ตาม RAM (Patch v22.3.1-v22.3.2)
+### 2025-12-09
+- ปรับ train_lstm สลับ optimizer และ learning rate อัตโนมัติตาม RAM (Patch v22.3.5)

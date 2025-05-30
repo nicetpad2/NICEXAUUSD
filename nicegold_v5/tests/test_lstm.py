@@ -57,5 +57,5 @@ def test_train_lstm(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     generate_ml_dataset_m1(str(csv_path), str(out_csv))
     X, y = load_dataset(str(out_csv), seq_len=5)
-    model = train_lstm(X, y, hidden_dim=8, epochs=1, batch_size=2)
+    model = train_lstm(X, y, hidden_dim=8, epochs=1, batch_size=2, optimizer_name='adam')
     assert isinstance(model, torch.nn.Module)
