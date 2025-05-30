@@ -548,3 +548,6 @@
 ### 2025-11-25
 - ปรับ generate_signals_v12_0 ใช้เงื่อนไข Sell จาก pattern + Volume + RSI (Patch v16.2.0)
 
+
+### 2025-11-26
+- ปรับ welcome() ให้ข้าม simulate_partial_tp_safe เมื่อไม่มีข้อมูล และยังเปิดเมนูใช้งานได้ (Patch v21.2.3)
