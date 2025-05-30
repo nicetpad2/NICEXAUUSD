@@ -79,6 +79,10 @@ SNIPER_CONFIG_Q3_TUNED = {
     "tp_rr_ratio": 5.5,              # [Patch v9.0] ลด TP ลงเล็กน้อย เพิ่ม Win Rate
     "tp1_rr_ratio": 1.5,             # [Patch v9.0] กำหนด TP1 ชัดเจน (ถ้าใช้)
     "volume_ratio": 0.5,             # [Patch v9.0] เพิ่มเกณฑ์ Volume
+    "disable_buy": True,              # [Patch v16.0.2] ปิดฝั่ง Buy
+    "min_volume": 0.05,              # [Patch v16.1.9] Volume filter
+    "enable_be": True,               # [Patch v16.1.9] เปิด Breakeven
+    "enable_trailing": True,         # [Patch v16.1.9] ใช้ Trailing SL
 }
 
 # [Patch v11.8] Relaxed fallback config หลัง Q3 ปรับลดเงื่อนไขให้ค้นหาสัญญาณได้กว้างขึ้น

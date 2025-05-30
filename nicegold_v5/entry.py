@@ -918,6 +918,7 @@ def generate_signals_v12_0(df: pd.DataFrame, config: dict | None = None) -> pd.D
     df["session"] = np.where(hour < 8, "Asia", np.where(hour < 15, "London", "NY"))
 
     signals: list[tuple[int, str]] = []
+    config = config or {}
     for i, row in df.iterrows():
         signal = None
         ema_fast = row.get("ema_15", 0)
@@ -926,13 +927,25 @@ def generate_signals_v12_0(df: pd.DataFrame, config: dict | None = None) -> pd.D
         rsi = row.get("rsi", 50)
 
         if rsi < 30 and row.get("pattern") == "inside_bar":
-            signal = "RSI_InsideBar"
+            signal = "buy"
         elif row.get("pattern") == "qm":
-            signal = "QM"
+            signal = "buy"
         elif row.get("pattern") == "fractal_v":
-            signal = "FractalV"
+            signal = "buy"
         elif gain_z > 0.3 and ema_fast > ema_slow:
-            signal = "MomentumBreak"
+            signal = "buy"
+        elif rsi > 70 and row.get("pattern") == "inside_bar":
+            signal = "sell"
+        elif row.get("pattern") == "qm_bearish":
+            signal = "sell"
+        elif row.get("pattern") == "bearish_engulfing":
+            signal = "sell"
+
+        if signal == "buy" and config.get("disable_buy", False):
+            continue  # [Patch v16.0.2] ปิดฝั่ง Buy หากตั้งค่าไว้
+
+        if row.get("volume", 0) < config.get("min_volume", 0.0):
+            continue  # [Patch v16.1.9] Volume Guard
 
         if signal and session_filter(row):
             signals.append((i, signal))
@@ -947,7 +960,7 @@ def generate_signals_v12_0(df: pd.DataFrame, config: dict | None = None) -> pd.D
 
     for i, row in df.iterrows():
         if pd.notnull(row["entry_signal"]):
-            direction = "buy" if row["gain_z"] > 0 else "sell"
+            direction = row["entry_signal"]
             sl_dist = row["atr"]
             tp1, tp2 = apply_tp_logic(row["close"], direction, 1.5, 3.0, sl_dist)
             sl = row["close"] - sl_dist if direction == "buy" else row["close"] + sl_dist

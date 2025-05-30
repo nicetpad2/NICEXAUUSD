@@ -181,6 +181,8 @@ def simulate_partial_tp_safe(df: pd.DataFrame, capital: float = 1000.0):
                 "sl": sl,
                 "tp1": tp1,
                 "tp2": tp2,
+                "rr1": rr1,
+                "rr2": rr2,
                 "lot": lot,
                 "type": direction,
                 "risk_mode": "normal",
@@ -224,28 +226,50 @@ def simulate_partial_tp_safe(df: pd.DataFrame, capital: float = 1000.0):
             tp1 = open_position["tp1"]
             tp2 = open_position["tp2"]
             sl = open_position["sl"]
+            rr1 = open_position.get("rr1", 1.8)
+            rr2 = open_position.get("rr2", 2.5)
+            atr = getattr(row, "atr", 1.0)
 
-            # [Patch v12.0.2] ตรวจ TP1/TP2/SL จากราคาแท่งจริง
+            mfe = open_position.get("mfe", 0.0)
+            cur_mfe = abs(row.high - open_position["entry"] if direction == "buy" else open_position["entry"] - row.low)
+            mfe = max(mfe, cur_mfe)
+            open_position["mfe"] = mfe
+
+            if mfe >= rr1 * 1.5 and open_position.get("breakeven") is False:
+                open_position["sl"] = open_position["entry"]  # [Patch v16.1.9] Move SL to BE
+                open_position["breakeven"] = True
+                sl = open_position["sl"]
+
+            if mfe >= rr1 and open_position.get("tsl_activated"):
+                adj = (tp1 - open_position["entry"]) * 0.5
+                if direction == "buy":
+                    open_position["sl"] = max(open_position["sl"], open_position["entry"] + adj)
+                else:
+                    open_position["sl"] = min(open_position["sl"], open_position["entry"] - adj)
+                sl = open_position["sl"]
+
+            # [Patch v16.1.9] ตรวจ TP1/TP2/SL พร้อม BE/TSL
+            mfe = open_position.get("mfe", 0.0)
             if direction == "buy":
-                if row.high >= tp2:
+                if row.low <= sl:
+                    exit_price = sl
+                    reason = "sl"
+                elif row.high >= tp2 and mfe >= rr2:
                     exit_price = tp2
                     reason = "tp2"
                 elif row.high >= tp1:
                     exit_price = tp1
                     reason = "tp1"
-                elif row.low <= sl:
+            else:
+                if row.high >= sl:
                     exit_price = sl
                     reason = "sl"
-            else:
-                if row.low <= tp2:
+                elif row.low <= tp2 and mfe >= rr2:
                     exit_price = tp2
                     reason = "tp2"
                 elif row.low <= tp1:
                     exit_price = tp1
                     reason = "tp1"
-                elif row.high >= sl:
-                    exit_price = sl
-                    reason = "sl"
 
             if exit_price is None:
                 exit_triggered, reason = should_exit(open_position, row)
