@@ -576,3 +576,6 @@
 - ย้าย `generate_ml_dataset_m1()` ไปหลังขั้นตอนแปลง timestamp ใน `autopipeline` เพื่อหลีกเลี่ยง KeyError (Patch v22.3.10)
 ## 2025-12-16
 - แก้ `generate_ml_dataset_m1` รองรับ timestamp แบบ พ.ศ. และ sanitize ปลอดภัย (Patch v22.4.1 Hotfix)
+## 2025-12-17
+- ปรับ generate_ml_dataset_m1 แปลงคอลัมน์เป็น lowercase และเรียก sanitize_price_columns ป้องกัน KeyError (Patch v22.4.2)
+

@@ -18,16 +18,22 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv"):
         if os.path.exists(alt):
             csv_path = alt
 
-    from nicegold_v5.utils import convert_thai_datetime, parse_timestamp_safe
-    print("[Patch v22.4.1] 🛠️ Loading and sanitizing CSV from:", csv_path)
+    from nicegold_v5.utils import (
+        convert_thai_datetime,
+        parse_timestamp_safe,
+        sanitize_price_columns,
+    )
+    print("[Patch v22.4.2] 🛠️ Loading and sanitizing CSV from:", csv_path)
     df = pd.read_csv(csv_path)
+    df.columns = [c.lower().strip() for c in df.columns]
     df = convert_thai_datetime(df)
     if "timestamp" not in df.columns:
         raise KeyError("[Patch v22.4.1] ❌ ไม่มีคอลัมน์ timestamp หลังแปลง – หยุดการทำงาน")
     df["timestamp"] = parse_timestamp_safe(df["timestamp"])
+    df = sanitize_price_columns(df)
     df = df.dropna(subset=["timestamp", "high", "low", "close", "volume"])
     df = df.sort_values("timestamp").reset_index(drop=True)
-    print(f"[Patch v22.4.1] ✅ Sanitize timestamp success – {len(df)} rows")
+    print(f"[Patch v22.4.2] ✅ Sanitize timestamp success – {len(df)} rows")
 
     # Basic Indicators
     df["gain"] = df["close"].diff()
@@ -58,4 +64,4 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv"):
     df.loc[df["timestamp"].isin(tp2_entries), "tp2_hit"] = 1
     df = df.dropna().reset_index(drop=True)
     df.to_csv(out_path, index=False)
-    print(f"[Patch v22.4.1] ✅ Saved ML dataset to: {out_path}")
+    print(f"[Patch v22.4.2] ✅ Saved ML dataset to: {out_path}")
