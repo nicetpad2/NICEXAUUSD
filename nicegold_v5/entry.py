@@ -924,24 +924,13 @@ def generate_signals_v12_0(df: pd.DataFrame, config: dict | None = None) -> pd.D
         ema_fast = row.get("ema_15", 0)
         ema_slow = row.get("ema_50", 0)
         gain_z = row.get("gain_z", 0)
-        rsi = row.get("rsi", 50)
+        entry_score = row.get("entry_score", 0)
+        volume = row.get("volume", 0)
+        volume_ma = row.get("volume_ma", 1)
+        vol_pass = volume > volume_ma * config.get("volume_ratio", 0.05)
 
-        # [Patch v16.2.1] 🔓 Adaptive Sell Logic
-        vol = row.get("volume", 0)
-        vol_ma = row.get("volume_ma", 1)
-        vol_pass = vol > vol_ma * config.get("volume_ratio", 0.3)
-        rsi_pass = rsi > 55
-
-        # ✅ Pattern-based Sell
-        if row.get("pattern") == "bearish_engulfing" and rsi_pass and vol_pass:
-            signal = "sell"
-        elif row.get("pattern") == "inside_bar" and rsi >= 65 and vol_pass:
-            signal = "sell"
-        elif row.get("pattern") == "qm_bearish" and vol_pass:
-            signal = "sell"
-
-        # ✅ [Fallback] Momentum-based Sell
-        elif gain_z < -0.2 and ema_fast < ema_slow and row.get("entry_score", 0) > 2.5 and rsi > 50 and vol_pass:
+        # ✅ [Patch v22.0.1-ultra] Ultra override sell: ปลดล็อกทุกชั้นแบบเร่งไม้
+        if gain_z < -0.01 and entry_score > 0.5 and vol_pass:
             signal = "sell"
 
         if signal == "buy" and config.get("disable_buy", False):

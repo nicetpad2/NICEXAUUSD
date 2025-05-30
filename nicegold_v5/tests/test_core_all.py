@@ -1263,19 +1263,22 @@ def test_simulate_partial_tp_safe_low_atr_high_gainz():
 
 
 def test_generate_signals_disable_buy_volume_guard(monkeypatch):
+    """เงื่อนไข Ultra override sell ควรทำงานแม้ disable_buy"""
     from nicegold_v5.entry import generate_signals_v12_0
     monkeypatch.setattr('nicegold_v5.entry.validate_indicator_inputs', lambda df, required_cols=None, min_rows=500: None)
 
     rows = 25
+    close = np.linspace(100, 125, rows)
+    close[20] = close[19] - 5  # force negative gain_z at index 20
     df = pd.DataFrame({
         'timestamp': pd.date_range('2025-01-01', periods=rows, freq='min'),
-        'close': np.linspace(100, 125, rows),
+        'close': close,
         'high': np.linspace(100.5, 125.5, rows),
         'low': np.linspace(99.5, 124.5, rows),
-        'volume': [1.0] * rows,
+        'volume': [10.0] * rows,
         'pattern': ['inside_bar'] + [None]*19 + ['qm_bearish'] + [None]*(rows-21),
-        'rsi': [20] + [50]*19 + [80] + [50]*(rows-21),
-        'gain_z': [0.1] + [0.0]*(rows-1),
+        'gain_z': [0.1]*20 + [-0.02] + [0.0]*(rows-21),
+        'entry_score': [4.0]*20 + [4.5] + [4.0]*(rows-21),
     })
 
     config = {'disable_buy': True, 'min_volume': 0.5}
@@ -1284,8 +1287,8 @@ def test_generate_signals_disable_buy_volume_guard(monkeypatch):
     assert out['entry_signal'].iloc[20] == 'sell'
 
 
-def test_generate_signals_v12_0_pattern_sell(monkeypatch):
-    """ตรวจสอบเงื่อนไขขายจาก pattern + Volume + RSI"""
+def test_generate_signals_v12_0_ultra_override(monkeypatch):
+    """ตรวจสอบ ultra override sell ทำงานเมื่อ gain_z ติดลบและ entry_score สูง"""
     from nicegold_v5.entry import generate_signals_v12_0
     monkeypatch.setattr(
         'nicegold_v5.entry.validate_indicator_inputs',
@@ -1293,18 +1296,20 @@ def test_generate_signals_v12_0_pattern_sell(monkeypatch):
     )
 
     rows = 25
+    close2 = np.linspace(100, 125, rows)
+    close2[20] = close2[19] - 5
     df = pd.DataFrame({
         'timestamp': pd.date_range('2025-01-01', periods=rows, freq='min'),
-        'close': np.linspace(100, 125, rows),
+        'close': close2,
         'high': np.linspace(100.5, 125.5, rows),
         'low': np.linspace(99.5, 124.5, rows),
-        'volume': [100]*20 + [150] + [100]*(rows-21),
-        'pattern': [None]*20 + ['bearish_engulfing'] + [None]*(rows-21),
-        'rsi': [50]*20 + [70] + [50]*(rows-21),
-        'gain_z': [0.0]*rows,
+        'volume': [50]*20 + [60] + [50]*(rows-21),
+        'pattern': [None]*20 + [None] + [None]*(rows-21),
+        'gain_z': [0.0]*20 + [-0.05] + [0.0]*(rows-21),
+        'entry_score': [4.0]*20 + [4.5] + [4.0]*(rows-21),
     })
 
-    out = generate_signals_v12_0(df, {'volume_ratio': 0.5})
+    out = generate_signals_v12_0(df, {'volume_ratio': 0.05})
     assert out.loc[20, 'entry_signal'] == 'sell'
 
 
