@@ -609,3 +609,6 @@
 ### 2025-12-19
 - แก้ generate_ml_dataset_m1 สร้างโฟลเดอร์ out_path อัตโนมัติก่อนบันทึกไฟล์ (Patch v22.4.4)
 
+### 2025-12-20
+- เพิ่มโหมด `mode="full"` ใน `autopipeline` และอัปเดตเมนูใน `welcome()` เป็น Ultimate Mode (Patch v22.6.4)
+

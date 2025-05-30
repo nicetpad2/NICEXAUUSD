@@ -343,7 +343,7 @@ def show_progress_bar(task_desc, steps=5):
         pass
 
 
-def autopipeline():
+def autopipeline(mode="default", train_epochs=1):
     """Run full ML + AutoFix WFV pipeline automatically."""
     print("\n🚀 เริ่ม NICEGOLD AutoPipeline")
     maximize_ram()
@@ -391,9 +391,9 @@ def autopipeline():
         f"⚙️ Auto Config → batch_size={batch_size}, model_dim={model_dim}, n_folds={n_folds}, optimizer={opt}, lr={lr}"
     )
 
-    if torch is not None:
+    if torch is not None and mode in ["full", "ultra"]:
         print(
-            f"⚙️ Training LSTM hidden_dim={model_dim} batch_size={batch_size} lr={lr} optimizer={opt}"
+            f"⚙️ [mode={mode}] Training LSTM {train_epochs} epochs hidden_dim={model_dim} batch_size={batch_size} lr={lr} optimizer={opt}"
         )
         # Step 2: Generate ML Dataset safely (after timestamp is confirmed)
         try:
@@ -408,7 +408,7 @@ def autopipeline():
             X,
             y,
             hidden_dim=model_dim,
-            epochs=1,
+            epochs=train_epochs,
             lr=lr,
             batch_size=batch_size,
             optimizer_name=opt,
@@ -464,6 +464,20 @@ def autopipeline():
 def welcome():
     print("\n🟡 NICEGOLD Assistant พร้อมให้บริการแล้ว (L4 GPU + QA Guard)")
     maximize_ram()
+
+    print("\n🟡 NICEGOLD AI Menu (v22.6.4 – Ultimate Mode)")
+    print("\n🚀 เลือกสิ่งที่คุณอยากให้ AI จัดการให้คุณ:\n")
+    print("1. 🧠 เทรดแบบ AI ครบวงจร (Train + SHAP + Guard + Optuna + WFV)")
+    print("   [✓ LSTM 50 รอบ + SHAP + TP2 Guard + AutoFix + Export]")
+    print("0. ❌ ออก")
+    choice = input("👉 เลือกเมนู (0–1): ").strip()
+    if choice == "1":
+        from main import autopipeline
+        print("\n🧠 NICEGOLD AI กำลังดำเนินการทั้งหมดให้คุณแบบอัตโนมัติ...")
+        autopipeline(mode="full", train_epochs=50)
+        return
+    elif choice == "0":
+        return
 
     show_progress_bar("📊 ตรวจ CSV", steps=2)
     if not run_csv_integrity_check():
