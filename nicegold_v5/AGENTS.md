@@ -612,3 +612,6 @@
 ### 2025-12-20
 - เพิ่มโหมด `mode="full"` ใน `autopipeline` และอัปเดตเมนูใน `welcome()` เป็น Ultimate Mode (Patch v22.6.4)
 
+### 2025-12-21
+- แก้ `autopipeline` ให้แปลง `timestamp` ในชุดข้อมูล ML ก่อน merge ป้องกัน ValueError dtype mismatch (Patch v22.6.5)
+
