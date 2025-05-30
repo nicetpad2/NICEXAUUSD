@@ -546,3 +546,5 @@
 - simulate_partial_tp_safe เพิ่ม TSL Trigger เมื่อกำไร ≥ 0.5 ATR และ TP2 Guard Exit
 - บันทึกเหตุผลออกใหม่ be_sl, tsl_exit, tp2_guard_exit ใน CSV
 - ปรับ fallback sell ใน generate_signals_v12_0 ให้ใช้ entry_score > 2.5 และ RSI >50 (Patch v16.2.4)
+\n## 2025-12-02
+- ปรับ generate_signals_v12_0 เพิ่ม ultra override sell ใช้ gain_z < -0.01, entry_score >0.5 และลด volume_ratio เป็น 0.05 (Patch v22.0.1-ultra)
