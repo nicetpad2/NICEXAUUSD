@@ -394,13 +394,21 @@ def welcome():
     print(f"   ▸ SL Count      : {sl_hits}")
     print(f"   ▸ Net PnL       : {total_pnl:.2f} USD")
     maximize_ram()
-    # print("6. TP1/TP2 Backtest Mode (v11.2+)")  # [Patch v12.4.1] Existing menu item
-    print("7. Run Walk-Forward Validation (WFV) แบบเทพ")  # [Patch vWFV.1]
-    # print("7. Run CleanBacktest (AutoFix, Export, Summary)")  # [Patch v12.4.1] New menu item
-    # choice = input("👉 เลือกเมนู (1-6): ")
-    # try:
-    #     choice = int(choice)
-    return  # Skip menu for automation
+
+    print("\n🧩 เลือกเมนูต่อไป:")
+    print("1. Run WFV (ML)")
+    print("2. วิเคราะห์ Session")
+    print("3. วิเคราะห์ Drawdown")
+    print("4. Backtest Signal (Scalper)")
+    print("5. Exit")
+    print("6. TP1/TP2 Simulator")
+    print("7. Run Walk-Forward Validation (WFV) แบบเทพ")
+    choice = input("👉 เลือกเมนู (1–7): ").strip()
+    try:
+        choice = int(choice)
+    except:
+        print("❌ เมนูไม่ถูกต้อง")
+        return
 
     if choice == 1:
         print("\n🚀 เริ่มรัน Walk-Forward ML Strategy...")
