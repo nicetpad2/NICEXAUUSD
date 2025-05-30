@@ -352,6 +352,7 @@ def autopipeline(mode="default", train_epochs=1):
     df = load_csv_safe(M1_PATH)
     df = convert_thai_datetime(df)
     df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
+    df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
     df = df.dropna(subset=["timestamp"])
     df = df.sort_values("timestamp")
     df = sanitize_price_columns(df)
@@ -419,6 +420,7 @@ def autopipeline(mode="default", train_epochs=1):
 
         df_feat = pd.read_csv("data/ml_dataset_m1.csv")
         df_feat["timestamp"] = parse_timestamp_safe(df_feat["timestamp"], DATETIME_FORMAT)
+        df_feat["timestamp"] = pd.to_datetime(df_feat["timestamp"], errors="coerce")
         df_feat = df_feat.dropna(subset=["timestamp"])
         feat_cols = [
             "gain_z",
