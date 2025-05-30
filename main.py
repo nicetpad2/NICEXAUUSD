@@ -287,6 +287,17 @@ def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
     return trades_df
 
 def run_wfv_with_progress(df, features, label_col):
+    # [Patch vWFV.7] Fallback support for lowercase 'open' or only 'close'
+    if "Open" not in df.columns:
+        if "open" in df.columns:
+            df = df.rename(columns={"open": "Open"})
+            print("[Patch vWFV.7] 🛠️ rename 'open' → 'Open'")
+        elif "close" in df.columns:
+            df = df.copy()
+            df["Open"] = df["close"]
+            print("[Patch vWFV.7] 🛠️ create 'Open' from 'close'")
+        else:
+            raise ValueError("[Patch vWFV.7] ❌ Missing 'Open'/'open'/'close'")
     from nicegold_v5.utils import split_by_session
 
     logging.info("[TIME] run_wfv_with_progress(): Start")

@@ -446,6 +446,24 @@ def test_run_wfv_with_progress_session_split(monkeypatch):
     assert set(trades['fold'].unique()) <= {'Asia', 'London', 'NY'}
 
 
+def test_run_wfv_with_progress_lowercase(monkeypatch):
+    import importlib
+    main = importlib.import_module('main')
+    df = sample_wfv_df_lower()
+    monkeypatch.setattr(main, 'maximize_ram', lambda: None)
+    trades = main.run_wfv_with_progress(df, ['Open', 'feat1', 'feat2'], 'label')
+    assert isinstance(trades, pd.DataFrame)
+
+
+def test_run_wfv_with_progress_close_fallback(monkeypatch):
+    import importlib
+    main = importlib.import_module('main')
+    df = sample_wfv_df_close_only()
+    monkeypatch.setattr(main, 'maximize_ram', lambda: None)
+    trades = main.run_wfv_with_progress(df, ['Open', 'feat1', 'feat2'], 'label')
+    assert isinstance(trades, pd.DataFrame)
+
+
 def test_split_by_session():
     from nicegold_v5.utils import split_by_session
     df = sample_df()
