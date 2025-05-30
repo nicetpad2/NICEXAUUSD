@@ -592,3 +592,6 @@
 ## 2025-12-20
 - เพิ่ม `mode="full"` ให้ฟังก์ชัน `autopipeline` และปรับเมนูใน `welcome()` เป็น Ultimate Mode (Patch v22.6.4)
 
+## 2025-12-21
+- แก้ `autopipeline` ให้แปลง `timestamp` ใน ML dataset เป็น datetime64 ก่อน merge ป้องกัน ValueError (Patch v22.6.5)
+
