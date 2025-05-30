@@ -487,3 +487,6 @@
 ## 2025-11-09
 - เพิ่ม fallback Diagnostic ใน welcome() หาก RELAX_CONFIG_Q3 ไม่พบสัญญาณ
 - ผ่อนปรนเงื่อนไขเปิดออเดอร์ใน simulate_partial_tp_safe (Patch v16.1.1)
+
+## 2025-11-10
+- แก้ simulate_partial_tp_safe ใน entry.py ใช้ high/low ตรวจ TP1/TP2/SL (Patch v16.1.2)

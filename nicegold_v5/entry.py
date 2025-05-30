@@ -977,9 +977,35 @@ def simulate_partial_tp_safe(df: pd.DataFrame):
         tp2 = entry_price + atr * 2.5 if direction == "buy" else entry_price - atr * 2.5
         sl = entry_price - atr * 1.2 if direction == "buy" else entry_price + atr * 1.2
 
-        # [Patch v12.0.2] 🛠 Force simulate TP1 สำหรับ debug QA
-        exit_price = tp1
-        exit_reason = "tp1"
+        high = row.get("high", row["close"])
+        low = row.get("low", row["close"])
+
+        # [Patch v16.1.2] ตรวจ TP1/TP2/SL จาก high/low จริง
+        exit_price, exit_reason = None, None
+        if direction == "buy":
+            if high >= tp2:
+                exit_price = tp2
+                exit_reason = "tp2"
+            elif high >= tp1:
+                exit_price = tp1
+                exit_reason = "tp1"
+            elif low <= sl:
+                exit_price = sl
+                exit_reason = "sl"
+        else:
+            if low <= tp2:
+                exit_price = tp2
+                exit_reason = "tp2"
+            elif low <= tp1:
+                exit_price = tp1
+                exit_reason = "tp1"
+            elif high >= sl:
+                exit_price = sl
+                exit_reason = "sl"
+
+        if exit_price is None:
+            exit_price = row.get("close")
+            exit_reason = "timeout_exit"
 
         trade_log.append({
             "timestamp": timestamp,

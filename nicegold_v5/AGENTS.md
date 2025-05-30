@@ -509,3 +509,6 @@
 
 ### 2025-11-09
 - ผ่อนปรน simulate_partial_tp_safe เปิดออเดอร์เมื่อ ATR หรือตัวชี้วัด momentum สูง (Patch v16.1.1)
+
+### 2025-11-10
+- แก้ simulate_partial_tp_safe ใน `entry.py` ตรวจ TP1/TP2/SL จากค่า high/low จริง (Patch v16.1.2)
