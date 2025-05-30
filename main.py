@@ -547,10 +547,6 @@ def welcome():
         show_progress_bar("🧠 เตรียม Walk-Forward", steps=2)
         print("\n🚀 เริ่มรัน Walk-Forward Validation (WFV)...")
 
-        sys.path.append("/mnt/data/wfv_extracted")
-
-        from wfv import run_wfv_with_progress
-
         df = pd.read_csv(M15_PATH, parse_dates=["timestamp"])
         df["EMA_50"] = df["close"].ewm(span=50).mean()
         df["RSI_14"] = df["close"].rolling(14).apply(

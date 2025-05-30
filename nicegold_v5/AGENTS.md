@@ -520,3 +520,5 @@
 - เพิ่มเมนู Walk-Forward Validation ใน main.py และฟังก์ชันเรียกใช้งาน (Patch vWFV.1)
 ### 2025-11-14
 - เปิดเมนู CLI แบบ Interactive และเลือกข้อ 7 เพื่อรัน WFV (Patch vWFV.2)
+### 2025-11-15
+- ปรับเมนู [7] นำเข้า `run_wfv_with_progress` จากโมดูลภายใน (Patch vWFV.3)
