@@ -539,3 +539,5 @@
 - ปรับ fallback sell ให้ตรวจ rsi >55 และ confirm_zone (Patch v16.2.2)
 ## 2025-11-29
 - ปรับ simulate_partial_tp_safe เซ็ต SL สำรองหาก tsl_activated แต่ sl ยังไม่ได้ตั้ง (Patch v16.2.3)
+## 2025-11-30
+- ปรับ should_exit ให้ตรวจสอบ trailing_sl เป็น None ก่อนคำนวณ เพื่อป้องกัน TypeError (Patch v16.2.4)
