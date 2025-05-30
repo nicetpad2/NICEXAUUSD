@@ -561,3 +561,8 @@
 - ปรับ simulate_partial_tp_safe ตั้ง SL สำรองเมื่อ tsl_activated แต่ sl ยังไม่มีค่า (Patch v16.2.3)
 ### 2025-11-30
 - แก้ should_exit ตรวจสอบ trailing_sl เป็น None ก่อนเปรียบเทียบ (Patch v16.2.4)
+
+### 2025-12-01
+- ปรับ simulate_partial_tp_safe เพิ่ม TSL Trigger ที่กำไร 0.5 ATR และเงื่อนไข TP2 Guard
+- เพิ่มเหตุผลออก "be_sl", "tsl_exit", "tp2_guard_exit" ใน trade log
+- ปรับ fallback sell ใน generate_signals_v12_0 ให้ใช้ entry_score > 2.5 และ RSI >50 (Patch v16.2.4)

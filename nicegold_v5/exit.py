@@ -88,7 +88,7 @@ def should_exit(trade, row):
             or (direction == "sell" and price_now >= tsl)
         ):
             logging.info(f"[{recovery_prefix.upper()}TSL] Triggered @ {price_now:.2f}")
-            return True, f"{recovery_prefix}tsl"
+            return True, f"{recovery_prefix}tsl_exit"
         high = _rget(row, "high", price_now) if direction == "buy" else _rget(row, "low", price_now)
         new_trail = high - atr if direction == "buy" else high + atr
         if tsl is not None and (
@@ -214,6 +214,13 @@ def simulate_partial_tp_safe(df: pd.DataFrame, capital: float = 1000.0):
                 if not delay_hold:
                     continue  # [Patch v12.3.0] Delay exit until TP2 hold time reached
 
+            # [Patch v16.2.4] ✅ TSL Trigger: หาก Gain ≥ 0.5 ATR → ตั้ง trailing SL
+            gain = abs(price_now - open_position["entry"])
+            if not open_position["tsl_activated"] and gain >= atr * 0.5:
+                tsl = max(high_window) - atr if direction == "buy" else min(low_window) + atr
+                open_position["sl"] = tsl
+                open_position["tsl_activated"] = True
+
             # [Patch v12.3.2] ✅ Dynamic TSL ใช้ rolling max/min 10 แท่ง
             if open_position["tp1_hit"] and not open_position["tsl_activated"]:
                 if direction == "buy":
@@ -268,20 +275,20 @@ def simulate_partial_tp_safe(df: pd.DataFrame, capital: float = 1000.0):
             if direction == "buy":
                 if row.low <= sl:
                     exit_price = sl
-                    reason = "sl"
-                elif row.high >= tp2 and mfe >= rr2:
+                    reason = "sl" if not open_position.get("breakeven") else "be_sl"
+                elif row.high >= tp2 * 0.98 and mfe >= rr2 - 0.2:
                     exit_price = tp2
-                    reason = "tp2"
+                    reason = "tp2_guard_exit"
                 elif row.high >= tp1:
                     exit_price = tp1
                     reason = "tp1"
             else:
                 if row.high >= sl:
                     exit_price = sl
-                    reason = "sl"
-                elif row.low <= tp2 and mfe >= rr2:
+                    reason = "sl" if not open_position.get("breakeven") else "be_sl"
+                elif row.low <= tp2 * 1.02 and mfe >= rr2 - 0.2:
                     exit_price = tp2
-                    reason = "tp2"
+                    reason = "tp2_guard_exit"
                 elif row.low <= tp1:
                     exit_price = tp1
                     reason = "tp1"
