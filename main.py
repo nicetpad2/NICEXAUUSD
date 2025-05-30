@@ -43,6 +43,7 @@ from nicegold_v5.utils import (
     safe_calculate_net_change,
     convert_thai_datetime,
     parse_timestamp_safe,
+    get_resource_plan,
 )
 from nicegold_v5.fix_engine import simulate_and_autofix  # [Patch v12.3.9] Added import
 # User-provided custom instructions
@@ -373,25 +374,21 @@ def autopipeline():
         load_dataset = None
         train_lstm = None
         print("⚠️ PyTorch ไม่พร้อมใช้งาน - ข้ามขั้นตอน LSTM")
-    try:
-        import psutil
-        ram_gb = psutil.virtual_memory().total / 1024 ** 3
-    except Exception:
-        ram_gb = 0
-    threads = cpu_count()
-    device = "cuda" if torch and torch.cuda.is_available() else "cpu"
-    gpu_name = (
-        torch.cuda.get_device_name(0) if torch and torch.cuda.is_available() else "CPU"
+    plan = get_resource_plan()
+    device = plan["device"]
+    DEVICE = torch.device(device) if torch else None
+    print(f"🖥️ Device: {plan['gpu']}")
+    print(
+        f"💾 RAM: {plan['ram']:.1f} GB | CPU Threads: {plan['threads']}"
     )
-    print(f"🖥️ Device: {gpu_name}")
-    print(f"💾 RAM: {ram_gb:.1f} GB | CPU Threads: {threads}")
-
-    if ram_gb >= 24:
-        batch_size, model_dim, n_folds, lr, opt = 256, 128, 8, 0.0005, "adam"
-    elif ram_gb >= 12:
-        batch_size, model_dim, n_folds, lr, opt = 128, 64, 6, 0.001, "adam"
-    else:
-        batch_size, model_dim, n_folds, lr, opt = 64, 32, 5, 0.01, "sgd"
+    batch_size = plan["batch_size"]
+    model_dim = plan["model_dim"]
+    n_folds = plan["n_folds"]
+    lr = plan["lr"]
+    opt = plan["optimizer"]
+    print(
+        f"⚙️ Auto Config → batch_size={batch_size}, model_dim={model_dim}, n_folds={n_folds}, optimizer={opt}, lr={lr}"
+    )
 
     if torch is not None:
         print(
@@ -426,10 +423,8 @@ def autopipeline():
         seq_len = 10
         seqs = [data[i : i + seq_len] for i in range(len(data) - seq_len)]
         if seqs:
-            X_tensor = torch.tensor(np.array(seqs), dtype=torch.float32)
-            if device == "cuda":
-                X_tensor = X_tensor.cuda()
-                model = model.cuda()
+            X_tensor = torch.tensor(np.array(seqs), dtype=torch.float32).to(DEVICE)
+            model = model.to(DEVICE)
             model.eval()
             with torch.no_grad():
                 pred = model(X_tensor).squeeze().cpu().numpy()
@@ -442,7 +437,7 @@ def autopipeline():
         df = df[df["tp2_guard_pass"] | df["entry_signal"].isnull()]
         print(f"✅ TP2 Guard Filter → เหลือ {df['entry_signal'].notnull().sum()} signals")
     else:
-        n_folds = 5
+        n_folds = plan["n_folds"]
 
     from nicegold_v5.utils import run_autofix_wfv
     trades_df = run_autofix_wfv(
