@@ -683,3 +683,5 @@
 
 ## 2026-01-16
 - เพิ่มชุดทดสอบ coverage_inc ครอบคลุม sanitize_price_columns และฟังก์ชัน QA ต่างๆ เพื่อเพิ่ม coverage เป็น 98%
+## 2026-01-17
+- [Patch v25.1.0] ตรวจสอบ dtype ของ timestamp ก่อน merge และแปลงเป็น datetime64[ns] หากจำเป็น

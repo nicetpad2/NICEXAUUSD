@@ -525,6 +525,15 @@ def autopipeline(mode="default", train_epochs=1):
         seqs = [data[i : i + seq_len] for i in range(len(data) - seq_len)]
         device2 = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+        # [Patch v25.1.0] Fix: Ensure 'timestamp' dtype matches before merge (datetime64[ns])
+        print("[Patch v25.1.0] ตรวจสอบ dtype ก่อน merge: df.timestamp =", df["timestamp"].dtype, "df_feat.timestamp =", df_feat["timestamp"].dtype)
+        if df["timestamp"].dtype != "datetime64[ns]":
+            df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
+            print("[Patch v25.1.0] → df['timestamp'] แปลงเป็น datetime64[ns]")
+        if df_feat["timestamp"].dtype != "datetime64[ns]":
+            df_feat["timestamp"] = pd.to_datetime(df_feat["timestamp"], errors="coerce")
+            print("[Patch v25.1.0] → df_feat['timestamp'] แปลงเป็น datetime64[ns]")
+
         # [Patch v25.0.0] Batch inference LSTM ป้องกัน OOM
         def predict_lstm_in_batches(model, X_data, batch_size=1024, device=None):
             model.eval()
@@ -541,6 +550,8 @@ def autopipeline(mode="default", train_epochs=1):
         preds = predict_lstm_in_batches(model, X_tensor, batch_size=1024, device=device2)
         df_feat["tp2_proba"] = np.concatenate([np.zeros(seq_len), preds])
 
+        # [Patch v25.1.0] log: dtype after fix
+        print("[Patch v25.1.0] dtype หลังแปลง: df.timestamp =", df["timestamp"].dtype, "df_feat.timestamp =", df_feat["timestamp"].dtype)
         df = df.merge(df_feat[["timestamp", "tp2_proba"]], on="timestamp", how="left")
         df["tp2_guard_pass"] = df["tp2_proba"] >= 0.7
         print(
