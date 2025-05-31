@@ -652,3 +652,5 @@
 - ย่อเมนูเหลือ Full AutoPipeline กับ Smart Fast QA เท่านั้น
 ## 2026-01-06
 - ปรับ `generate_ml_dataset_m1` ให้สร้าง trade log ใหม่ทุกครั้งด้วย `SNIPER_CONFIG_ULTRA_OVERRIDE` (Patch v24.3.0)
+## 2026-01-07
+- เพิ่มเทส wfv และ train_lstm_runner ครอบคลุมฟังก์ชันย่อย ทำ coverage เกิน 90%
