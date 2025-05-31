@@ -664,3 +664,5 @@
 - ปรับ welcome() ให้เหลือ 2 เมนู Full AutoPipeline และ Smart Fast QA
 - เพิ่มฟังก์ชัน `run_smart_fast_qa` รัน pytest แบบย่อ
 - อัปเดต changelog และเพิ่ม unit test หากจำเป็น
+### 2026-01-03
+- เพิ่มชุดทดสอบ fix_engine ครอบคลุม run_self_diagnostic, auto_fix_logic และ simulate_and_autofix
