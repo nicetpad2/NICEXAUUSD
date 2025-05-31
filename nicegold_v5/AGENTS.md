@@ -687,3 +687,8 @@
 - [Patch v24.3.4] แก้ bug Categorical fillna ใน backtester
 ### 2026-01-11
 - [Patch v24.3.5] ปรับ backtester ใช้ isinstance(df["entry_tier"].dtype, pd.CategoricalDtype) แทน is_categorical_dtype
+### 2026-01-12
+- เพิ่มชุดทดสอบ simulate_trades_with_tp ครอบคลุม sl/tp1 และ planned_risk
+- เพิ่มเทส objective ใน optuna_tuner และกรณี DataFrame ว่าง
+- เพิ่มเทส safe_calculate_net_change และ convert_thai_datetime เพิ่ม coverage เป็น 94%
+

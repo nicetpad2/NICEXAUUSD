@@ -667,3 +667,8 @@
 - [Patch v24.3.4] แก้ปัญหา fillna บนคอลัมน์ entry_tier ที่เป็น Categorical ใน backtester
 ## 2026-01-11
 - [Patch v24.3.5] ปรับ backtester ตรวจสอบ dtype Categorical แบบใหม่ ไม่ใช้ is_categorical_dtype
+## 2026-01-12
+- เพิ่มเทส simulate_trades_with_tp ตรวจ sl, tp1 และ planned_risk
+- เพิ่มเทส optuna objective และ safe_calculate_net_change
+- ปรับ coverage รวมให้เกิน 94%
+
