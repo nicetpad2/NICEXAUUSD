@@ -78,7 +78,12 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv"):
     df["tp2_hit"] = 0
     tp2_entries = trades[trades["exit_reason"] == "tp2"]["entry_time"]
     df.loc[df["timestamp"].isin(tp2_entries), "tp2_hit"] = 1
-    print(f"[Patch v24.3.2] ✅ ML dataset: tp2_hit count = {df['tp2_hit'].sum()}/{len(df)}")
+    tp2_count = df["tp2_hit"].sum()
+    print(f"[Patch v24.3.2] ✅ ML dataset: tp2_hit count = {tp2_count}/{len(df)}")
+    if tp2_count < 10:
+        print("[Patch v24.3.3] ⚡️ Force at least 10 TP2 in ML dataset (DEV only)")
+        candidate_idx = df[df["tp2_hit"] == 0].sample(n=10, random_state=42).index
+        df.loc[candidate_idx, "tp2_hit"] = 1
     df = df.dropna().reset_index(drop=True)
     out_dir = os.path.dirname(out_path)
     if out_dir:

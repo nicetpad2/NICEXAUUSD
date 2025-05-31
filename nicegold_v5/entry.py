@@ -321,6 +321,14 @@ def generate_signals_v8_0(df: pd.DataFrame, config: dict | None = None) -> pd.Da
     )
 
     df["entry_signal"] = np.where(buy_cond, "buy", np.where(sell_cond, "sell", None))
+    if config and config.get("gain_z_thresh", 0) <= -9.0:
+        # [Patch v24.3.3] Force entry_signal ทุกๆ 500 row (DEV/ML only)
+        force_every = 500
+        indices = list(range(0, len(df), force_every))
+        for i in indices:
+            if pd.isna(df.at[i, "entry_signal"]):
+                df.at[i, "entry_signal"] = "buy"
+        print(f"[Patch v24.3.3] ⚡️ Ultra Fallback: force entry_signal 'buy' {len(indices)} spots")
 
     # --- Logging QA Reason ---
     # [Patch v7.2] Restore entry_blocked_reason logic

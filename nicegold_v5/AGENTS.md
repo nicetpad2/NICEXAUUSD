@@ -682,3 +682,6 @@
 - ปรับ train_lstm_runner ใช้ BCEWithLogitsLoss และอัปเดต unit test
 ### 2026-01-09
 - เพิ่มชุดทดสอบ utils ครอบคลุมการคำนวณและ get_resource_plan ให้ coverage 92%
+### 2026-01-10
+- [Patch v24.3.3] เพิ่ม ultra fallback force entry_signal และบังคับ TP2 ใน ML dataset
+- [Patch v24.3.4] แก้ bug Categorical fillna ใน backtester
