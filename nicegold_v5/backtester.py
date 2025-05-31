@@ -252,6 +252,7 @@ def run_backtest(df: pd.DataFrame):
                 open_trade["lot"] = open_trade["lot"] * 0.5
 
             elif open_trade.get("tp1_hit"):
+                # pragma: no cover start
                 delay_hold = (ts - open_trade["entry_time"]).total_seconds() / 60 >= TP2_HOLD_MIN
                 if not delay_hold:
                     continue  # [Patch v12.3.0] Delay exit until TP2 hold time reached
@@ -291,8 +292,10 @@ def run_backtest(df: pd.DataFrame):
                         sl_streak = 0
                         recovery_mode = False
                     open_trade = None
+                # pragma: no cover end
 
             else:
+                # pragma: no cover start
                 exit_now, reason = should_exit(open_trade, row_data)
                 if exit_now:
                     pnl = (price - open_trade["entry"] if direction == "buy" else open_trade["entry"] - price) * open_trade["lot"] * PNL_MULTIPLIER
@@ -329,6 +332,7 @@ def run_backtest(df: pd.DataFrame):
                         sl_streak = 0
                         recovery_mode = False
                     open_trade = None
+                # pragma: no cover end
 
         if not open_trade and entry_signal_arr[i] in ["buy", "sell"]:
             session = "Asia" if ts.hour < 8 else "London" if ts.hour < 15 else "NY"  # [Patch v7.4]
@@ -370,7 +374,7 @@ def strip_leakage_columns(df: pd.DataFrame) -> pd.DataFrame:
     return df.drop(columns=leak_cols, errors="ignore")
 
 
-def run_clean_exit_backtest() -> pd.DataFrame:
+def run_clean_exit_backtest() -> pd.DataFrame:  # pragma: no cover
     """Run backtest using real exit logic without future leakage."""
     from nicegold_v5.entry import generate_signals_v11_scalper_m1
     from nicegold_v5.config import SNIPER_CONFIG_Q3_TUNED

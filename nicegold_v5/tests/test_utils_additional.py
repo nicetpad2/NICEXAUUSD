@@ -175,3 +175,14 @@ def test_simulate_tp_exit_sl_and_timeout():
     result = utils.simulate_tp_exit(trades, m1, window_minutes=1)
     assert result.loc[0, 'exit_reason'] == 'SL'
     assert result.loc[1, 'exit_reason'] == 'TIMEOUT'
+
+
+def test_safe_calculate_net_change_missing_cols():
+    df = pd.DataFrame()
+    assert utils.safe_calculate_net_change(df) == 0.0
+
+
+def test_convert_thai_datetime_no_columns():
+    df = pd.DataFrame({'close': [1.0]})
+    result = utils.convert_thai_datetime(df)
+    assert result.equals(df)

@@ -1504,3 +1504,63 @@ def test_generate_signals_print_blocked_pct(capsys):
     out = capsys.readouterr().out
     assert 'Entry Signal Blocked' in out
 
+
+def test_simulate_trades_with_tp_sl_exit():
+    from nicegold_v5.entry import simulate_trades_with_tp
+
+    df = pd.DataFrame([
+        {
+            'timestamp': pd.Timestamp('2025-01-01 00:00:00'),
+            'close': 100.0,
+            'high': 101.0,
+            'low': 94.0,
+            'signal': 'long',
+            'session': 'London',
+            'rsi': 55,
+            'pattern': 'inside_bar',
+        }
+    ])
+
+    trades, _ = simulate_trades_with_tp(df)
+    assert trades[0]['exit_reason'] == 'sl'
+
+
+def test_simulate_trades_with_tp_tp1_exit():
+    from nicegold_v5.entry import simulate_trades_with_tp
+
+    df = pd.DataFrame([
+        {
+            'timestamp': pd.Timestamp('2025-01-01 00:00:00'),
+            'close': 100.0,
+            'high': 108.0,
+            'low': 96.0,
+            'signal': 'long',
+            'session': 'London',
+            'rsi': 30,
+            'pattern': 'inside_bar',
+        }
+    ])
+
+    trades, _ = simulate_trades_with_tp(df)
+    assert trades[0]['exit_reason'] == 'tp1'
+
+
+def test_simulate_trades_with_tp_zero_planned_risk():
+    from nicegold_v5.entry import simulate_trades_with_tp
+
+    df = pd.DataFrame([
+        {
+            'timestamp': pd.Timestamp('2025-01-01 00:00:00'),
+            'close': 100.0,
+            'high': 100.0,
+            'low': 100.0,
+            'signal': 'long',
+            'session': 'London',
+            'rsi': 50,
+            'pattern': 'inside_bar',
+        }
+    ])
+
+    trades, _ = simulate_trades_with_tp(df, sl_distance=0.0)
+    assert trades[0]['planned_risk'] == 0.01
+
