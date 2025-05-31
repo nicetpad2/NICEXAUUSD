@@ -650,3 +650,7 @@
   ป้องกัน KeyError 'close' ระหว่าง Optuna (Patch v24.1.1)
 ### 2025-12-30
 - เพิ่ม Mixed Precision Training ใน `train_lstm_runner` พร้อม CPU fallback และอัพเดตชุดทดสอบ (Patch v24.2.3)
+
+### 2025-12-31
+- เพิ่มระบบจับเวลา load, forward, backward และ optimizer step ใน `train_lstm_runner`
+- แสดง bottleneck ต่อ epoch และใช้ `prefetch_factor` เพิ่มความเร็ว I/O (Patch v24.2.4)
