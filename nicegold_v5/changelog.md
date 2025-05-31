@@ -624,3 +624,7 @@
 ## 2025-12-28
 - ปรับปรุง `get_resource_plan` ตรวจสอบ VRAM และ CUDA cores เพิ่มฟิลด์ precision และ train_epochs
 - บันทึกข้อมูลแผนทรัพยากรลง `logs/resource_plan.json` และแสดงผลใน `autopipeline`
+
+## 2025-12-29
+- แก้บั๊ก KeyError 'close' ระหว่าง Optuna ในโหมด `ai_master`
+- ปรับ `autopipeline` ส่ง DataFrame ราคาจริงให้ `start_optimization` (Patch v24.1.1)
