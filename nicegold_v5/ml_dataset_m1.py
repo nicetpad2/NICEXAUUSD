@@ -53,17 +53,18 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv"):
 
     # Load trade log
     trade_log_path = "logs/trades_v12_tp1tp2.csv"
-    if not os.path.exists(trade_log_path):
-        print("⚠️ ไม่พบ trades_v12_tp1tp2.csv – กำลังสร้างโดยอัตโนมัติ...")
-        from nicegold_v5.entry import generate_signals
-        from nicegold_v5.exit import simulate_partial_tp_safe
-        df_trades = df.copy()
-        df_trades = generate_signals(df_trades)
-        df_trades["entry_time"] = df_trades["timestamp"]
-        trade_df = simulate_partial_tp_safe(df_trades)
-        os.makedirs("logs", exist_ok=True)
-        trade_df.to_csv(trade_log_path, index=False)
-        print("✅ สร้าง trade log ใหม่แล้วที่:", trade_log_path)
+    # [Patch v24.3.0] 🛡️ Always regenerate trade log with ultra config for ML (ensure TP2 sample)
+    print("[Patch v24.3.0] 🛡️ Generating trade log for ML with SNIPER_CONFIG_ULTRA_OVERRIDE...")
+    from nicegold_v5.config import SNIPER_CONFIG_ULTRA_OVERRIDE
+    from nicegold_v5.entry import generate_signals
+    from nicegold_v5.exit import simulate_partial_tp_safe
+    df_trades = df.copy()
+    df_trades = generate_signals(df_trades, config=SNIPER_CONFIG_ULTRA_OVERRIDE)
+    df_trades["entry_time"] = df_trades["timestamp"]
+    trade_df = simulate_partial_tp_safe(df_trades)
+    os.makedirs("logs", exist_ok=True)
+    trade_df.to_csv(trade_log_path, index=False)
+    print("[Patch v24.3.0] ✅ Trade log (ultra) saved:", trade_log_path)
 
     trades = pd.read_csv(trade_log_path)
     trades["entry_time"] = pd.to_datetime(trades["entry_time"])
