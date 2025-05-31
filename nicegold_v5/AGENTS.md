@@ -720,3 +720,7 @@
 - เพิ่มเทส train_lstm_runner ครอบคลุมกรณีใช้ GPU และรันผ่าน `__main__`
 - เพิ่มเทส simulate_tp_exit ให้ตรวจสอบกรณี TP2, SL และ TP1 เพื่อให้ coverage 100%
 
+
+### 2026-01-23
+- [Patch v26.0.0] เพิ่ม Hedge Fund Mode: soft filter, dynamic lot และ session adaptive
+

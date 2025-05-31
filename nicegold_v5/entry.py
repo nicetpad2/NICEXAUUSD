@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
+from .config import SESSION_CONFIG, HEDGEFUND_ENTRY_CONFIG
 
 # --- CONFIG FLAGS (Patch v11.1) ---
 ENABLE_TP1_TP2 = True
@@ -149,6 +150,42 @@ def sanitize_price_columns(df: pd.DataFrame) -> pd.DataFrame:
     for col, count in missing.items():
         print(f"   ▸ {col}: {count} NaN")
     return df
+
+
+def filter_entry_signals(df: pd.DataFrame, config: dict, session: str | None = None) -> pd.DataFrame:
+    """Filter entry rows based on config thresholds."""
+    df = df.copy()
+    session_conf = SESSION_CONFIG.get(session, {}) if config.get("session_adaptive") and session else {}
+    g_thresh = session_conf.get("gain_z_thresh", config.get("gain_z_thresh", -0.05))
+    tp1_rr = session_conf.get("tp1_rr_ratio", config.get("tp1_rr_ratio", 1.15))
+    tp2_rr = session_conf.get("tp2_rr_ratio", config.get("tp_rr_ratio", 2.0))
+
+    rows = []
+    for _, row in df.iterrows():
+        if row.get("gain_z", 0) < g_thresh:
+            continue
+        if row.get("ema_slope", 0) < config.get("ema_slope_min", 0):
+            continue
+        if row.get("atr", 0) < config.get("atr_thresh", 0):
+            continue
+        if row.get("sniper_risk_score", 0) < config.get("sniper_risk_score_min", 0):
+            continue
+        r = row.to_dict()
+        r["tp1_rr_ratio"] = tp1_rr
+        r["tp2_rr_ratio"] = tp2_rr
+        rows.append(r)
+    return pd.DataFrame(rows)
+
+
+def calc_lot_size(account: dict, win_streak: int, loss_streak: int, config: dict) -> float:
+    """Dynamic lot sizing based on win/loss streak."""
+    lot = account.get("init_lot", 0.01)
+    if config.get("dynamic_lot"):
+        if win_streak >= 2:
+            lot *= config.get("lot_win_multiplier", 1.18)
+        elif loss_streak >= 2:
+            lot *= config.get("lot_loss_multiplier", 0.88)
+    return min(max(lot, 0.01), config.get("max_lot", 3.0))
 
 
 def generate_pattern_signals(df: pd.DataFrame) -> pd.DataFrame:
