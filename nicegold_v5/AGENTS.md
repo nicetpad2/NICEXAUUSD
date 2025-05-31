@@ -675,3 +675,8 @@
 - ปรับ `generate_ml_dataset_m1` สร้าง trade log ใหม่ทุกครั้งด้วย `SNIPER_CONFIG_ULTRA_OVERRIDE` (Patch v24.3.0)
 ### 2026-01-07
 - เพิ่มชุดทดสอบ wfv และ train_lstm_runner ให้ coverage ทะลุ 90%
+### 2026-01-08
+- ปรับ generate_signals_v8_0 ให้ override volume=1 เมื่อ gain_z_thresh <= -9 และ volume ว่าง (Patch v24.3.2)
+- เพิ่ม log volume stat และนับ tp2_hit ใน generate_ml_dataset_m1 (Patch v24.3.2)
+- อัปเดต LSTMClassifier ใช้ BCEWithLogitsLoss และลบ sigmoid ใน deep_model_m1 (Patch v24.3.2)
+- ปรับ train_lstm_runner ใช้ BCEWithLogitsLoss และอัปเดต unit test

@@ -55,6 +55,7 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv"):
     trade_log_path = "logs/trades_v12_tp1tp2.csv"
     # [Patch v24.3.0] 🛡️ Always regenerate trade log with ultra config for ML (ensure TP2 sample)
     print("[Patch v24.3.0] 🛡️ Generating trade log for ML with SNIPER_CONFIG_ULTRA_OVERRIDE...")
+    print("[Patch v24.3.2] 🔎 Volume stat (dev):", df["volume"].describe())
     from nicegold_v5.config import SNIPER_CONFIG_ULTRA_OVERRIDE
     from nicegold_v5.entry import generate_signals
     from nicegold_v5.exit import simulate_partial_tp_safe
@@ -77,6 +78,7 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv"):
     df["tp2_hit"] = 0
     tp2_entries = trades[trades["exit_reason"] == "tp2"]["entry_time"]
     df.loc[df["timestamp"].isin(tp2_entries), "tp2_hit"] = 1
+    print(f"[Patch v24.3.2] ✅ ML dataset: tp2_hit count = {df['tp2_hit'].sum()}/{len(df)}")
     df = df.dropna().reset_index(drop=True)
     out_dir = os.path.dirname(out_path)
     if out_dir:
