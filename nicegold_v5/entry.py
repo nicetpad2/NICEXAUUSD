@@ -755,14 +755,13 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
     ปลดล็อกฝั่ง Buy/Sell ทุกจุด (QA Guard)
     """
     config = config or {}
+    # Force unlock both sides regardless of any caller config
+    if config.get("disable_buy", None) is not False:
+        print("[Patch v26.0.1] QA Override: force disable_buy = False")
+    if config.get("disable_sell", None) is not False:
+        print("[Patch v26.0.1] QA Override: force disable_sell = False")
     config["disable_buy"] = False
     config["disable_sell"] = False
-    if "disable_buy" in config and config["disable_buy"] is not False:
-        print("[Patch v26.0.1] QA Override: force disable_buy = False")
-        config["disable_buy"] = False
-    if "disable_sell" in config and config["disable_sell"] is not False:
-        print("[Patch v26.0.1] QA Override: force disable_sell = False")
-        config["disable_sell"] = False
     assert not config.get("disable_buy", False), "QA BLOCK: disable_buy=True not allowed"
     assert not config.get("disable_sell", False), "QA BLOCK: disable_sell=True not allowed"
     return generate_signals_v8_0(df, config=config)
@@ -968,8 +967,15 @@ def generate_signals_v12_0(df: pd.DataFrame, config: dict | None = None) -> pd.D
     [Patch v26.0.1] Multi-pattern signal generator - *unblock* buy/sell every signal
     """
     config = config or {}
+    # QA Guard: always force both sides open
+    if config.get("disable_buy", None) is not False:
+        print("[Patch v26.0.1] QA Override: force disable_buy = False [v12.0]")
+    if config.get("disable_sell", None) is not False:
+        print("[Patch v26.0.1] QA Override: force disable_sell = False [v12.0]")
     config["disable_buy"] = False
     config["disable_sell"] = False
+    assert not config.get("disable_buy", False), "QA BLOCK: disable_buy=True not allowed"
+    assert not config.get("disable_sell", False), "QA BLOCK: disable_sell=True not allowed"
     # เดิม...
     # [Patch v12.3.4] ✅ Entry Score Filter (TP2 Potential only)
     df = df.copy()

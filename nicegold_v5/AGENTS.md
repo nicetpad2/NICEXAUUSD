@@ -727,4 +727,6 @@
 - [Patch v26.0.1] บังคับเปิดฝั่ง BUY/SELL ทุกคอนฟิกและทุกเซสชัน ป้องกันสัญญาณถูกบล็อกโดยไม่ตั้งใจ
 ### 2026-01-25
 - [Patch v26.0.1] ปรับ generate_signals และ generate_signals_v12_0 เพิ่ม QA Override ให้ปิด disable_buy/disable_sell เสมอ
+### 2026-01-26
+- ปรับปรุง QA Override ใน generate_signals และ generate_signals_v12_0 ให้ตรวจค่าจาก config ก่อนตั้งค่าใหม่ พร้อมข้อความ log ชัดเจน
 
