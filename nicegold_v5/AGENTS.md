@@ -668,3 +668,6 @@
 - เพิ่มชุดทดสอบ fix_engine ครอบคลุม run_self_diagnostic, auto_fix_logic และ simulate_and_autofix
 ### 2026-01-04
 - ปรับ main.py เรียก welcome() ใน __main__ แทน autopipeline
+### 2026-01-05
+- ตัดขั้นตอน simulate TP1/TP2 และตรวจ CSV ออกจาก welcome()
+- ย่อเมนูเหลือเพียงเลือก Full AutoPipeline หรือ Smart Fast QA
