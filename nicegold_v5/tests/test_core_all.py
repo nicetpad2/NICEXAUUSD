@@ -1361,6 +1361,31 @@ def test_generate_signals_disable_buy_volume_guard(monkeypatch):
     assert out['entry_signal'].iloc[20] == 'sell'
 
 
+def test_generate_signals_disable_sell_override(monkeypatch):
+    """ควรบังคับเปิดฝั่ง SELL แม้ตั้ง disable_sell=True"""
+    from nicegold_v5.entry import generate_signals_v12_0
+    monkeypatch.setattr('nicegold_v5.entry.validate_indicator_inputs', lambda df, required_cols=None, min_rows=500: None)
+
+    rows = 25
+    close = np.linspace(100, 125, rows)
+    close[20] = close[19] - 5
+    df = pd.DataFrame({
+        'timestamp': pd.date_range('2025-01-01', periods=rows, freq='min'),
+        'close': close,
+        'high': np.linspace(100.5, 125.5, rows),
+        'low': np.linspace(99.5, 124.5, rows),
+        'volume': [10.0] * rows,
+        'pattern': ['inside_bar'] + [None]*19 + ['qm_bearish'] + [None]*(rows-21),
+        'gain_z': [0.1]*20 + [-0.02] + [0.0]*(rows-21),
+        'entry_score': [4.0]*20 + [4.5] + [4.0]*(rows-21),
+    })
+
+    config = {'disable_sell': True}
+    out = generate_signals_v12_0(df, config)
+    assert config['disable_sell'] is False
+    assert out['entry_signal'].iloc[20] == 'sell'
+
+
 def test_generate_signals_v12_0_ultra_override(monkeypatch):
     """ตรวจสอบ ultra override sell ทำงานเมื่อ gain_z ติดลบและ entry_score สูง"""
     from nicegold_v5.entry import generate_signals_v12_0
