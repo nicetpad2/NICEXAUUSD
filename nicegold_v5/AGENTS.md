@@ -671,3 +671,5 @@
 ### 2026-01-05
 - ตัดขั้นตอน simulate TP1/TP2 และตรวจ CSV ออกจาก welcome()
 - ย่อเมนูเหลือเพียงเลือก Full AutoPipeline หรือ Smart Fast QA
+### 2026-01-06
+- ปรับ `generate_ml_dataset_m1` สร้าง trade log ใหม่ทุกครั้งด้วย `SNIPER_CONFIG_ULTRA_OVERRIDE` (Patch v24.3.0)

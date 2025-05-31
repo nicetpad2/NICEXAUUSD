@@ -127,18 +127,15 @@ def test_generate_ml_dataset_m1(tmp_path, monkeypatch):
     df = sample_m1_data()
     csv_path = tmp_path / 'XAUUSD_M1.csv'
     df.to_csv(csv_path, index=False)
-    log_dir = tmp_path / 'logs'
-    log_dir.mkdir()
-    trades = pd.DataFrame({
-        'entry_time': df['timestamp'].iloc[10:12].astype(str),
-        'exit_reason': ['tp2', 'sl']
-    })
-    trades_path = log_dir / 'trades_v12_tp1tp2.csv'
-    trades.to_csv(trades_path, index=False)
     out_dir = tmp_path / 'data'
     out_dir.mkdir()
     out_csv = out_dir / 'ml_dataset_m1.csv'
     monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df, config=None: df)
+    monkeypatch.setattr(
+        'nicegold_v5.exit.simulate_partial_tp_safe',
+        lambda df: pd.DataFrame({'entry_time': df['entry_time'].iloc[[10, 20]].astype(str).reset_index(drop=True), 'exit_reason': ['tp2', 'sl']})
+    )
     generate_ml_dataset_m1(str(csv_path), str(out_csv))
     assert out_csv.exists()
     out_df = pd.read_csv(out_csv)
@@ -153,7 +150,7 @@ def test_generate_ml_dataset_auto_trade_log(tmp_path, monkeypatch):
     out_dir.mkdir()
     out_csv = out_dir / 'ml_dataset_m1.csv'
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df: df)
+    monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df, config=None: df)
     monkeypatch.setattr(
         'nicegold_v5.exit.simulate_partial_tp_safe',
         lambda df: pd.DataFrame({'entry_time': df['entry_time'], 'exit_reason': ['tp2'] * len(df)})
@@ -167,18 +164,15 @@ def test_train_lstm(tmp_path, monkeypatch):
     df = sample_m1_data()
     csv_path = tmp_path / 'XAUUSD_M1.csv'
     df.to_csv(csv_path, index=False)
-    log_dir = tmp_path / 'logs'
-    log_dir.mkdir()
-    trades = pd.DataFrame({
-        'entry_time': df['timestamp'].iloc[10:12].astype(str),
-        'exit_reason': ['tp2', 'sl']
-    })
-    trades_path = log_dir / 'trades_v12_tp1tp2.csv'
-    trades.to_csv(trades_path, index=False)
     out_dir = tmp_path / 'data'
     out_dir.mkdir()
     out_csv = out_dir / 'ml_dataset_m1.csv'
     monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df, config=None: df)
+    monkeypatch.setattr(
+        'nicegold_v5.exit.simulate_partial_tp_safe',
+        lambda df: pd.DataFrame({'entry_time': df['entry_time'].iloc[[10, 20]].astype(str).reset_index(drop=True), 'exit_reason': ['tp2', 'sl']})
+    )
     generate_ml_dataset_m1(str(csv_path), str(out_csv))
     X, y = load_dataset(str(out_csv), seq_len=5)
     class LocalModel(torch.nn.Module):
@@ -205,7 +199,7 @@ def test_generate_ml_dataset_creates_dir(tmp_path, monkeypatch):
     df.to_csv(csv_path, index=False)
     out_csv = tmp_path / 'newdir' / 'ml_dataset_m1.csv'
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df: df)
+    monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df, config=None: df)
     monkeypatch.setattr(
         'nicegold_v5.exit.simulate_partial_tp_safe',
         lambda df: pd.DataFrame({'entry_time': df['entry_time'], 'exit_reason': ['tp2'] * len(df)})
