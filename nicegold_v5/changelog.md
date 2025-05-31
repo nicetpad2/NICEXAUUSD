@@ -647,3 +647,6 @@
 - เพิ่มชุดทดสอบโมดูล fix_engine (run_self_diagnostic, auto_fix_logic, simulate_and_autofix)
 ## 2026-01-04
 - ปรับ __main__ ให้เรียก welcome() เมื่อไม่ได้ใช้โหมด clean
+## 2026-01-05
+- ตัดขั้นตอน simulate TP1/TP2 และตรวจ CSV ใน welcome()
+- ย่อเมนูเหลือ Full AutoPipeline กับ Smart Fast QA เท่านั้น
