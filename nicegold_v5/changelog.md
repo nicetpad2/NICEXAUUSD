@@ -640,3 +640,6 @@
 - ปรับ `generate_ml_dataset_m1` เติมคอลัมน์ `entry_score`, `gain_z` หากไม่พบใน trade log
 - พิมพ์ debug ค่า label ใน `autopipeline`
 - อัปเดต `MetaClassifier.predict` ใส่ค่า 0.0 หากฟีเจอร์ขาด
+## 2026-01-02
+- ปรับเมนู welcome() ให้เลือกได้ 2 โหมด AutoPipeline และ Smart Fast QA
+- เพิ่มฟังก์ชัน `run_smart_fast_qa` เรียก pytest เร็ว ๆ

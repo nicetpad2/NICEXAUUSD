@@ -660,3 +660,7 @@
 - ปรับ `generate_ml_dataset_m1` ให้สร้างคอลัมน์ `entry_score`, `gain_z` หากหายไป
 - เพิ่ม debug แสดงค่า label ใน `autopipeline`
 - อัปเดต `MetaClassifier.predict` ตรวจสอบฟีเจอร์ขาดก่อนทำนาย
+### 2026-01-02
+- ปรับ welcome() ให้เหลือ 2 เมนู Full AutoPipeline และ Smart Fast QA
+- เพิ่มฟังก์ชัน `run_smart_fast_qa` รัน pytest แบบย่อ
+- อัปเดต changelog และเพิ่ม unit test หากจำเป็น
