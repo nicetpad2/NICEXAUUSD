@@ -643,3 +643,5 @@
 ## 2026-01-02
 - ปรับเมนู welcome() ให้เลือกได้ 2 โหมด AutoPipeline และ Smart Fast QA
 - เพิ่มฟังก์ชัน `run_smart_fast_qa` เรียก pytest เร็ว ๆ
+## 2026-01-03
+- เพิ่มชุดทดสอบโมดูล fix_engine (run_self_diagnostic, auto_fix_logic, simulate_and_autofix)
