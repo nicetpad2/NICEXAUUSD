@@ -631,3 +631,6 @@
 ## 2025-12-30
 - เพิ่มการเทรนแบบ Mixed Precision (AMP) ใน `train_lstm_runner`
 - ใช้งาน CPU fallback เมื่อไม่พบ GPU และปรับชุดทดสอบ (Patch v24.2.3)
+## 2025-12-31
+- เพิ่มระบบจับเวลา load, forward, backward และ optimizer step ใน `train_lstm_runner`
+- แสดง bottleneck ต่อ epoch และใช้ `prefetch_factor` เพิ่มความเร็ว I/O (Patch v24.2.4)

@@ -5,6 +5,7 @@ import torch.nn as nn
 from torch import optim
 from torch.utils.data import DataLoader, TensorDataset
 from torch.cuda.amp import autocast, GradScaler
+import time
 from .deep_model_m1 import LSTMClassifier
 
 
@@ -43,7 +44,13 @@ def train_lstm(
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     dataset = TensorDataset(X, y)
-    loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+    loader = DataLoader(
+        dataset,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=2,
+        prefetch_factor=2,
+    )
     criterion = nn.BCELoss()
     optimizer = (
         optim.SGD(model.parameters(), lr=lr)
@@ -56,17 +63,41 @@ def train_lstm(
     for epoch in range(epochs):
         model.train()
         total_loss = 0.0
+        load_time = forward_time = backward_time = step_time = 0.0
         for batch_x, batch_y in loader:
+            t0 = time.time()
             batch_x, batch_y = batch_x.to(device), batch_y.to(device)
+            t1 = time.time()
             optimizer.zero_grad()
             with autocast(enabled=use_amp):
                 preds = model(batch_x)
                 loss = criterion(preds, batch_y)
+            t2 = time.time()
             scaler.scale(loss).backward()
+            t3 = time.time()
             scaler.step(optimizer)
             scaler.update()
+            t4 = time.time()
             total_loss += loss.item()
+
+            load_time += t1 - t0
+            forward_time += t2 - t1
+            backward_time += t3 - t2
+            step_time += t4 - t3
         print(f"Epoch {epoch+1}/{epochs} – Loss: {total_loss:.4f}")
+        print(
+            f"⏱️ Time Breakdown (sec): Load {load_time:.2f} | Forward {forward_time:.2f} | Backward {backward_time:.2f} | Step {step_time:.2f}"
+        )
+        bottlenecks = sorted(
+            [
+                ("DataLoad", load_time),
+                ("Forward", forward_time),
+                ("Backward", backward_time),
+                ("Step", step_time),
+            ],
+            key=lambda x: -x[1],
+        )
+        print(f"🔥 Bottleneck: {bottlenecks[0][0]} ({bottlenecks[0][1]:.2f}s)")
     return model
 
 
