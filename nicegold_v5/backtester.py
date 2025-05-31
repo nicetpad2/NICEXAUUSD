@@ -169,9 +169,12 @@ def run_backtest(df: pd.DataFrame):
 
     bar_count = len(df)
     if "entry_tier" in df.columns:
-        entry_tier_arr = df["entry_tier"].fillna("").astype(str).values
+        # [Patch v24.3.4] ⚡️ Fix Categorical fillna: convert to string first, then fillna
+        if pd.api.types.is_categorical_dtype(df["entry_tier"]):
+            df["entry_tier"] = df["entry_tier"].astype(str)
+        entry_tier_arr = df["entry_tier"].astype(str).fillna("").values
     else:
-        entry_tier_arr = np.array([""] * len(df))
+        entry_tier_arr = np.array(["" for _ in range(len(df))])
 
     pbar = tqdm(range(bar_count), total=bar_count, desc="⏱️ Running Backtest", unit="rows")
     for i in pbar:

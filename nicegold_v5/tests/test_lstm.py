@@ -124,7 +124,7 @@ def sample_m1_data(rows=30):
 
 
 def test_generate_ml_dataset_m1(tmp_path, monkeypatch):
-    df = sample_m1_data()
+    df = sample_m1_data(rows=100)
     csv_path = tmp_path / 'XAUUSD_M1.csv'
     df.to_csv(csv_path, index=False)
     out_dir = tmp_path / 'data'
@@ -140,6 +140,7 @@ def test_generate_ml_dataset_m1(tmp_path, monkeypatch):
     assert out_csv.exists()
     out_df = pd.read_csv(out_csv)
     assert 'tp2_hit' in out_df.columns
+    assert out_df['tp2_hit'].sum() > 1
 
 
 def test_generate_ml_dataset_auto_trade_log(tmp_path, monkeypatch):

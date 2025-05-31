@@ -732,6 +732,19 @@ def test_entry_tier_handles_small_df():
     out = generate_signals_v8_0(df)
     assert 'entry_tier' in out.columns
     assert out['entry_tier'].iloc[0] == 'C'
+
+
+def test_ultra_override_force_signal():
+    df = pd.DataFrame({
+        'timestamp': pd.date_range('2025-01-01', periods=10, freq='min'),
+        'open': [1]*10,
+        'high': [1]*10,
+        'low': [1]*10,
+        'close': [1]*10,
+        'volume': [0]*10,
+    })
+    out = generate_signals_v8_0(df, {'gain_z_thresh': -9.5})
+    assert out['entry_signal'].iloc[0] == 'buy'
 import pandas as pd
 from nicegold_v5.backtester import run_backtest
 
@@ -775,6 +788,24 @@ def test_backtest_avg_profit_over_one():
     trades, _ = run_backtest(df)
     assert not trades.empty
     assert trades["pnl"].mean() > 1.0
+
+
+def test_run_backtest_entry_tier_category():
+    df = pd.DataFrame({
+        "timestamp": pd.date_range(start="2025-01-01", periods=3, freq="min"),
+        "close": [100.0, 100.5, 101.0],
+        "high": [100.5, 101.0, 101.5],
+        "low": [99.5, 100.0, 100.5],
+        "entry_signal": ["buy", None, None],
+        "atr": [0.5, 0.5, 0.5],
+        "atr_ma": [0.5, 0.5, 0.5],
+        "gain_z": [0.1, 0.1, 0.1],
+        "entry_tier": pd.Categorical(["A", "B", "C"]),
+    })
+    from nicegold_v5 import exit as exit_mod
+    exit_mod.BE_HOLD_MIN = 0
+    trades, _ = run_backtest(df)
+    assert not trades.empty
 import pandas as pd
 from nicegold_v5.backtester import (
     calculate_duration,
