@@ -681,3 +681,5 @@
 ## 2026-01-15
 - [Patch v25.0.1] เพิ่มชุดทดสอบ coverage_extra เพื่อเพิ่ม coverage เป็น 97%
 
+## 2026-01-16
+- เพิ่มชุดทดสอบ coverage_inc ครอบคลุม sanitize_price_columns และฟังก์ชัน QA ต่างๆ เพื่อเพิ่ม coverage เป็น 98%

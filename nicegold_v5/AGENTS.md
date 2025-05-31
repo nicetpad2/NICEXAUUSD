@@ -701,3 +701,5 @@
 ### 2026-01-15
 - [Patch v25.0.1] เพิ่มชุดทดสอบ coverage_extra ครอบคลุมสาขา error ใน ml_dataset_m1, get_resource_plan และ should_exit เพื่อดัน coverage รวมแตะ 97%
 
+### 2026-01-16
+- เพิ่มชุดทดสอบ coverage_inc ครอบคลุม sanitize_price_columns, auto_fix_logic และ QA functions เพื่อดัน coverage เป็น 98%
