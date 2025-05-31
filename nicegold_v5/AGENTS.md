@@ -734,3 +734,6 @@
 ### 2026-01-28
 - [Patch v27.0.0] Oversample TP2, Adaptive TP2 Guard และ QA Self-Healing
 
+### 2026-01-29
+- [Patch v28.1.0] เพิ่มระบบ QA ForceEntry สำหรับทดสอบเท่านั้น พร้อม config ป้องกันใช้งานใน production
+

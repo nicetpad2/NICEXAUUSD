@@ -26,7 +26,7 @@ def test_generate_ml_dataset_alt_path(monkeypatch, tmp_path):
     mod_file = importlib.import_module('nicegold_v5.ml_dataset_m1').__file__
     alt_path = Path(mod_file).parent / 'does_not_exist.csv'
     make_sample_csv(alt_path)
-    monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df, config=None: df)
+    monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df, config=None, **kw: df)
     monkeypatch.setattr('nicegold_v5.exit.simulate_partial_tp_safe', lambda df: pd.DataFrame({'entry_time': df['timestamp'].iloc[:2], 'exit_reason': ['tp2', 'sl']}))
     out_csv = tmp_path / 'out.csv'
     generate_ml_dataset_m1('does_not_exist.csv', str(out_csv))
@@ -39,7 +39,7 @@ def test_generate_ml_dataset_missing_timestamp(tmp_path, monkeypatch):
     csv_path = tmp_path / 'data.csv'
     df.to_csv(csv_path, index=False)
     monkeypatch.setattr('main.M1_PATH', str(csv_path))
-    monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df, config=None: df)
+    monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df, config=None, **kw: df)
     monkeypatch.setattr('nicegold_v5.exit.simulate_partial_tp_safe', lambda df: pd.DataFrame())
     with pytest.raises(KeyError):
         generate_ml_dataset_m1(None, str(tmp_path / 'out.csv'))

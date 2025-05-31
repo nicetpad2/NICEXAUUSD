@@ -198,6 +198,17 @@ SESSION_CONFIG = {
     "NY":     {"gain_z_thresh":  0.03, "tp1_rr_ratio": 1.18, "tp2_rr_ratio": 2.30, "disable_buy": False, "disable_sell": False},
 }
 
+# [Patch v28.1.0] QA ForceEntry Config (for QA/backtest only)
+QA_FORCE_ENTRY_CONFIG = {
+    "force_entry": True,
+    "force_entry_ratio": 0.02,
+    "force_entry_side": "both",        # ["buy", "sell", "both"]
+    "force_entry_session": "all",      # ["Asia", "London", "NY", "all"]
+    "force_entry_type": "all",         # reserved for future use
+    "force_entry_min_orders": 30,
+    "force_entry_seed": 42,
+}
+
 # [Patch HEDGEFUND-NEXT] Compound/OMS parameters
 COMPOUND_MILESTONES = [200, 500, 1000, 2000, 5000]
 KILL_SWITCH_DD = 35
@@ -219,6 +230,7 @@ for _cfg in [
     SNIPER_CONFIG_UNBLOCK,
     SNIPER_CONFIG_PROFIT,
     HEDGEFUND_ENTRY_CONFIG,
+    QA_FORCE_ENTRY_CONFIG,
     AUTOFIX_WFV_CONFIG,
 ]:
     ensure_order_side_enabled(_cfg)

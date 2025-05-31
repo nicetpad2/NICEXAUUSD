@@ -749,7 +749,11 @@ def generate_signals_v7_1(df: pd.DataFrame, config: dict | None = None) -> pd.Da
 # --- Patch v8.1.4 ---
 
 
-def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
+def generate_signals(
+    df: pd.DataFrame,
+    config: dict | None = None,
+    test_mode: bool = False,
+) -> pd.DataFrame:
     """
     [Patch v26.0.1] Generate signals with BUY/SELL *always* enabled.
     ปลดล็อกฝั่ง Buy/Sell ทุกจุด (QA Guard)
@@ -764,7 +768,41 @@ def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFra
     config["disable_sell"] = False
     assert not config.get("disable_buy", False), "QA BLOCK: disable_buy=True not allowed"
     assert not config.get("disable_sell", False), "QA BLOCK: disable_sell=True not allowed"
-    return generate_signals_v8_0(df, config=config)
+    df = generate_signals_v8_0(df, config=config)
+
+    # [Patch v28.1.0] QA ForceEntry System (with full config guard)
+    if config.get("force_entry"):
+        if not test_mode:
+            raise RuntimeError(
+                "[Patch v28.1.0] \ud83d\udea8 ForceEntry \u0e16\u0e39\u0e01\u0e40\u0e1b\u0e34\u0e14\u0e43\u0e19 production! \u0e2b\u0e49\u0e32\u0e21 deploy \u0e40\u0e17\u0e23\u0e14\u0e08\u0e23\u0e34\u0e07 (dev only)"
+            )
+        import numpy as np
+
+        np.random.seed(config.get("force_entry_seed", 42))
+        mask = df["entry_signal"].isnull()
+        ratio = float(config.get("force_entry_ratio", 0.01))
+        min_orders = int(config.get("force_entry_min_orders", 10))
+        side = config.get("force_entry_side", "both")
+        session = config.get("force_entry_session", "all")
+        sess_col = "session" if "session" in df.columns else "session_name" if "session_name" in df.columns else None
+        eligible = mask.copy()
+        if session != "all" and sess_col:
+            eligible &= df[sess_col] == session
+        num_eligible = int(eligible.sum())
+        if num_eligible < 1:
+            print("[Patch v28.1.0] \u26a0\ufe0f No eligible bars for ForceEntry injection.")
+            return df
+        num_force = max(int(num_eligible * ratio), min_orders)
+        idx_force = np.random.choice(df[eligible].index, size=min(num_force, num_eligible), replace=False)
+        if side == "buy" or side == "sell":
+            df.loc[idx_force, "entry_signal"] = side
+        else:
+            df.loc[idx_force, "entry_signal"] = np.random.choice(["buy", "sell"], size=len(idx_force))
+        print(
+            f"[Patch v28.1.0] \ud83d\udea8 [QA MODE] ForceEntry injected {len(idx_force)} orders (side={side}, session={session})"
+        )
+
+    return df
 
 
 

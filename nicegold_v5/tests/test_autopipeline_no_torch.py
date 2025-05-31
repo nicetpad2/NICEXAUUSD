@@ -20,7 +20,7 @@ def test_autopipeline_no_torch(monkeypatch, tmp_path, capsys):
     monkeypatch.setattr(main, 'parse_timestamp_safe', lambda s, fmt: s)
     monkeypatch.setattr(main, 'sanitize_price_columns', lambda d: d)
     monkeypatch.setattr(main, 'validate_indicator_inputs', lambda *a, **k: None)
-    monkeypatch.setattr(main, 'generate_signals', lambda df, config=None: df.assign(entry_signal=['long']*len(df)))
+    monkeypatch.setattr(main, 'generate_signals', lambda df, config=None, **kw: df.assign(entry_signal=['long']*len(df)))
     monkeypatch.setattr('nicegold_v5.utils.run_autofix_wfv', lambda df, sim, cfg, n_folds=5: pd.DataFrame({'pnl':[0.0]}))
     plan = {
         'device': 'cpu',
