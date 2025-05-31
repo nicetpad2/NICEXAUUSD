@@ -129,6 +129,21 @@ def maximize_ram():
     else:
         gc.collect()
 
+
+def run_smart_fast_qa():
+    """Run a minimal set of tests for ultra-fast QA."""
+    import subprocess
+    print("\n🤖 Running Smart Fast QA tests...")
+    try:
+        subprocess.run([
+            "pytest",
+            "-q",
+            "nicegold_v5/tests/test_core_all.py",
+        ], check=True)
+        print("✅ Smart Fast QA Passed")
+    except Exception as e:
+        print(f"❌ Smart Fast QA Failed: {e}")
+
 def _run_fold(args):
     df, features, label_col, fold_name = args
     # [Patch v16.0.1] Fallback Fix 'Open' column แบบเทพ
@@ -773,241 +788,29 @@ def welcome():
     maximize_ram()
 
     print("\n🧩 เลือกเมนูต่อไป:")
-    print("1. Run WFV (ML)")
-    print("2. วิเคราะห์ Session")
-    print("3. วิเคราะห์ Drawdown")
-    print("4. Backtest Signal (Scalper)")
-    print("5. เทรน TP2 Classifier (LSTM)")
-    print("6. TP1/TP2 Simulator")
-    print("7. Run Walk-Forward Validation (WFV) แบบเทพ")
-    choice = input("👉 เลือกเมนู (1–7): ").strip()
+    print("1. 🚀 Full AutoPipeline Mode (ML+Optuna+LSTM+SHAP+RL+WFV)")
+    print("2. 🟢 Smart Fast QA (Ultra-Fast Logic Test)")
+    choice = input("👉 เลือกเมนู (1–2): ").strip()
     try:
         choice = int(choice)
-    except:
+    except Exception:
         print("❌ เมนูไม่ถูกต้อง")
         return
 
     if choice == 1:
-        print("\n🚀 เริ่มรัน Walk-Forward ML Strategy...")
-        df = pd.read_csv(M15_PATH, parse_dates=["timestamp"], engine="python", on_bad_lines="skip")
-        show_progress_bar("🚧 เตรียมฟีเจอร์", steps=5)
-        df.set_index("timestamp", inplace=True)
-        df["EMA_50"] = df["Close"].ewm(span=50).mean()
-        df["RSI_14"] = rsi(df["Close"], 14)
-        df["ATR_14"] = (df["High"] - df["Low"]).rolling(14).mean()
-        df["ATR_14_MA50"] = df["ATR_14"].rolling(50).mean()
-        df["EMA_50_slope"] = df["EMA_50"].diff()
-        df["target"] = (df["Close"].shift(-10) > df["Close"]).astype(int)
-        features = ["EMA_50", "RSI_14", "ATR_14", "ATR_14_MA50", "EMA_50_slope"]
-        trades_df = run_wfv_with_progress(df, features, "target")
-        df_merged = merge_equity_curves(trades_df)
-        plot_equity(df_merged)
-        out_path = os.path.join(TRADE_DIR, "merged_trades.csv")
-        trades_df.to_csv(out_path, index=False)
-        print(f"📦 บันทึก Trade log ที่: {out_path}")
+        print("\n🚀 [Full AutoPipeline] โหมด ML+Optuna+LSTM+SHAP+RL+WFV ครบทุกฟีเจอร์")
+        autopipeline(mode="ai_master", train_epochs=50)
         maximize_ram()
-
+        return
     elif choice == 2:
-        show_progress_bar("📊 Session Analysis", steps=3)
-        path = input("📄 ใส่ path ไฟล์ trade_log CSV: ").strip()
-        trades = load_csv_safe(path)
-        trades["time"] = pd.to_datetime(trades["time"], errors="coerce")
-        print(session_performance(trades))
+        print("\n🟢 [Smart Fast QA Mode] รันทดสอบ ultra-fast logic...")
+        run_smart_fast_qa()
         maximize_ram()
-
-    elif choice == 3:
-        show_progress_bar("📉 Drawdown/Streak", steps=3)
-        path = input("📄 ใส่ path ไฟล์ trade_log CSV: ").strip()
-        trades = load_csv_safe(path)
-        trades["time"] = pd.to_datetime(trades["time"], errors="coerce")
-        print(streak_summary(trades))
-        maximize_ram()
-
-    elif choice == 4:
-        show_progress_bar("📡 Backtest Signals", steps=3)
-        print("\n⚙️ เริ่มรัน Backtest จาก Signal (ไม่ใช้ ML)...")
-        df = load_csv_safe(M1_PATH)
-
-        # ✅ [Patch v11.9.18] รองรับ Date แบบพุทธศักราช
-        df = convert_thai_datetime(df)
-
-        # [Patch] Apply full datetime and signal generation
-        df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
-        df = df.sort_values("timestamp")
-
-        from nicegold_v5.entry import (
-            generate_signals_v11_scalper_m1 as generate_signals_menu
-        )  # [Patch v10.1] Scalper Boost: QM + RSI + Fractal + InsideBar
-        from nicegold_v5.config import SNIPER_CONFIG_PROFIT  # [Patch v10.1]
-        from nicegold_v5.backtester import run_backtest
-        from nicegold_v5.utils import (
-            print_qa_summary,
-            create_summary_dict,
-            export_chatgpt_ready_logs,
-        )
-        import time
-
-        # [Patch] Inject signal + run with updated SL/TP1/TP2/BE
-        print("\U0001F9E0 [UltraFix] Injecting Profit Config for entry_signal...")
-        df = generate_signals_menu(df, config=SNIPER_CONFIG_PROFIT)
-        if "entry_tier" in df.columns:
-            print("[Patch] Removing weak 'C' tier signals.")
-            df = df[df["entry_tier"] != "C"]
-
-        # [Patch QA-P8] คำเตือนสำคัญ: ต้องปิดระบบด้วยตนเองหรือใช้ News Filter
-        # ในช่วงข่าว High-Impact (NFP, FOMC, CPI) ตามผลการทดสอบ Stress Test!
-        # การไม่ปฏิบัติตามอาจส่งผลให้ระบบทำงานผิดพลาดหรือขาดทุนสูงกว่าที่คาดการณ์!
-
-
-        start = time.time()
-        trades, equity = run_backtest(df)
-        end = time.time()
-
-        start_time = pd.to_datetime(df["timestamp"].iloc[0])
-        end_time = pd.to_datetime(df["timestamp"].iloc[-1])
-
-        print_qa_summary(trades, equity)  # [Patch] Now includes exit_reason, drawdown
-
-        # [Patch] Export with updated format including SL/TP1/TP2/BE info
-        summary = create_summary_dict(
-            trades,
-            equity,
-            file_name="XAUUSD_M1.csv",
-            start_time=start_time,
-            end_time=end_time,
-            duration_sec=end - start,
-        )
-        export_chatgpt_ready_logs(trades, equity, summary, outdir=TRADE_DIR)
-        run_qa_guard(trades, df)
-        auto_qa_after_backtest(trades, equity, label="Signal")
-
-    elif choice == 5:
-        from nicegold_v5.ml_dataset_m1 import generate_ml_dataset_m1
-        from nicegold_v5.train_lstm_runner import load_dataset, train_lstm
-        import types
-        try:
-            import torch
-        except Exception:
-            torch = types.SimpleNamespace(save=lambda *a, **k: None)
-
-        print("🚀 สร้าง Dataset และฝึก LSTM Classifier สำหรับ TP2 Prediction...")
-        generate_ml_dataset_m1()
-        X, y = load_dataset("data/ml_dataset_m1.csv")
-        print(f"[Debug] y unique: {y.unique()}, value_counts: {np.unique(y, return_counts=True)}")
-        model = train_lstm(X, y)
-        os.makedirs("models", exist_ok=True)
-        torch.save(model.state_dict(), "models/model_lstm_tp2.pth")
-        print("✅ บันทึกโมเดลที่ models/model_lstm_tp2.pth")
-    elif choice == 6:
-        show_progress_bar("🧪 TP1/TP2 Backtest Mode", steps=3)
-        print("\n⚙️ เริ่มรัน simulate_trades_with_tp() จาก UltraFix Patch...")
-        df = load_csv_safe(M1_PATH)
-
-        try:
-            from nicegold_v5.ml_dataset_m1 import generate_ml_dataset_m1
-            from nicegold_v5.deep_model_m1 import LSTMClassifier
-            import torch
-            import numpy as np
-
-            generate_ml_dataset_m1()
-            tp2_model = LSTMClassifier(input_dim=7, hidden_dim=64)
-            tp2_model.load_state_dict(
-                torch.load("models/model_lstm_tp2.pth", map_location=torch.device("cpu"))
-            )
-            tp2_model.eval()
-            print("✅ Loaded TP2 LSTM Classifier")
-
-            df_feat = pd.read_csv("data/ml_dataset_m1.csv")
-            seq_len = 10
-            feat_cols = ["gain_z", "ema_slope", "atr", "rsi", "volume", "entry_score", "pattern_label"]
-            data = df_feat[feat_cols].values
-            X_seq = [data[i:i + seq_len] for i in range(len(data) - seq_len)]
-            if X_seq:
-                X_tensor = torch.tensor(np.array(X_seq), dtype=torch.float32)
-                with torch.no_grad():
-                    pred = tp2_model(X_tensor).squeeze().numpy()
-                df_feat["tp2_proba"] = np.concatenate([np.zeros(seq_len), pred])
-                df["tp2_proba"] = df_feat["tp2_proba"]
-                df["tp2_guard_pass"] = df["tp2_proba"] >= 0.7
-                df = df[df["tp2_guard_pass"] | df["entry_signal"].isnull()]
-                print(
-                    f"✅ Applied TP2 Guard Filter → เหลือ {df['entry_signal'].notnull().sum()} signals"
-                )
-        except Exception as e:
-            print(f"⚠️ TP2 Guard disabled: {e}")
-
-        # ✅ [Patch v11.9.18] รองรับ Date แบบพุทธศักราช
-        df = convert_thai_datetime(df)
-
-        df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
-        df = df.sort_values("timestamp")
-
-        if len(df) < 2:
-            print("[Patch CLI] ⚠️ ไม่มีข้อมูลครบสำหรับ simulate – ข้ามขั้นตอนนี้")
-            trade_df = pd.DataFrame()
-        else:
-            from nicegold_v5.entry import simulate_trades_with_tp  # ← Patch v11.2 logic
-            trades, logs = simulate_trades_with_tp(df)
-            trade_df = pd.DataFrame(trades)
-
-        out_path = os.path.join(TRADE_DIR, "trades_v11p_tp1tp2.csv")
-        trade_df.to_csv(out_path, index=False)
-        print(f"📦 บันทึกผล TP1/TP2 Trade log ที่: {out_path}")
-
-        tp1_hits = (
-            trade_df["exit_reason"].eq("tp1").sum() if "exit_reason" in trade_df.columns else 0
-        )
-        tp2_hits = (
-            trade_df["exit_reason"].eq("tp2").sum() if "exit_reason" in trade_df.columns else 0
-        )
-        sl_hits = (
-            trade_df["exit_reason"].eq("sl").sum() if "exit_reason" in trade_df.columns else 0
-        )
-        total_pnl = safe_calculate_net_change(trade_df)
-
-        print("\n📊 QA Summary (TP1/TP2):")
-        print(f"   ▸ TP1 Triggered : {tp1_hits}")
-        print(f"   ▸ TP2 Triggered : {tp2_hits}")
-        print(f"   ▸ SL Count      : {sl_hits}")
-        print(f"   ▸ Net PnL       : {total_pnl:.2f} USD")
-
-        maximize_ram()
-    elif choice == 7:
-        show_progress_bar("🧠 เตรียม Walk-Forward", steps=2)
-        print("\n🚀 [Patch v21.2.2] เริ่ม AutoFix WFV แบบเทพ...")
-
-        df = load_csv_safe(M1_PATH)
-        df = convert_thai_datetime(df)
-        df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
-        df = sanitize_price_columns(df)
-
-        try:
-            validate_indicator_inputs(df, min_rows=min(500, len(df)))
-        except TypeError:
-            validate_indicator_inputs(df)
-
-        df = generate_signals(df, config=SNIPER_CONFIG_Q3_TUNED)
-        if df["entry_signal"].isnull().mean() >= 1.0:
-            print("[Patch CLI] ⚠️ ไม่มีสัญญาณ – fallback RELAX_CONFIG_Q3")
-            df = generate_signals(df, config=RELAX_CONFIG_Q3)
-
-        from nicegold_v5.utils import run_autofix_wfv
-        from nicegold_v5.config import SNIPER_CONFIG_Q3_TUNED
-        from nicegold_v5.exit import simulate_partial_tp_safe
-
-        trades_df = run_autofix_wfv(
-            df,
-            simulate_partial_tp_safe,
-            SNIPER_CONFIG_Q3_TUNED,
-            n_folds=5,
-        )
-        out_path = os.path.join(TRADE_DIR, "wfv_autofix_result.csv")
-        trades_df.to_csv(out_path, index=False)
-        print(f"📦 บันทึกผล AutoFix WFV ที่: {out_path}")
-        maximize_ram()
+        return
     else:
         print("❌ เลือกเมนูไม่ถูกต้อง")
         maximize_ram()
+        return
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "clean":
