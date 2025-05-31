@@ -620,3 +620,7 @@
 - เพิ่มโหมด `fusion_ai` ใน `autopipeline` รวม LSTM + SHAP + MetaClassifier + RL fallback
 - ปรับ `autopipeline` โหมด `ai_master` ฝึก MetaClassifier และ RL Agent และบันทึกฟีเจอร์ SHAP
 - เพิ่มโมดูล `meta_classifier.py` และชุดทดสอบใหม่
+
+## 2025-12-28
+- ปรับปรุง `get_resource_plan` ตรวจสอบ VRAM และ CUDA cores เพิ่มฟิลด์ precision และ train_epochs
+- บันทึกข้อมูลแผนทรัพยากรลง `logs/resource_plan.json` และแสดงผลใน `autopipeline`

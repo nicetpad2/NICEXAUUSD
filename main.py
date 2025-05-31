@@ -363,18 +363,25 @@ def autopipeline(mode="default", train_epochs=1):
     plan = get_resource_plan()
     device = plan["device"]
     DEVICE = torch.device(device) if torch else None
-    print(f"🖥️ Device: {plan['gpu']}")
-    print(
-        f"💾 RAM: {plan['ram']:.1f} GB | CPU Threads: {plan['threads']}"
-    )
+    print("\n🧠 AI Resource Plan Summary:")
+    print(f"   ▸ GPU       : {plan['gpu']}")
+    print(f"   ▸ RAM       : {plan['ram']:.2f} GB")
+    print(f"   ▸ VRAM      : {plan['vram']:.2f} GB")
+    print(f"   ▸ CUDA Core : {plan['cuda_cores']}")
+    print(f"   ▸ Threads   : {plan['threads']}")
+    print(f"   ▸ Precision : {plan['precision']}")
+    print(f"   ▸ Batch     : {plan['batch_size']}")
+    print(f"   ▸ ModelDim  : {plan['model_dim']}")
+    print(f"   ▸ Epochs    : {plan['train_epochs']}")
+    print(f"   ▸ Optimizer : {plan['optimizer']}")
+    print("✅ บันทึก resource_plan.json แล้วที่ logs/")
+
     batch_size = plan["batch_size"]
     model_dim = plan["model_dim"]
     n_folds = plan["n_folds"]
-    lr = plan["lr"]
+    lr = plan.get("lr", 0.001)
     opt = plan["optimizer"]
-    print(
-        f"⚙️ Auto Config → batch_size={batch_size}, model_dim={model_dim}, n_folds={n_folds}, optimizer={opt}, lr={lr}"
-    )
+    train_epochs = plan.get("train_epochs", train_epochs)
 
     # Load and prepare CSV for all pipeline modes
     df = load_csv_safe(M1_PATH)

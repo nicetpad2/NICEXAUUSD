@@ -25,6 +25,8 @@ def test_autopipeline_no_torch(monkeypatch, tmp_path, capsys):
     plan = {
         'device': 'cpu',
         'gpu': 'CPU',
+        'vram': 0.0,
+        'cuda_cores': 0,
         'ram': 8.0,
         'threads': 2,
         'batch_size': 64,
@@ -32,6 +34,8 @@ def test_autopipeline_no_torch(monkeypatch, tmp_path, capsys):
         'n_folds': 5,
         'optimizer': 'sgd',
         'lr': 0.01,
+        'precision': 'float32',
+        'train_epochs': 30,
     }
     monkeypatch.setattr(main, 'get_resource_plan', lambda: plan)
 

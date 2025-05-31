@@ -74,34 +74,57 @@ M15_PATH = "/content/drive/MyDrive/NICEGOLD/XAUUSD_M15.csv"
 
 
 def get_resource_plan() -> dict:
-    """Return resource-aware training plan for LSTM and WFV."""
+    """ตรวจสอบทรัพยากรแล้ววางแผนการเทรนให้เหมาะสม"""
+    import time
     try:
         import psutil
-        ram_gb = psutil.virtual_memory().total / 1024 ** 3
+        ram_gb = psutil.virtual_memory().total / (1024 ** 3)
+        threads = psutil.cpu_count(logical=False)
     except Exception:
-        ram_gb = 0.0
+        ram_gb, threads = 0.0, 2
 
     try:
         import torch
         has_gpu = torch.cuda.is_available()
         device = "cuda" if has_gpu else "cpu"
         gpu_name = torch.cuda.get_device_name(0) if has_gpu else "CPU"
+        if has_gpu:
+            props = torch.cuda.get_device_properties(0)
+            vram_gb = props.total_memory / (1024 ** 3)
+            cuda_cores = props.multi_processor_count * 128
+        else:
+            vram_gb = 0.0
+            cuda_cores = 0
+        try:
+            torch.set_float32_matmul_precision("medium")
+        except Exception:
+            pass
     except Exception:
         device = "cpu"
-        gpu_name = "CPU"
+        gpu_name = "Unknown"
+        vram_gb = 0.0
+        cuda_cores = 0
+        has_gpu = False
 
-    threads = cpu_count()
+    precision = "float16" if has_gpu and vram_gb >= 16 else "float32"
 
-    if ram_gb >= 24:
-        batch_size, model_dim, n_folds, lr, opt = 256, 128, 8, 0.0005, "adam"
-    elif ram_gb >= 12:
-        batch_size, model_dim, n_folds, lr, opt = 128, 64, 6, 0.001, "adam"
+    if cuda_cores >= 512 and ram_gb > 12:
+        batch_size, model_dim, n_folds, lr, opt, epochs = 384, 128, 7, 0.0005, "adamw", 60
+    elif device == "cuda" and ram_gb > 12:
+        batch_size, model_dim, n_folds, lr, opt, epochs = 256, 128, 6, 0.0007, "adamw", 50
+    elif ram_gb > 12:
+        batch_size, model_dim, n_folds, lr, opt, epochs = 128, 64, 5, 0.001, "adam", 40
+    elif ram_gb > 8:
+        batch_size, model_dim, n_folds, lr, opt, epochs = 64, 32, 4, 0.005, "adam", 30
     else:
-        batch_size, model_dim, n_folds, lr, opt = 64, 32, 5, 0.01, "sgd"
+        batch_size, model_dim, n_folds, lr, opt, epochs = 32, 16, 3, 0.01, "sgd", 15
 
-    return {
+    os.makedirs("logs", exist_ok=True)
+    plan = {
         "device": device,
         "gpu": gpu_name,
+        "vram": vram_gb,
+        "cuda_cores": cuda_cores,
         "ram": ram_gb,
         "threads": threads,
         "batch_size": batch_size,
@@ -109,7 +132,19 @@ def get_resource_plan() -> dict:
         "n_folds": n_folds,
         "optimizer": opt,
         "lr": lr,
+        "precision": precision,
+        "train_epochs": epochs,
+        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
     }
+
+    try:
+        import json
+        with open("logs/resource_plan.json", "w") as f:
+            json.dump(plan, f, indent=2)
+    except Exception:
+        pass
+
+    return plan
 
 
 def load_data(path):

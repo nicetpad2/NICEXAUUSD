@@ -640,3 +640,7 @@
 ### 2025-12-27
 - เพิ่มโหมด `fusion_ai` ใน `autopipeline` ผสาน LSTM, SHAP, MetaClassifier และ RL Fallback (Patch v24.0.0)
 - ปรับ `ai_master` ให้ฝึก MetaClassifier และ RL Agent พร้อมวิเคราะห์ SHAP (Patch v24.1.0)
+
+### 2025-12-28
+- ปรับ `get_resource_plan` ตรวจสอบ VRAM และ CUDA cores พร้อมบันทึก `logs/resource_plan.json`
+- แสดง AI Resource Plan Summary ใน `autopipeline`
