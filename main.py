@@ -33,10 +33,15 @@ from nicegold_v5.entry import (
     rsi,
 )
 from nicegold_v5.exit import simulate_partial_tp_safe  # [Patch v12.2.x]
-from nicegold_v5.config import (  # [Patch v12.3.9] Import SNIPER_CONFIG_Q3_TUNED
+from nicegold_v5.config import (
     SNIPER_CONFIG_PROFIT,
     SNIPER_CONFIG_Q3_TUNED,
     RELAX_CONFIG_Q3,
+    SESSION_CONFIG,
+    COMPOUND_MILESTONES,
+    KILL_SWITCH_DD,
+    RECOVERY_SL_TRIGGER,
+    RECOVERY_LOT_MULT,
 )
 from nicegold_v5.optuna_tuner import start_optimization
 from nicegold_v5.qa import run_qa_guard, auto_qa_after_backtest
@@ -51,7 +56,7 @@ from nicegold_v5.fix_engine import simulate_and_autofix  # [Patch v12.3.9] Added
 # *สนทนาภาษาไทยเท่านั้น
 
 # --- Advanced Risk Management (Patch C) ---
-KILL_SWITCH_DD = 25  # %
+# ค่า DD Limit อัปเกรดจาก config (Patch HEDGEFUND-NEXT)
 MAX_LOT_CAP = 1.0  # [Patch v6.7] จำกัดขนาดลอตสูงสุดต่อไม้
 
 
@@ -60,6 +65,25 @@ def kill_switch(equity_curve):
     for eq in equity_curve:
         dd = (peak - eq) / peak * 100
         if dd >= KILL_SWITCH_DD:
+            print("[KILL SWITCH] Drawdown limit reached. Backtest halted.")
+            return True
+        peak = max(peak, eq)
+    return False
+
+# [Patch HEDGEFUND-NEXT] OMS Compound/KillSwitch
+def update_compound_lot(equity, last_milestone, base_lot=0.01):
+    for milestone in sorted(COMPOUND_MILESTONES):
+        if equity >= milestone:
+            last_milestone = milestone
+    lot = max(base_lot, round(0.01 * (last_milestone / 100), 2))
+    return lot, last_milestone
+
+
+def kill_switch_hedge(equity_curve, dd_limit=KILL_SWITCH_DD):
+    peak = equity_curve[0]
+    for eq in equity_curve:
+        dd = (peak - eq) / peak * 100
+        if dd >= dd_limit:
             print("[KILL SWITCH] Drawdown limit reached. Backtest halted.")
             return True
         peak = max(peak, eq)
@@ -218,14 +242,8 @@ def load_csv_safe(path, lowercase=True):
 
 
 def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
-    # [Patch v12.4.2] – Export Summary JSON + QA Summary ต่อ Fold (Incorporates v12.4.0, v12.4.1)
-    # -------------------------------------------------------------------
-    # ✅ robust: fallback config if signal missing
-    # ✅ export: log + config_used + summary
-    # ✅ CLI: เพิ่มเมนูใน welcome() → choice 7 (commented out in welcome())
-    # ✅ บันทึก QA Summary แยกไฟล์ JSON
+    """Run backtest with session-based config and OMS risk management."""
     df = df.copy()
-    # รองรับ Date+Timestamp แบบ พ.ศ. และตัวพิมพ์เล็ก
     if {"Date", "Timestamp"}.issubset(df.columns):
         df = convert_thai_datetime(df)
         df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
@@ -240,69 +258,73 @@ def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
     df = df.dropna(subset=["timestamp"])
     df = df.sort_values("timestamp")
 
-    # [Patch v12.4.0] Sanitize and validate
     try:
         df = sanitize_price_columns(df)
         validate_indicator_inputs(df, min_rows=min(500, len(df)))
     except TypeError:
         validate_indicator_inputs(df)
 
-    from nicegold_v5.config import RELAX_CONFIG_Q3
-    df = generate_signals(df, config=SNIPER_CONFIG_Q3_TUNED)
+    df["session"] = df["timestamp"].dt.hour.apply(lambda h: "Asia" if h < 8 else "London" if h < 15 else "NY")
+    all_trades = []
+    for sess_name, cfg in SESSION_CONFIG.items():
+        df_sess = df[df["session"] == sess_name].copy()
+        if df_sess.empty:
+            continue
+        print(f"\n[Patch HEDGEFUND-NEXT] Running {sess_name} session with config: {cfg}")
+        df_sess = generate_signals(df_sess, config=cfg)
+        if df_sess["entry_signal"].isnull().mean() >= 1.0:
+            continue
+        trades_df, _, _ = simulate_and_autofix(df_sess, simulate_partial_tp_safe, cfg, session=sess_name)
+        trades_df["session"] = sess_name
+        all_trades.append(trades_df)
 
-    # [Patch v12.4.0] Fallback if no signals
-    if df["entry_signal"].isnull().mean() >= 1.0:
-        print("[Patch QA] ⚠️ ไม่พบสัญญาณ → fallback RELAX_CONFIG_Q3")
-        df = generate_signals(df, config=RELAX_CONFIG_Q3)
+    if not all_trades:
+        raise RuntimeError("[Patch HEDGEFUND-NEXT] ❌ ไม่มีสัญญาณเข้าเลย – หยุดรัน backtest")
 
-    if "entry_signal" not in df.columns:
-        df["entry_signal"] = None
+    df_trades = pd.concat(all_trades, ignore_index=True)
 
-    if df["entry_signal"].isnull().mean() >= 1.0:
-        raise RuntimeError("[Patch QA] ❌ ไม่มีสัญญาณเข้าเลย – หยุดรัน backtest")
+    capital = 100.0
+    last_milestone = 100
+    equity_curve = [capital]
+    sl_streak = 0
+    recovery_mode = False
+    processed = []
+    for _, row in df_trades.iterrows():
+        lot, last_milestone = update_compound_lot(capital, last_milestone)
+        if recovery_mode:
+            lot = round(lot * RECOVERY_LOT_MULT, 2)
+        pnl = float(row.get("pnl", 0.0))
+        capital += pnl
+        exit_reason = row.get("exit_reason", "TP" if pnl >= 0 else "SL")
+        processed.append({
+            "entry_time": row.get("entry_time"),
+            "exit_time": row.get("exit_time"),
+            "type": row.get("type"),
+            "lot": lot,
+            "pnl": capital,
+            "exit_reason": exit_reason,
+            "session": row.get("session"),
+            "risk_mode": "recovery" if recovery_mode else "normal",
+        })
+        if pnl < 0:
+            sl_streak += 1
+        else:
+            sl_streak = 0
+        if sl_streak >= RECOVERY_SL_TRIGGER:
+            recovery_mode = True
+            sl_streak = 0
+        else:
+            recovery_mode = False
+        equity_curve.append(capital)
+        if kill_switch_hedge(equity_curve):
+            break
 
-    df = df.dropna(subset=["timestamp", "entry_signal", "close", "high", "low"])
-    df["entry_time"] = pd.to_datetime(df["timestamp"], errors="coerce")
-    df["signal_id"] = df["timestamp"].astype(str)
-
-    print("\n🚀 [Patch v12.4.2] Using simulate_and_autofix() pipeline...")
-    trades_df, equity_df, config_used = simulate_and_autofix(
-        df,
-        simulate_partial_tp_safe,
-        SNIPER_CONFIG_Q3_TUNED,
-        session="London"
-    )
-    print("\n✅ Simulation Completed with Adaptive Config:")
-    for k, v in config_used.items():
-        print(f"    ▸ {k}: {v}")
-
+    trades_df_final = pd.DataFrame(processed)
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    out_path = os.path.join(TRADE_DIR, f"trades_cleanbacktest_{ts}.csv")
-    trades_df.to_csv(out_path, index=False)
+    out_path = os.path.join(TRADE_DIR, f"trades_hedgefund_next_{ts}.csv")
+    trades_df_final.to_csv(out_path, index=False)
     print(f"📁 Exported trades → {out_path}")
-
-    config_path = os.path.join(TRADE_DIR, f"config_used_{ts}.json")
-    with open(config_path, "w") as f:
-        json.dump(config_used, f, indent=2)
-    print(f"⚙️ Exported config_used → {config_path}")
-
-    if "exit_reason" in trades_df.columns:
-        qa_summary = {
-            "tp1_count": int(trades_df["exit_reason"].eq("tp1").sum()),
-            "tp2_count": int(trades_df["exit_reason"].eq("tp2").sum()),
-            "sl_count": int(trades_df["exit_reason"].eq("sl").sum()),
-            "total_trades": len(trades_df),
-            "net_pnl": float(trades_df["pnl"].sum() if "pnl" in trades_df.columns else 0.0),
-        }
-        qa_path = os.path.join(TRADE_DIR, f"qa_summary_{ts}.json")
-        with open(qa_path, "w") as f:
-            json.dump(qa_summary, f, indent=2)
-        print(f"📊 Exported QA Summary → {qa_path}")
-
-        print("\n📊 [Patch QA] Summary (TP1/TP2):")
-        for k, v_val in qa_summary.items():
-            print(f"    ▸ {k.replace('_', ' ').title()}: {v_val}")
-    return trades_df
+    return trades_df_final
 
 def run_wfv_with_progress(df, features, label_col):
     # [Patch vWFV.7] Fallback support for lowercase 'open' or only 'close'

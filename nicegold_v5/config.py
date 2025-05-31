@@ -159,3 +159,36 @@ AUTOFIX_WFV_CONFIG = {
     "breakeven_rr_trigger": 1.2,
     "trailing_rr_trigger": 0.9,
 }
+# [Patch HEDGEFUND-NEXT] Session Adaptive Config
+SESSION_CONFIG = {
+    "Asia": {
+        "gain_z_thresh": -0.12,
+        "ema_slope_min": -0.01,
+        "atr_thresh": 0.08,
+        "sniper_risk_score_min": 0.8,
+        "tp_rr_ratio": 3.2,
+        "volume_ratio": 0.01,
+    },
+    "London": {
+        "gain_z_thresh": -0.06,
+        "ema_slope_min": 0.00,
+        "atr_thresh": 0.05,
+        "sniper_risk_score_min": 1.5,
+        "tp_rr_ratio": 4.0,
+        "volume_ratio": 0.04,
+    },
+    "NY": {
+        "gain_z_thresh": -0.03,
+        "ema_slope_min": 0.01,
+        "atr_thresh": 0.07,
+        "sniper_risk_score_min": 1.2,
+        "tp_rr_ratio": 4.5,
+        "volume_ratio": 0.06,
+    },
+}
+
+# [Patch HEDGEFUND-NEXT] Compound/OMS parameters
+COMPOUND_MILESTONES = [200, 500, 1000, 2000, 5000]
+KILL_SWITCH_DD = 35
+RECOVERY_SL_TRIGGER = 3
+RECOVERY_LOT_MULT = 1.5

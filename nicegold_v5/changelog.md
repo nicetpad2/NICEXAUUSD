@@ -693,3 +693,6 @@
 
 ## 2026-01-20
 - เพิ่มเทส entry_exit_cov ครอบคลุม entry.py และ exit.py ให้ coverage 100%\n
+## 2026-01-21
+- เพิ่ม SESSION_CONFIG และระบบ OMS Compound/KillSwitch ใน run_clean_backtest
+
