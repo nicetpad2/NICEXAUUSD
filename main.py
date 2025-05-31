@@ -401,6 +401,7 @@ def autopipeline(mode="default", train_epochs=1):
         print("\n🧠 [AI Master Pipeline] เริ่มทำงานแบบครบวงจร (SHAP + Optuna + Guard + WFV)")
         generate_ml_dataset_m1(csv_path=M1_PATH, out_path="data/ml_dataset_m1.csv")
         X, y = load_dataset("data/ml_dataset_m1.csv")
+        print(f"[Debug] y unique: {y.unique()}, value_counts: {np.unique(y, return_counts=True)}")
         model = train_lstm(
             X,
             y,
@@ -539,6 +540,7 @@ def autopipeline(mode="default", train_epochs=1):
 
         generate_ml_dataset_m1(csv_path=M1_PATH, out_path="data/ml_dataset_m1.csv")
         X, y = load_dataset("data/ml_dataset_m1.csv")
+        print(f"[Debug] y unique: {y.unique()}, value_counts: {np.unique(y, return_counts=True)}")
         model = train_lstm(X, y, epochs=train_epochs)
         os.makedirs("models", exist_ok=True)
         torch.save(model.state_dict(), "models/model_lstm_tp2.pth")
@@ -606,6 +608,7 @@ def autopipeline(mode="default", train_epochs=1):
 
         # Step 3: Train LSTM Classifier
         X, y = load_dataset("data/ml_dataset_m1.csv")
+        print(f"[Debug] y unique: {y.unique()}, value_counts: {np.unique(y, return_counts=True)}")
         model = train_lstm(
             X,
             y,
@@ -890,6 +893,7 @@ def welcome():
         print("🚀 สร้าง Dataset และฝึก LSTM Classifier สำหรับ TP2 Prediction...")
         generate_ml_dataset_m1()
         X, y = load_dataset("data/ml_dataset_m1.csv")
+        print(f"[Debug] y unique: {y.unique()}, value_counts: {np.unique(y, return_counts=True)}")
         model = train_lstm(X, y)
         os.makedirs("models", exist_ok=True)
         torch.save(model.state_dict(), "models/model_lstm_tp2.pth")

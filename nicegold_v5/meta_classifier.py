@@ -11,5 +11,8 @@ class MetaClassifier:
         self.model = joblib.load(model_path)
 
     def predict(self, df: pd.DataFrame):
+        for feat in FEATURES:
+            if feat not in df.columns:
+                df[feat] = 0.0
         X = df[FEATURES]
         return self.model.predict(X)

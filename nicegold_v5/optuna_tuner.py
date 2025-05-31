@@ -18,6 +18,11 @@ def objective(trial) -> float:
     }
 
     df = session_folds.get("London", pd.DataFrame()).copy()
+    # [Patch v24.1.1] 🔧 Ensure 'timestamp' column exists and is datetime
+    if "timestamp" not in df.columns and df.index.name == "timestamp":
+        df = df.reset_index()
+    if "timestamp" in df.columns:
+        df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
     if df.empty:
         return -999
     df = generate_signals(df, config=config)

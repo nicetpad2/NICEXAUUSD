@@ -634,3 +634,9 @@
 ## 2025-12-31
 - เพิ่มระบบจับเวลา load, forward, backward และ optimizer step ใน `train_lstm_runner`
 - แสดง bottleneck ต่อ epoch และใช้ `prefetch_factor` เพิ่มความเร็ว I/O (Patch v24.2.4)
+
+## 2026-01-01
+- แก้ objective ใน `optuna_tuner` ตรวจสอบและแปลง `timestamp`
+- ปรับ `generate_ml_dataset_m1` เติมคอลัมน์ `entry_score`, `gain_z` หากไม่พบใน trade log
+- พิมพ์ debug ค่า label ใน `autopipeline`
+- อัปเดต `MetaClassifier.predict` ใส่ค่า 0.0 หากฟีเจอร์ขาด
