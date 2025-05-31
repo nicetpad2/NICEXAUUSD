@@ -202,6 +202,11 @@ def generate_signals_v8_0(df: pd.DataFrame, config: dict | None = None) -> pd.Da
     df["lot_suggested"] = 0.05
 
     # --- Indicators ---
+    # [Patch v24.3.2] 🛡️ Auto-fix volume==0 dev set (ultra override only)
+    if config and config.get("gain_z_thresh", 0) <= -9.0:
+        if (df["volume"].max() == 0) or (df["volume"].isnull().all()):
+            print("[Patch v24.3.2] 🛡️ Ultra Override: force volume = 1.0 for signal fallback.")
+            df["volume"] = 1.0
     df["ema_15"] = df["close"].ewm(span=15).mean()
     df["ema_50"] = df["close"].ewm(span=50).mean()
     df["atr"] = (df["high"] - df["low"]).rolling(14).mean()

@@ -69,7 +69,7 @@ def test_train_lstm_stub(monkeypatch):
             pass
 
     monkeypatch.setattr(tlr, 'LSTMClassifier', DummyModel)
-    monkeypatch.setattr(tlr, 'nn', types.SimpleNamespace(BCELoss=lambda: lambda preds, target: SimpleNamespace(item=lambda: 0.0)))
+    monkeypatch.setattr(tlr, 'nn', types.SimpleNamespace(BCEWithLogitsLoss=lambda: lambda preds, target: SimpleNamespace(item=lambda: 0.0)))
     monkeypatch.setattr(tlr, 'GradScaler', lambda enabled=True: DummyScaler())
     class DummyCast:
         def __init__(self, enabled=True):

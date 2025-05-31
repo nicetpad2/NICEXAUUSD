@@ -51,7 +51,8 @@ def train_lstm(
         num_workers=2,
         prefetch_factor=2,
     )
-    criterion = nn.BCELoss()
+    # [Patch v24.3.2] ⚡️ Use BCEWithLogitsLoss for amp+sigmoid safety
+    criterion = nn.BCEWithLogitsLoss()
     optimizer = (
         optim.SGD(model.parameters(), lr=lr)
         if optimizer_name == "sgd"
