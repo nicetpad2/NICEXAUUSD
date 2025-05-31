@@ -711,3 +711,5 @@
 ### 2026-01-19
 - เพิ่มชุดทดสอบ backtester เพิ่ม coverage เป็น 100%
 
+### 2026-01-20
+- เพิ่มชุดทดสอบ entry_exit_cov ครอบคลุม entry.py และ exit.py ให้ coverage แตะ 100%\n
