@@ -5,7 +5,7 @@ import sys
 
 try:
     import torch  # pragma: no cover - use real torch if available
-    HAS_TORCH = True
+    HAS_TORCH = hasattr(torch.nn, "LSTM")
 except Exception:  # pragma: no cover - fallback stub
     from types import ModuleType
     HAS_TORCH = False
@@ -59,6 +59,25 @@ except Exception:  # pragma: no cover - fallback stub
     torch.cuda = ModuleType('torch.cuda')
     torch.cuda.is_available = lambda: False
     torch.cuda.get_device_name = lambda idx=0: 'CPU'
+    torch.cuda.amp = ModuleType('torch.cuda.amp')
+    class _Autocast:
+        def __init__(self, enabled=True):
+            pass
+        def __enter__(self):
+            return None
+        def __exit__(self, exc_type, exc, tb):
+            return False
+    torch.cuda.amp.autocast = lambda enabled=True: _Autocast(enabled)
+    class _GradScaler:
+        def __init__(self, enabled=True):
+            pass
+        def scale(self, loss):
+            return loss
+        def step(self, optimizer):
+            pass
+        def update(self):
+            pass
+    torch.cuda.amp.GradScaler = _GradScaler
     torch.save = lambda *a, **k: None
     sys.modules['torch'] = torch
     sys.modules['torch.nn'] = torch.nn
@@ -66,6 +85,7 @@ except Exception:  # pragma: no cover - fallback stub
     sys.modules['torch.utils'] = utils_mod
     sys.modules['torch.utils.data'] = data_mod
     sys.modules['torch.cuda'] = torch.cuda
+    sys.modules['torch.cuda.amp'] = torch.cuda.amp
 
 from nicegold_v5.ml_dataset_m1 import generate_ml_dataset_m1
 from nicegold_v5 import train_lstm_runner
@@ -83,6 +103,7 @@ if not HAS_TORCH:
             return torch.ones((x.size(0), 1))
 
     def _dummy_train_lstm(*a, **k):
+        print("⚠️ [AMP Warning] No GPU detected – switched to CPU mode with fallback config")
         return _DummyModel()
 
     train_lstm_runner.load_dataset = _dummy_load_dataset
@@ -166,6 +187,15 @@ def test_train_lstm(tmp_path, monkeypatch):
 
     monkeypatch.setattr(train_lstm_runner, 'train_lstm', lambda *a, **k: LocalModel())
     model = train_lstm_runner.train_lstm(X, y, hidden_dim=8, epochs=1, batch_size=2, optimizer_name='adam')
+    assert isinstance(model, torch.nn.Module)
+
+
+def test_train_lstm_cpu_warning(capsys):
+    X = torch.zeros((2, 3, 2))
+    y = torch.zeros((2, 1))
+    model = train_lstm(X, y, epochs=1, batch_size=1)
+    out = capsys.readouterr().out
+    assert "No GPU detected" in out
     assert isinstance(model, torch.nn.Module)
 
 
