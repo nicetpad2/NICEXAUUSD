@@ -716,3 +716,7 @@
 ### 2026-01-21
 - เพิ่ม SESSION_CONFIG และ OMS Compound ใน run_clean_backtest (Patch HEDGEFUND-NEXT)
 
+### 2026-01-22
+- เพิ่มเทส train_lstm_runner ครอบคลุมกรณีใช้ GPU และรันผ่าน `__main__`
+- เพิ่มเทส simulate_tp_exit ให้ตรวจสอบกรณี TP2, SL และ TP1 เพื่อให้ coverage 100%
+

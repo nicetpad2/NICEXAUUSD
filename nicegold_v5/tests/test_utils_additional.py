@@ -186,3 +186,43 @@ def test_convert_thai_datetime_no_columns():
     df = pd.DataFrame({'close': [1.0]})
     result = utils.convert_thai_datetime(df)
     assert result.equals(df)
+
+
+def test_simulate_tp_exit_extra_branches():
+    trades = pd.DataFrame([
+        {
+            'timestamp': pd.Timestamp('2025-01-02 00:00:00'),
+            'entry_price': 100.0,
+            'tp1_price': 103.0,
+            'tp2_price': 106.0,
+            'sl_price': 95.0,
+            'direction': 'buy',
+        },
+        {
+            'timestamp': pd.Timestamp('2025-01-02 01:00:00'),
+            'entry_price': 100.0,
+            'tp1_price': 99.0,
+            'tp2_price': 97.0,
+            'sl_price': 103.0,
+            'direction': 'sell',
+        },
+        {
+            'timestamp': pd.Timestamp('2025-01-02 02:00:00'),
+            'entry_price': 100.0,
+            'tp1_price': 98.0,
+            'tp2_price': 95.0,
+            'sl_price': 110.0,
+            'direction': 'sell',
+        },
+    ])
+
+    m1 = pd.DataFrame([
+        {'timestamp': '2025-01-02 00:00:30', 'high': 107.0, 'low': 99.0},
+        {'timestamp': '2025-01-02 01:00:30', 'high': 104.0, 'low': 99.0},
+        {'timestamp': '2025-01-02 02:00:30', 'high': 105.0, 'low': 97.5},
+    ])
+
+    result = utils.simulate_tp_exit(trades, m1, window_minutes=1)
+    assert result.loc[0, 'exit_reason'] == 'TP2'
+    assert result.loc[1, 'exit_reason'] == 'SL'
+    assert result.loc[2, 'exit_reason'] == 'TP1'

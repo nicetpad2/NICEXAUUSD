@@ -696,3 +696,7 @@
 ## 2026-01-21
 - เพิ่ม SESSION_CONFIG และระบบ OMS Compound/KillSwitch ใน run_clean_backtest
 
+## 2026-01-22
+- เพิ่มเทส train_lstm_runner ครอบคลุมกรณีใช้ GPU และรันผ่าน `__main__`
+- เพิ่มเทส simulate_tp_exit ครอบคลุม TP2/SL/TP1 ทำให้ coverage แตะ 100%
+

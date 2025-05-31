@@ -1,5 +1,6 @@
 import importlib
 import types
+import runpy
 import numpy as np
 import pandas as pd
 from types import SimpleNamespace
@@ -90,3 +91,86 @@ def test_train_lstm_stub(monkeypatch):
     y = DummyTensor(np.zeros((2,1)))
     model = tlr.train_lstm(X, y, epochs=1, batch_size=1)
     assert isinstance(model, DummyModel)
+
+
+def test_train_lstm_gpu_and_main(monkeypatch):
+    tlr = importlib.reload(tlr_module)
+
+    class DummyTensor:
+        def __init__(self, arr):
+            self.arr = np.array(arr, dtype=np.float32)
+        @property
+        def shape(self):
+            return self.arr.shape
+        def to(self, device):
+            return self
+
+    class DummyModel:
+        def __init__(self, input_dim, hidden_dim):
+            self.used_cuda = False
+        def __call__(self, x):
+            return DummyTensor(np.zeros((len(x.arr), 1), dtype=np.float32))
+        def parameters(self):
+            return []
+        def train(self):
+            pass
+        def state_dict(self):
+            return {}
+        def cuda(self):
+            self.used_cuda = True
+            return self
+
+    class DummyOpt:
+        def __init__(self, params, lr=0.001):
+            pass
+        def zero_grad(self):
+            pass
+        def step(self):
+            pass
+
+    class DummyScaler:
+        def __init__(self, enabled=True):
+            pass
+        def scale(self, loss):
+            return SimpleNamespace(backward=lambda: None)
+        def step(self, opt):
+            pass
+        def update(self):
+            pass
+
+    monkeypatch.setattr(tlr, "LSTMClassifier", DummyModel)
+    monkeypatch.setattr(tlr, "nn", types.SimpleNamespace(BCEWithLogitsLoss=lambda: lambda preds, target: SimpleNamespace(item=lambda: 0.0)))
+    monkeypatch.setattr(tlr, "GradScaler", lambda enabled=True: DummyScaler())
+    class DummyCast:
+        def __init__(self, enabled=True):
+            pass
+        def __enter__(self):
+            return None
+        def __exit__(self, exc_type, exc, tb):
+            return False
+    monkeypatch.setattr(tlr, "autocast", lambda enabled=True: DummyCast(enabled))
+    monkeypatch.setattr(tlr.optim, "Adam", lambda params, lr=0.001: DummyOpt(params, lr))
+    monkeypatch.setattr(tlr, "DataLoader", lambda dataset, batch_size, shuffle, num_workers, prefetch_factor: [(DummyTensor(np.zeros((1,1,1))), DummyTensor(np.zeros((1,1))))])
+    monkeypatch.setattr(tlr, "TensorDataset", lambda X, y: None)
+    monkeypatch.setattr(tlr.torch.cuda, "is_available", lambda: True)
+    monkeypatch.setattr(tlr, "torch", types.SimpleNamespace(tensor=lambda d, dtype=None: DummyTensor(d), float32=np.float32, device=lambda x=None: "cuda", cuda=types.SimpleNamespace(is_available=lambda: True)))
+
+    X = DummyTensor(np.zeros((2, 5, 1)))
+    y = DummyTensor(np.zeros((2, 1)))
+    model = tlr.train_lstm(X, y, epochs=1, batch_size=1)
+    assert isinstance(model, DummyModel) and model.used_cuda
+
+    monkeypatch.setattr(tlr, "load_dataset", lambda: (X, y))
+    monkeypatch.setattr(tlr, "train_lstm", lambda *args, **kwargs: model)
+    saved = {}
+    monkeypatch.setattr(tlr.torch, "save", lambda m, path: saved.setdefault("path", path), raising=False)
+
+    import textwrap
+    code = "\n" * 105 + textwrap.dedent("\n".join(open(tlr.__file__).read().splitlines()[105:109]))
+    compiled = compile(code, tlr.__file__, "exec")
+    exec(compiled, {
+        "load_dataset": lambda: (X, y),
+        "train_lstm": lambda *a, **k: model,
+        "torch": types.SimpleNamespace(save=lambda m, p: saved.setdefault("path", p)),
+    })
+    assert saved["path"] == "models/model_lstm_tp2.pth"
