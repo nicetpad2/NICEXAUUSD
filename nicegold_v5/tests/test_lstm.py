@@ -131,7 +131,7 @@ def test_generate_ml_dataset_m1(tmp_path, monkeypatch):
     out_dir.mkdir()
     out_csv = out_dir / 'ml_dataset_m1.csv'
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df, config=None: df)
+    monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df, config=None, **kw: df)
     monkeypatch.setattr(
         'nicegold_v5.exit.simulate_partial_tp_safe',
         lambda df: pd.DataFrame({'entry_time': df['entry_time'].iloc[[10, 20]].astype(str).reset_index(drop=True), 'exit_reason': ['tp2', 'sl']})
@@ -151,7 +151,7 @@ def test_generate_ml_dataset_auto_trade_log(tmp_path, monkeypatch):
     out_dir.mkdir()
     out_csv = out_dir / 'ml_dataset_m1.csv'
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df, config=None: df)
+    monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df, config=None, **kw: df)
     monkeypatch.setattr(
         'nicegold_v5.exit.simulate_partial_tp_safe',
         lambda df: pd.DataFrame({'entry_time': df['entry_time'], 'exit_reason': ['tp2'] * len(df)})
@@ -169,7 +169,7 @@ def test_train_lstm(tmp_path, monkeypatch):
     out_dir.mkdir()
     out_csv = out_dir / 'ml_dataset_m1.csv'
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df, config=None: df)
+    monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df, config=None, **kw: df)
     monkeypatch.setattr(
         'nicegold_v5.exit.simulate_partial_tp_safe',
         lambda df: pd.DataFrame({'entry_time': df['entry_time'].iloc[[10, 20]].astype(str).reset_index(drop=True), 'exit_reason': ['tp2', 'sl']})
@@ -200,7 +200,7 @@ def test_generate_ml_dataset_creates_dir(tmp_path, monkeypatch):
     df.to_csv(csv_path, index=False)
     out_csv = tmp_path / 'newdir' / 'ml_dataset_m1.csv'
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df, config=None: df)
+    monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df, config=None, **kw: df)
     monkeypatch.setattr(
         'nicegold_v5.exit.simulate_partial_tp_safe',
         lambda df: pd.DataFrame({'entry_time': df['entry_time'], 'exit_reason': ['tp2'] * len(df)})

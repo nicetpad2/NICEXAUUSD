@@ -535,7 +535,7 @@ def test_run_clean_backtest(monkeypatch, tmp_path):
     })
 
     monkeypatch.setattr(main, 'TRADE_DIR', str(tmp_path))
-    monkeypatch.setattr(main, 'generate_signals', lambda d, config=None: d.assign(entry_signal='buy'))
+    monkeypatch.setattr(main, 'generate_signals', lambda d, config=None, **kw: d.assign(entry_signal='buy'))
     monkeypatch.setattr(main, 'simulate_partial_tp_safe', lambda d: pd.DataFrame({'pnl': [1]}))
     monkeypatch.setattr('nicegold_v5.utils.print_qa_summary', lambda *a, **k: {})
     monkeypatch.setattr('nicegold_v5.utils.export_chatgpt_ready_logs', lambda *a, **k: None)
@@ -570,7 +570,7 @@ def test_run_clean_backtest_thai_date(monkeypatch, tmp_path):
         )
 
     monkeypatch.setattr(main, 'simulate_partial_tp_safe', lambda d: pd.DataFrame({'pnl': [1]}))
-    monkeypatch.setattr(main, 'generate_signals', lambda d, config=None: d.assign(entry_signal='buy'))
+    monkeypatch.setattr(main, 'generate_signals', lambda d, config=None, **kw: d.assign(entry_signal='buy'))
     monkeypatch.setattr('nicegold_v5.utils.print_qa_summary', lambda *a, **k: {})
     monkeypatch.setattr('nicegold_v5.utils.export_chatgpt_ready_logs', lambda *a, **k: None)
 
@@ -604,7 +604,7 @@ def test_run_clean_backtest_lowercase_date(monkeypatch, tmp_path):
         )
 
     monkeypatch.setattr(main, 'simulate_partial_tp_safe', lambda d: pd.DataFrame({'pnl': [1]}))
-    monkeypatch.setattr(main, 'generate_signals', lambda d, config=None: d.assign(entry_signal='buy'))
+    monkeypatch.setattr(main, 'generate_signals', lambda d, config=None, **kw: d.assign(entry_signal='buy'))
     monkeypatch.setattr('nicegold_v5.utils.print_qa_summary', lambda *a, **k: {})
     monkeypatch.setattr('nicegold_v5.utils.export_chatgpt_ready_logs', lambda *a, **k: None)
 
@@ -626,7 +626,7 @@ def test_run_clean_backtest_fallback(monkeypatch, capsys, tmp_path):
         'volume': [100, 100],
     })
 
-    def fake_generate(d, config=None):
+    def fake_generate(d, config=None, **kw):
         return d.assign(entry_signal='buy')
 
     monkeypatch.setattr(main, 'generate_signals', fake_generate)
@@ -655,7 +655,7 @@ def test_run_clean_backtest_signal_guard(monkeypatch, tmp_path):
     })
 
     monkeypatch.setattr(main, 'TRADE_DIR', str(tmp_path))
-    monkeypatch.setattr(main, 'generate_signals', lambda d, config=None: d.assign(entry_signal=[None]*len(d)))
+    monkeypatch.setattr(main, 'generate_signals', lambda d, config=None, **kw: d.assign(entry_signal=[None]*len(d)))
     monkeypatch.setattr('nicegold_v5.utils.print_qa_summary', lambda *a, **k: None)
     monkeypatch.setattr('nicegold_v5.utils.export_chatgpt_ready_logs', lambda *a, **k: None)
 

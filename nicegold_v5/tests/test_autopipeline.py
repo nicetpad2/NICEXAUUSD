@@ -117,7 +117,7 @@ def test_autopipeline(monkeypatch, tmp_path, capsys):
     monkeypatch.setattr(main, 'sanitize_price_columns', lambda d: d)
     monkeypatch.setattr('nicegold_v5.entry.validate_indicator_inputs', lambda df, required_cols=None, min_rows=500: None)
     monkeypatch.setattr(main, 'validate_indicator_inputs', lambda df, required_cols=None, min_rows=500: None)
-    monkeypatch.setattr(main, 'generate_signals', lambda df, config=None: df.assign(entry_signal=['long']*len(df)))
+    monkeypatch.setattr(main, 'generate_signals', lambda df, config=None, **kw: df.assign(entry_signal=['long']*len(df)))
 
     def dummy_generate(*a, **k):
         os.makedirs('data', exist_ok=True)
@@ -186,7 +186,7 @@ def test_ai_master_pipeline(monkeypatch, tmp_path, capsys):
     monkeypatch.setattr(main, 'sanitize_price_columns', lambda d: d)
     monkeypatch.setattr('nicegold_v5.entry.validate_indicator_inputs', lambda df, required_cols=None, min_rows=500: None)
     monkeypatch.setattr(main, 'validate_indicator_inputs', lambda df, required_cols=None, min_rows=500: None)
-    monkeypatch.setattr(main, 'generate_signals', lambda df, config=None: df.assign(entry_signal=['long']*len(df)))
+    monkeypatch.setattr(main, 'generate_signals', lambda df, config=None, **kw: df.assign(entry_signal=['long']*len(df)))
 
     monkeypatch.setattr('nicegold_v5.ml_dataset_m1.generate_ml_dataset_m1', lambda *a, **k: None)
     X_dummy = torch.zeros((1, 10, 7))
@@ -258,7 +258,7 @@ def test_fusion_ai_pipeline(monkeypatch, tmp_path, capsys):
     monkeypatch.setattr(main, 'sanitize_price_columns', lambda d: d)
     monkeypatch.setattr('nicegold_v5.entry.validate_indicator_inputs', lambda df, required_cols=None, min_rows=500: None)
     monkeypatch.setattr(main, 'validate_indicator_inputs', lambda df, required_cols=None, min_rows=500: None)
-    monkeypatch.setattr(main, 'generate_signals', lambda df, config=None: df.assign(entry_signal=['long']*len(df)))
+    monkeypatch.setattr(main, 'generate_signals', lambda df, config=None, **kw: df.assign(entry_signal=['long']*len(df)))
     monkeypatch.setattr('nicegold_v5.ml_dataset_m1.generate_ml_dataset_m1', lambda *a, **k: None)
     X_dummy = torch.zeros((1, 10, 7))
     y_dummy = torch.zeros((1, 1))

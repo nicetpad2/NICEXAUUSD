@@ -25,7 +25,7 @@ def test_objective_score(monkeypatch):
         "volume": [1.0, 1.0, 1.0],
     })
     tuner.session_folds = {"London": df}
-    monkeypatch.setattr(tuner, "generate_signals", lambda d, config=None: d.assign(entry_signal="buy"))
+    monkeypatch.setattr(tuner, "generate_signals", lambda d, config=None, **kw: d.assign(entry_signal="buy"))
     monkeypatch.setattr(
         tuner,
         "run_backtest",

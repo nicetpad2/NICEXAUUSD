@@ -273,7 +273,7 @@ def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
             continue
         print(f"\n[Patch HEDGEFUND-NEXT] Running {sess_name} session with config: {cfg}")
         ensure_order_side_enabled(cfg)
-        df_sess = generate_signals(df_sess, config=cfg)
+        df_sess = generate_signals(df_sess, config=cfg, test_mode=True)
         if df_sess["entry_signal"].isnull().mean() >= 1.0:
             continue
         trades_df, _, _ = simulate_and_autofix(df_sess, simulate_partial_tp_safe, cfg, session=sess_name)
@@ -432,11 +432,12 @@ def autopipeline(mode="default", train_epochs=1):
     except TypeError:
         validate_indicator_inputs(df)
     ensure_order_side_enabled(SNIPER_CONFIG_Q3_TUNED)
-    df = generate_signals(df, config=SNIPER_CONFIG_Q3_TUNED)
+    test_mode = mode in ["QA", "test", "WFV", "diagnose"]
+    df = generate_signals(df, config=SNIPER_CONFIG_Q3_TUNED, test_mode=test_mode)
     if df["entry_signal"].isnull().mean() >= 1.0:
         print("[AutoPipeline] ⚠️ ไม่มีสัญญาณ – fallback RELAX_CONFIG_Q3")
         ensure_order_side_enabled(RELAX_CONFIG_Q3)
-        df = generate_signals(df, config=RELAX_CONFIG_Q3)
+        df = generate_signals(df, config=RELAX_CONFIG_Q3, test_mode=test_mode)
 
     if mode == "ai_master" and torch is not None:
         print("\n🧠 [AI Master Pipeline] เริ่มทำงานแบบครบวงจร (SHAP + Optuna + Guard + WFV)")
@@ -545,7 +546,7 @@ def autopipeline(mode="default", train_epochs=1):
         df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
         df = sanitize_price_columns(df)
         ensure_order_side_enabled(study.best_trial.params)
-        df = generate_signals(df, config=study.best_trial.params)
+        df = generate_signals(df, config=study.best_trial.params, test_mode=True)
 
         seq_len = 10
         data = df_feat[top_features].values
@@ -611,7 +612,7 @@ def autopipeline(mode="default", train_epochs=1):
                 "disable_buy": False,
                 "disable_sell": False,
             }
-            df = generate_signals(df, config=relax_config)
+            df = generate_signals(df, config=relax_config, test_mode=True)
             trades_df = run_autofix_wfv(df, simulate_partial_tp_safe, relax_config)
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         out_path = os.path.join(TRADE_DIR, f"trades_ai_master_{ts}.csv")
@@ -653,7 +654,7 @@ def autopipeline(mode="default", train_epochs=1):
         df_raw = load_csv_safe(M1_PATH)
         df_raw = sanitize_price_columns(df_raw)
         ensure_order_side_enabled(SNIPER_CONFIG_Q3_TUNED)
-        df_raw = generate_signals(df_raw, config=SNIPER_CONFIG_Q3_TUNED)
+        df_raw = generate_signals(df_raw, config=SNIPER_CONFIG_Q3_TUNED, test_mode=True)
         df = df_raw.merge(df_feat, on="timestamp", how="left")
         # [Patch v27.0.0] Adaptive threshold (auto fallback)
         for THRESHOLD in [0.5, 0.4, 0.3, 0.0]:
@@ -797,7 +798,7 @@ def autopipeline(mode="default", train_epochs=1):
             "disable_buy": False,
             "disable_sell": False,
         }
-        df = generate_signals(df, config=relax_config)
+        df = generate_signals(df, config=relax_config, test_mode=True)
         trades_df = run_autofix_wfv(df, simulate_partial_tp_safe, relax_config)
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     out_path = os.path.join(TRADE_DIR, f"trades_autopipeline_{ts}.csv")
