@@ -665,3 +665,5 @@
 - [Patch v24.3.3] เพิ่ม force entry_signal ทุกๆ 500 แถวใน ultra override
 - [Patch v24.3.3] บังคับจำนวน tp2_hit ≥ 10 ใน generate_ml_dataset_m1
 - [Patch v24.3.4] แก้ปัญหา fillna บนคอลัมน์ entry_tier ที่เป็น Categorical ใน backtester
+## 2026-01-11
+- [Patch v24.3.5] ปรับ backtester ตรวจสอบ dtype Categorical แบบใหม่ ไม่ใช้ is_categorical_dtype

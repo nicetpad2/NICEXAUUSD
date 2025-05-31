@@ -685,3 +685,5 @@
 ### 2026-01-10
 - [Patch v24.3.3] เพิ่ม ultra fallback force entry_signal และบังคับ TP2 ใน ML dataset
 - [Patch v24.3.4] แก้ bug Categorical fillna ใน backtester
+### 2026-01-11
+- [Patch v24.3.5] ปรับ backtester ใช้ isinstance(df["entry_tier"].dtype, pd.CategoricalDtype) แทน is_categorical_dtype

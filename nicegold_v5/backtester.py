@@ -170,7 +170,8 @@ def run_backtest(df: pd.DataFrame):
     bar_count = len(df)
     if "entry_tier" in df.columns:
         # [Patch v24.3.4] ⚡️ Fix Categorical fillna: convert to string first, then fillna
-        if pd.api.types.is_categorical_dtype(df["entry_tier"]):
+        dtype = df["entry_tier"].dtype
+        if isinstance(dtype, pd.CategoricalDtype):
             df["entry_tier"] = df["entry_tier"].astype(str)
         entry_tier_arr = df["entry_tier"].astype(str).fillna("").values
     else:
