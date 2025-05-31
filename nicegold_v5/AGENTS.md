@@ -680,3 +680,5 @@
 - เพิ่ม log volume stat และนับ tp2_hit ใน generate_ml_dataset_m1 (Patch v24.3.2)
 - อัปเดต LSTMClassifier ใช้ BCEWithLogitsLoss และลบ sigmoid ใน deep_model_m1 (Patch v24.3.2)
 - ปรับ train_lstm_runner ใช้ BCEWithLogitsLoss และอัปเดต unit test
+### 2026-01-09
+- เพิ่มชุดทดสอบ utils ครอบคลุมการคำนวณและ get_resource_plan ให้ coverage 92%
