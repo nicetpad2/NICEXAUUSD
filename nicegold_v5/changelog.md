@@ -645,3 +645,5 @@
 - เพิ่มฟังก์ชัน `run_smart_fast_qa` เรียก pytest เร็ว ๆ
 ## 2026-01-03
 - เพิ่มชุดทดสอบโมดูล fix_engine (run_self_diagnostic, auto_fix_logic, simulate_and_autofix)
+## 2026-01-04
+- ปรับ __main__ ให้เรียก welcome() เมื่อไม่ได้ใช้โหมด clean

@@ -822,7 +822,7 @@ if __name__ == "__main__":
         run_clean_backtest(df)
         print("✅ Done: Clean Backtest Completed")
     else:
-        autopipeline()
+        welcome()
     # [Patch v12.4.1] Example of how choice 7 might be handled if menu was active
     # elif choice == 7:  # This would be part of the active menu loop in welcome()
     #     print("\n🚀 เริ่มรัน CleanBacktest ด้วย AutoFix + Export...")

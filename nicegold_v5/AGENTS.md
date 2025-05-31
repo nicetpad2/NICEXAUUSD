@@ -666,3 +666,5 @@
 - อัปเดต changelog และเพิ่ม unit test หากจำเป็น
 ### 2026-01-03
 - เพิ่มชุดทดสอบ fix_engine ครอบคลุม run_self_diagnostic, auto_fix_logic และ simulate_and_autofix
+### 2026-01-04
+- ปรับ main.py เรียก welcome() ใน __main__ แทน autopipeline
