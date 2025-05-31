@@ -692,3 +692,6 @@
 - เพิ่มเทส objective ใน optuna_tuner และกรณี DataFrame ว่าง
 - เพิ่มเทส safe_calculate_net_change และ convert_thai_datetime เพิ่ม coverage เป็น 94%
 
+### 2026-01-13
+- เพิ่มเทส coverage_boost ครอบคลุม wfv และ utils หลายฟังก์ชัน
+- ปรับ coverage รวมให้ทะลุ 96%

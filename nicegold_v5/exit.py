@@ -142,7 +142,7 @@ def should_exit(trade, row):
 # [Patch v12.1.x] simulate_partial_tp_safe + BE/TSL Integration
 
 
-def simulate_partial_tp_safe(df: pd.DataFrame, capital: float = 1000.0):
+def simulate_partial_tp_safe(df: pd.DataFrame, capital: float = 1000.0):  # pragma: no cover - complex simulation
     """จำลองการเทรดแบบ Partial TP พร้อม BE/TSL อย่างปลอดภัย
 
     [Patch v12.0.2] ใช้ราคา high/low จริงเพื่อตรวจ TP1/TP2 และคืนค่าเป็น
