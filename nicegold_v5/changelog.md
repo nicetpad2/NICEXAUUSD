@@ -709,4 +709,6 @@
 - [Patch v26.0.1] ปรับฟังก์ชัน generate_signals และ generate_signals_v12_0 ให้ QA Override disable_buy/disable_sell
 ## 2026-01-26
 - ปรับข้อความ QA Override และตรวจ config ก่อนตั้งค่าใหม่ใน generate_signals และ generate_signals_v12_0
+## 2026-01-27
+- [Patch v26.0.1] เพิ่ม assert ตรวจ QA Guard ให้ disable_buy/disable_sell เป็น False เสมอ
 
