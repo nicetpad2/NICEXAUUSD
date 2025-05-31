@@ -493,7 +493,7 @@ def autopipeline(mode="default", train_epochs=1):
         df_feat = pd.read_csv("data/ml_dataset_m1.csv")
         df_feat = df_feat.dropna(subset=top_features)
         df_feat = df_feat[top_features + ["timestamp", "tp2_hit"]]
-        study = start_optimization(df_feat, n_trials=100)
+        study = start_optimization(df, n_trials=100)
         print("✅ [Patch v22.7.2] Optuna เสร็จสิ้น – บันทึก best trial")
         with open("logs/optuna_best_config.json", "w") as f:
             json.dump(study.best_trial.params, f, indent=2)

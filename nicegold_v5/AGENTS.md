@@ -644,3 +644,7 @@
 ### 2025-12-28
 - ปรับ `get_resource_plan` ตรวจสอบ VRAM และ CUDA cores พร้อมบันทึก `logs/resource_plan.json`
 - แสดง AI Resource Plan Summary ใน `autopipeline`
+
+### 2025-12-29
+- แก้ `autopipeline` (ai_master) ส่งข้อมูลราคาจริงให้ `start_optimization`
+  ป้องกัน KeyError 'close' ระหว่าง Optuna (Patch v24.1.1)
