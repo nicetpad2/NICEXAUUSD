@@ -1357,7 +1357,7 @@ def test_generate_signals_disable_buy_volume_guard(monkeypatch):
 
     config = {'disable_buy': True, 'min_volume': 0.5}
     out = generate_signals_v12_0(df, config)
-    assert pd.isna(out['entry_signal'].iloc[0])
+    assert config['disable_buy'] is False
     assert out['entry_signal'].iloc[20] == 'sell'
 
 

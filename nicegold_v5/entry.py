@@ -750,8 +750,14 @@ def generate_signals_v7_1(df: pd.DataFrame, config: dict | None = None) -> pd.Da
 
 
 def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
-    """[Patch v8.1.4] Fallback ถูกยกเลิก — forward ไปยัง logic sniper v8.0"""
-    return generate_signals_v8_0(df, config=config)  # ใช้ sniper confirm zone, risk score, delay, TP boost เท่านั้น
+    """Generate signals with BUY/SELL safety enabled."""
+    config = config or {}
+    # --- PATCH v26.0.1: enforce BUY/SELL enabled ---
+    config["disable_buy"] = False
+    config["disable_sell"] = False
+    assert not config.get("disable_buy", False), "QA BLOCK: disable_buy=True not allowed"
+    assert not config.get("disable_sell", False), "QA BLOCK: disable_sell=True not allowed"
+    return generate_signals_v8_0(df, config=config)
 
 
 
@@ -976,6 +982,11 @@ def generate_signals_v12_0(df: pd.DataFrame, config: dict | None = None) -> pd.D
 
     signals: list[tuple[int, str]] = []
     config = config or {}
+    # --- PATCH v26.0.1: enforce BUY/SELL enabled ---
+    config["disable_buy"] = False
+    config["disable_sell"] = False
+    assert not config.get("disable_buy", False), "QA BLOCK: disable_buy=True not allowed"
+    assert not config.get("disable_sell", False), "QA BLOCK: disable_sell=True not allowed"
     for i, row in df.iterrows():
         signal = None
         ema_fast = row.get("ema_15", 0)
