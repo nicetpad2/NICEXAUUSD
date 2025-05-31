@@ -711,4 +711,6 @@
 - ปรับข้อความ QA Override และตรวจ config ก่อนตั้งค่าใหม่ใน generate_signals และ generate_signals_v12_0
 ## 2026-01-27
 - [Patch v26.0.1] เพิ่ม assert ตรวจ QA Guard ให้ disable_buy/disable_sell เป็น False เสมอ
+## 2026-01-28
+- [Patch v27.0.0] Oversample TP2 rows, Adaptive TP2 Guard threshold และ QA Self-Healing
 
