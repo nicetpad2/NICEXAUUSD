@@ -67,6 +67,11 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv"):
 
     trades = pd.read_csv(trade_log_path)
     trades["entry_time"] = pd.to_datetime(trades["entry_time"])
+    # [Patch v24.1.1] 🛠️ Ensure 'entry_score', 'gain_z' columns exist in trades
+    if "entry_score" not in trades.columns:
+        trades["entry_score"] = 1.0
+    if "gain_z" not in trades.columns:
+        trades["gain_z"] = 0.0
 
     df["tp2_hit"] = 0
     tp2_entries = trades[trades["exit_reason"] == "tp2"]["entry_time"]
