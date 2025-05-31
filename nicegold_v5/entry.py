@@ -750,11 +750,19 @@ def generate_signals_v7_1(df: pd.DataFrame, config: dict | None = None) -> pd.Da
 
 
 def generate_signals(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
-    """Generate signals with BUY/SELL safety enabled."""
+    """
+    [Patch v26.0.1] Generate signals with BUY/SELL *always* enabled.
+    ปลดล็อกฝั่ง Buy/Sell ทุกจุด (QA Guard)
+    """
     config = config or {}
-    # --- PATCH v26.0.1: enforce BUY/SELL enabled ---
     config["disable_buy"] = False
     config["disable_sell"] = False
+    if "disable_buy" in config and config["disable_buy"] is not False:
+        print("[Patch v26.0.1] QA Override: force disable_buy = False")
+        config["disable_buy"] = False
+    if "disable_sell" in config and config["disable_sell"] is not False:
+        print("[Patch v26.0.1] QA Override: force disable_sell = False")
+        config["disable_sell"] = False
     assert not config.get("disable_buy", False), "QA BLOCK: disable_buy=True not allowed"
     assert not config.get("disable_sell", False), "QA BLOCK: disable_sell=True not allowed"
     return generate_signals_v8_0(df, config=config)
@@ -956,9 +964,15 @@ def simulate_trades_with_tp(df: pd.DataFrame, sl_distance: float = 5.0):
 
 
 def generate_signals_v12_0(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
-    """[Patch v12.0] Multi-pattern signal generator with auto TP calculation."""
-    df = df.copy()
+    """
+    [Patch v26.0.1] Multi-pattern signal generator - *unblock* buy/sell every signal
+    """
+    config = config or {}
+    config["disable_buy"] = False
+    config["disable_sell"] = False
+    # เดิม...
     # [Patch v12.3.4] ✅ Entry Score Filter (TP2 Potential only)
+    df = df.copy()
     if "entry_score" in df.columns:
         df = df[df["entry_score"] > 3.5]
         print(f"[Patch v12.3.4] ⚙️ Filtered by Entry Score > 3.5 → {len(df)} rows")
@@ -981,10 +995,6 @@ def generate_signals_v12_0(df: pd.DataFrame, config: dict | None = None) -> pd.D
     df["session"] = np.where(hour < 8, "Asia", np.where(hour < 15, "London", "NY"))
 
     signals: list[tuple[int, str]] = []
-    config = config or {}
-    # --- PATCH v26.0.1: enforce BUY/SELL enabled ---
-    config["disable_buy"] = False
-    config["disable_sell"] = False
     assert not config.get("disable_buy", False), "QA BLOCK: disable_buy=True not allowed"
     assert not config.get("disable_sell", False), "QA BLOCK: disable_sell=True not allowed"
     for i, row in df.iterrows():

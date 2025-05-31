@@ -705,4 +705,6 @@
 - [Patch v26.0.0] เพิ่ม Hedge Fund Mode พร้อม soft filter, session adaptive และ dynamic lot scaling
 ## 2026-01-24
 - [Patch v26.0.1] บังคับเปิดฝั่ง BUY/SELL ทุกคอนฟิกและทุกเซสชัน ป้องกันสัญญาณถูกบล็อก
+## 2026-01-25
+- [Patch v26.0.1] ปรับฟังก์ชัน generate_signals และ generate_signals_v12_0 ให้ QA Override disable_buy/disable_sell
 
