@@ -134,6 +134,29 @@ SNIPER_CONFIG_PROFIT = {
     "tp_rr_ratio": 5.5,
     "volume_ratio": 0.5,
 }  # [Patch v10.0] Profit Mode RR + filter slope logic
+# ====== [Patch v26.0.0] Entry Filtering Config (Hedge Fund Mode) ======
+HEDGEFUND_ENTRY_CONFIG = {
+    "gain_z_thresh": -0.04,
+    "ema_slope_min": 0.02,
+    "atr_thresh": 0.5,
+    "sniper_risk_score_min": 3.0,
+    "tp_rr_ratio": 2.2,
+    "tp1_rr_ratio": 1.15,
+    "volume_ratio": 0.25,
+    "disable_buy": False,
+    "disable_sell": False,
+    "min_volume": 0.02,
+    "enable_be": True,
+    "enable_trailing": True,
+    "tp2_delay_min": 7,
+    "atr_multiplier": 1.2,
+    "use_dynamic_tsl": True,
+    "dynamic_lot": True,
+    "lot_win_multiplier": 1.18,
+    "lot_loss_multiplier": 0.88,
+    "session_adaptive": True,
+}
+
 
 # Meta ML Feature Config
 META_CLASSIFIER_FEATURES = [
@@ -159,32 +182,11 @@ AUTOFIX_WFV_CONFIG = {
     "breakeven_rr_trigger": 1.2,
     "trailing_rr_trigger": 0.9,
 }
-# [Patch HEDGEFUND-NEXT] Session Adaptive Config
+# [Patch v26.0.0] Adaptive Session Config
 SESSION_CONFIG = {
-    "Asia": {
-        "gain_z_thresh": -0.12,
-        "ema_slope_min": -0.01,
-        "atr_thresh": 0.08,
-        "sniper_risk_score_min": 0.8,
-        "tp_rr_ratio": 3.2,
-        "volume_ratio": 0.01,
-    },
-    "London": {
-        "gain_z_thresh": -0.06,
-        "ema_slope_min": 0.00,
-        "atr_thresh": 0.05,
-        "sniper_risk_score_min": 1.5,
-        "tp_rr_ratio": 4.0,
-        "volume_ratio": 0.04,
-    },
-    "NY": {
-        "gain_z_thresh": -0.03,
-        "ema_slope_min": 0.01,
-        "atr_thresh": 0.07,
-        "sniper_risk_score_min": 1.2,
-        "tp_rr_ratio": 4.5,
-        "volume_ratio": 0.06,
-    },
+    "Asia":   {"gain_z_thresh": -0.08, "tp1_rr_ratio": 1.10, "tp2_rr_ratio": 2.0,  "disable_buy": False, "disable_sell": False},
+    "London": {"gain_z_thresh":  0.00, "tp1_rr_ratio": 1.15, "tp2_rr_ratio": 2.15, "disable_buy": False, "disable_sell": False},
+    "NY":     {"gain_z_thresh":  0.03, "tp1_rr_ratio": 1.18, "tp2_rr_ratio": 2.30, "disable_buy": False, "disable_sell": False},
 }
 
 # [Patch HEDGEFUND-NEXT] Compound/OMS parameters
