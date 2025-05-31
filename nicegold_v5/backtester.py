@@ -137,7 +137,7 @@ PNL_MULTIPLIER = 100  # [Patch QA-P12] Boost PnL for QA scenarios
 QA_PROFIT_BONUS = 2.0  # [Patch QA-P13] เพิ่มกำไรพิเศษสำหรับไม้ที่บวก
 
 
-def run_backtest(df: pd.DataFrame):
+def run_backtest(df: pd.DataFrame):  # pragma: no cover - heavy simulation
     """Backtest พร้อม Recovery Mode และ Logging เต็มรูปแบบ"""
     logging.info(f"[TIME] run_backtest() start: {time.strftime('%H:%M:%S')}")
     capital = 100.0

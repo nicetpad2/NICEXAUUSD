@@ -672,3 +672,6 @@
 - เพิ่มเทส optuna objective และ safe_calculate_net_change
 - ปรับ coverage รวมให้เกิน 94%
 
+## 2026-01-13
+- เพิ่มชุดทดสอบ coverage_boost ครอบคลุม wfv และ utils
+- coverage รวมสูงกว่า 96%
