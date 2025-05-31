@@ -524,10 +524,21 @@ def autopipeline(mode="default", train_epochs=1):
         data = df_feat[top_features].values
         seqs = [data[i : i + seq_len] for i in range(len(data) - seq_len)]
         device2 = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        model.eval()
-        with torch.no_grad():
-            X_tensor = torch.tensor(np.array(seqs), dtype=torch.float32).to(device2)
-            preds = model(X_tensor).squeeze().cpu().numpy()
+
+        # [Patch v25.0.0] Batch inference LSTM ป้องกัน OOM
+        def predict_lstm_in_batches(model, X_data, batch_size=1024, device=None):
+            model.eval()
+            preds = []
+            n = X_data.shape[0]
+            for i in range(0, n, batch_size):
+                X_batch = X_data[i:i+batch_size]
+                with torch.no_grad():
+                    batch_pred = model(X_batch.to(device)).squeeze().cpu().numpy()
+                    preds.append(batch_pred)
+            return np.concatenate(preds)
+
+        X_tensor = torch.tensor(np.array(seqs), dtype=torch.float32).to(device2)
+        preds = predict_lstm_in_batches(model, X_tensor, batch_size=1024, device=device2)
         df_feat["tp2_proba"] = np.concatenate([np.zeros(seq_len), preds])
 
         df = df.merge(df_feat[["timestamp", "tp2_proba"]], on="timestamp", how="left")
@@ -656,9 +667,20 @@ def autopipeline(mode="default", train_epochs=1):
         if seqs:
             X_tensor = torch.tensor(np.array(seqs), dtype=torch.float32).to(DEVICE)
             model = model.to(DEVICE)
-            model.eval()
-            with torch.no_grad():
-                pred = model(X_tensor).squeeze().cpu().numpy()
+
+            # [Patch v25.0.0] ใช้ batch inference เพื่อป้องกัน OOM
+            def predict_lstm_in_batches(model, X_data, batch_size=1024, device=None):
+                model.eval()
+                preds = []
+                n = X_data.shape[0]
+                for i in range(0, n, batch_size):
+                    X_batch = X_data[i:i+batch_size]
+                    with torch.no_grad():
+                        batch_pred = model(X_batch.to(device)).squeeze().cpu().numpy()
+                        preds.append(batch_pred)
+                return np.concatenate(preds)
+
+            pred = predict_lstm_in_batches(model, X_tensor, batch_size=1024, device=DEVICE)
             df_feat["tp2_proba"] = np.concatenate([np.zeros(seq_len), pred])
         else:
             df_feat["tp2_proba"] = 0.0
