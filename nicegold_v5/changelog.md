@@ -678,3 +678,6 @@
 ## 2026-01-14
 - [Patch v25.0.0] sanitize_price_columns เติม volume=1.0 หาก NaN/0 เกิน 95%
 - [Patch v25.0.0] เพิ่ม predict_lstm_in_batches สำหรับ batch inference LSTM
+## 2026-01-15
+- [Patch v25.0.1] เพิ่มชุดทดสอบ coverage_extra เพื่อเพิ่ม coverage เป็น 97%
+
