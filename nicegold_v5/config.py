@@ -8,6 +8,15 @@ ENTRY_CONFIG_PER_FOLD = {
     5: {"gain_z_thresh": -0.15, "ema_slope_min": 0.001},
 }
 
+# --- PATCH v26.0.1: Ensure BUY/SELL always enabled ---
+def ensure_order_side_enabled(cfg: dict) -> dict:
+    """Force disable_buy/disable_sell to False for safety."""
+    if "disable_buy" in cfg:
+        cfg["disable_buy"] = False
+    if "disable_sell" in cfg:
+        cfg["disable_sell"] = False
+    return cfg
+
 # [Patch v8.1.5] Default Sniper Config สำหรับใช้ใน main.py menu 4
 SNIPER_CONFIG_DEFAULT = {
     "gain_z_thresh": -0.05,
@@ -79,7 +88,7 @@ SNIPER_CONFIG_Q3_TUNED = {
     "tp_rr_ratio": 5.5,              # [Patch v9.0] ลด TP ลงเล็กน้อย เพิ่ม Win Rate
     "tp1_rr_ratio": 1.5,             # [Patch v9.0] กำหนด TP1 ชัดเจน (ถ้าใช้)
     "volume_ratio": 0.3,             # [Patch v16.2.1] ลดเงื่อนไข volume guard
-    "disable_buy": True,              # [Patch v16.0.2] ปิดฝั่ง Buy
+    "disable_buy": False,             # [Patch v16.0.2] ปิดฝั่ง Buy -> Force Enabled
     "min_volume": 0.05,              # [Patch v16.1.9] Volume filter
     "enable_be": True,               # [Patch v16.1.9] เปิด Breakeven
     "enable_trailing": True,         # [Patch v16.1.9] ใช้ Trailing SL
@@ -194,3 +203,25 @@ COMPOUND_MILESTONES = [200, 500, 1000, 2000, 5000]
 KILL_SWITCH_DD = 35
 RECOVERY_SL_TRIGGER = 3
 RECOVERY_LOT_MULT = 1.5
+
+# --- PATCH v26.0.1: Apply safety check to all configs ---
+for _cfg in [
+    SNIPER_CONFIG_DEFAULT,
+    SNIPER_CONFIG_RELAXED,
+    SNIPER_CONFIG_OVERRIDE,
+    SNIPER_CONFIG_ULTRA_OVERRIDE,
+    SNIPER_CONFIG_STABLE_GAIN,
+    SNIPER_CONFIG_AUTO_GAIN,
+    SNIPER_CONFIG_Q3_TUNED,
+    RELAX_CONFIG_Q3,
+    SNIPER_CONFIG_DIAGNOSTIC,
+    SNIPER_CONFIG_RELAXED_AUTOGAIN,
+    SNIPER_CONFIG_UNBLOCK,
+    SNIPER_CONFIG_PROFIT,
+    HEDGEFUND_ENTRY_CONFIG,
+    AUTOFIX_WFV_CONFIG,
+]:
+    ensure_order_side_enabled(_cfg)
+
+for sess_cfg in SESSION_CONFIG.values():
+    ensure_order_side_enabled(sess_cfg)

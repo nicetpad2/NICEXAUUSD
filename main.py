@@ -42,6 +42,7 @@ from nicegold_v5.config import (
     KILL_SWITCH_DD,
     RECOVERY_SL_TRIGGER,
     RECOVERY_LOT_MULT,
+    ensure_order_side_enabled,
 )
 from nicegold_v5.optuna_tuner import start_optimization
 from nicegold_v5.qa import run_qa_guard, auto_qa_after_backtest
@@ -271,6 +272,7 @@ def run_clean_backtest(df: pd.DataFrame) -> pd.DataFrame:
         if df_sess.empty:
             continue
         print(f"\n[Patch HEDGEFUND-NEXT] Running {sess_name} session with config: {cfg}")
+        ensure_order_side_enabled(cfg)
         df_sess = generate_signals(df_sess, config=cfg)
         if df_sess["entry_signal"].isnull().mean() >= 1.0:
             continue
@@ -429,9 +431,11 @@ def autopipeline(mode="default", train_epochs=1):
         validate_indicator_inputs(df, min_rows=min(500, len(df)))
     except TypeError:
         validate_indicator_inputs(df)
+    ensure_order_side_enabled(SNIPER_CONFIG_Q3_TUNED)
     df = generate_signals(df, config=SNIPER_CONFIG_Q3_TUNED)
     if df["entry_signal"].isnull().mean() >= 1.0:
         print("[AutoPipeline] ⚠️ ไม่มีสัญญาณ – fallback RELAX_CONFIG_Q3")
+        ensure_order_side_enabled(RELAX_CONFIG_Q3)
         df = generate_signals(df, config=RELAX_CONFIG_Q3)
 
     if mode == "ai_master" and torch is not None:
@@ -540,6 +544,7 @@ def autopipeline(mode="default", train_epochs=1):
         df = convert_thai_datetime(df)
         df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
         df = sanitize_price_columns(df)
+        ensure_order_side_enabled(study.best_trial.params)
         df = generate_signals(df, config=study.best_trial.params)
 
         seq_len = 10
@@ -583,6 +588,7 @@ def autopipeline(mode="default", train_epochs=1):
 
         from nicegold_v5.utils import run_autofix_wfv
 
+        ensure_order_side_enabled(SNIPER_CONFIG_Q3_TUNED)
         trades_df = run_autofix_wfv(df, simulate_partial_tp_safe, SNIPER_CONFIG_Q3_TUNED)
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         out_path = os.path.join(TRADE_DIR, f"trades_ai_master_{ts}.csv")
@@ -621,6 +627,7 @@ def autopipeline(mode="default", train_epochs=1):
 
         df_raw = load_csv_safe(M1_PATH)
         df_raw = sanitize_price_columns(df_raw)
+        ensure_order_side_enabled(SNIPER_CONFIG_Q3_TUNED)
         df_raw = generate_signals(df_raw, config=SNIPER_CONFIG_Q3_TUNED)
         df = df_raw.merge(df_feat, on="timestamp", how="left")
         df["tp2_guard_pass"] = df["tp2_proba"] >= 0.7
@@ -647,6 +654,7 @@ def autopipeline(mode="default", train_epochs=1):
             df = df_rl
 
         from nicegold_v5.utils import run_autofix_wfv
+        ensure_order_side_enabled(SNIPER_CONFIG_Q3_TUNED)
         trades_df = run_autofix_wfv(df, simulate_partial_tp_safe, SNIPER_CONFIG_Q3_TUNED, n_folds=5)
         out_path = os.path.join(TRADE_DIR, "trades_fusion_ai_" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".csv")
         trades_df.to_csv(out_path, index=False)
@@ -729,7 +737,7 @@ def autopipeline(mode="default", train_epochs=1):
     trades_df = run_autofix_wfv(
         df,
         simulate_partial_tp_safe,
-        SNIPER_CONFIG_Q3_TUNED,
+        ensure_order_side_enabled(SNIPER_CONFIG_Q3_TUNED),
         n_folds=n_folds,
     )
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
