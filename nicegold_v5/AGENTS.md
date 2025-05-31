@@ -698,3 +698,6 @@
 ### 2026-01-14
 - [Patch v25.0.0] แก้ sanitize_price_columns เติม volume=1.0 หากข้อมูลว่างเกือบทั้งหมด
 - [Patch v25.0.0] เพิ่ม predict_lstm_in_batches ลด OOM ขณะ inference
+### 2026-01-15
+- [Patch v25.0.1] เพิ่มชุดทดสอบ coverage_extra ครอบคลุมสาขา error ใน ml_dataset_m1, get_resource_plan และ should_exit เพื่อดัน coverage รวมแตะ 97%
+
