@@ -695,3 +695,6 @@
 ### 2026-01-13
 - เพิ่มเทส coverage_boost ครอบคลุม wfv และ utils หลายฟังก์ชัน
 - ปรับ coverage รวมให้ทะลุ 96%
+### 2026-01-14
+- [Patch v25.0.0] แก้ sanitize_price_columns เติม volume=1.0 หากข้อมูลว่างเกือบทั้งหมด
+- [Patch v25.0.0] เพิ่ม predict_lstm_in_batches ลด OOM ขณะ inference

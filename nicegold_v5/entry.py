@@ -137,6 +137,12 @@ def sanitize_price_columns(df: pd.DataFrame) -> pd.DataFrame:
             series = df[col].astype(str).str.replace(",", "", regex=False).str.strip()
             df[col] = pd.to_numeric(series, errors="coerce")
 
+    # [Patch v25.0.0] Auto-fix volume NaN/0 → 1.0 ทุกกรณี
+    if "volume" in df.columns:
+        if df["volume"].isnull().mean() > 0.95 or (df["volume"] == 0).mean() > 0.95:
+            print("[Patch v25.0.0] ⚠️ volume เป็น NaN/0 เกือบหมด – เติมเป็น 1.0 อัตโนมัติ")
+            df["volume"] = 1.0
+
     cols_to_check = [c for c in ["close", "high", "low", "volume"] if c in df.columns]
     missing = df[cols_to_check].isnull().sum()
     print("[Patch v11.9.16] 🧼 Sanitize Columns:")
