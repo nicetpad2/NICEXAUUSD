@@ -124,6 +124,8 @@ def test_autopipeline(monkeypatch, tmp_path, capsys):
     plan = {
         'device': 'cpu',
         'gpu': 'CPU',
+        'vram': 0.0,
+        'cuda_cores': 0,
         'ram': 8.0,
         'threads': 2,
         'batch_size': 64,
@@ -131,6 +133,8 @@ def test_autopipeline(monkeypatch, tmp_path, capsys):
         'n_folds': 5,
         'optimizer': 'sgd',
         'lr': 0.01,
+        'precision': 'float32',
+        'train_epochs': 30,
     }
     monkeypatch.setattr(main, 'get_resource_plan', lambda: plan)
 
@@ -192,6 +196,8 @@ def test_ai_master_pipeline(monkeypatch, tmp_path, capsys):
     plan = {
         'device': 'cpu',
         'gpu': 'CPU',
+        'vram': 0.0,
+        'cuda_cores': 0,
         'ram': 8.0,
         'threads': 2,
         'batch_size': 64,
@@ -199,6 +205,8 @@ def test_ai_master_pipeline(monkeypatch, tmp_path, capsys):
         'n_folds': 5,
         'optimizer': 'sgd',
         'lr': 0.01,
+        'precision': 'float32',
+        'train_epochs': 30,
     }
     monkeypatch.setattr(main, 'get_resource_plan', lambda: plan)
     monkeypatch.setattr('nicegold_v5.optuna_tuner.start_optimization', lambda df_feat, n_trials=100: types.SimpleNamespace(best_trial=types.SimpleNamespace(params={})))
@@ -261,6 +269,8 @@ def test_fusion_ai_pipeline(monkeypatch, tmp_path, capsys):
     plan = {
         'device': 'cpu',
         'gpu': 'CPU',
+        'vram': 0.0,
+        'cuda_cores': 0,
         'ram': 8.0,
         'threads': 2,
         'batch_size': 64,
@@ -268,6 +278,8 @@ def test_fusion_ai_pipeline(monkeypatch, tmp_path, capsys):
         'n_folds': 5,
         'optimizer': 'sgd',
         'lr': 0.01,
+        'precision': 'float32',
+        'train_epochs': 30,
     }
     monkeypatch.setattr(main, 'get_resource_plan', lambda: plan)
     def dummy_autopipeline(*a, **k):
