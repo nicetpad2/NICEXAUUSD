@@ -731,4 +731,6 @@
 - ปรับปรุง QA Override ใน generate_signals และ generate_signals_v12_0 ให้ตรวจค่าจาก config ก่อนตั้งค่าใหม่ พร้อมข้อความ log ชัดเจน
 ### 2026-01-27
 - [Patch v26.0.1] เพิ่ม assert ตรวจ QA Guard บังคับเปิดฝั่ง BUY/SELL ทุกจุด
+### 2026-01-28
+- [Patch v27.0.0] Oversample TP2, Adaptive TP2 Guard และ QA Self-Healing
 

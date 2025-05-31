@@ -580,20 +580,45 @@ def autopipeline(mode="default", train_epochs=1):
         # [Patch v25.1.0] log: dtype after fix
         print("[Patch v25.1.0] dtype หลังแปลง: df.timestamp =", df["timestamp"].dtype, "df_feat.timestamp =", df_feat["timestamp"].dtype)
         df = df.merge(df_feat[["timestamp", "tp2_proba"]], on="timestamp", how="left")
-        df["tp2_guard_pass"] = df["tp2_proba"] >= 0.7
-        print(
-            f"✅ [Patch v22.7.2] TP2 Guard Filter → เหลือ {df['entry_signal'].notnull().sum()} signals"
-        )
+        # [Patch v27.0.0] Adaptive threshold (auto fallback)
+        for THRESHOLD in [0.5, 0.4, 0.3, 0.0]:
+            df["tp2_guard_pass"] = df["tp2_proba"] >= THRESHOLD
+            n_signal = df[df["tp2_guard_pass"] & df["entry_signal"].notnull()].shape[0]
+            print(f"[Patch v27.0.0] TP2 Guard @ {THRESHOLD:.2f} → {n_signal} signals")
+            if n_signal > 20:
+                break
+        if n_signal == 0:
+            print("[Patch v27.0.0] 🚨 No signals after TP2 Guard – Fallback: ปิด guard ทุกไม้ (DEV)")
+            df["tp2_guard_pass"] = True
         df = df[df["tp2_guard_pass"] | df["entry_signal"].isnull()]
+        print(f"[Patch v27.0.0] TP2 Guard Filter (final) → เหลือ {df['entry_signal'].notnull().sum()} signals")
 
         from nicegold_v5.utils import run_autofix_wfv
 
         ensure_order_side_enabled(SNIPER_CONFIG_Q3_TUNED)
         trades_df = run_autofix_wfv(df, simulate_partial_tp_safe, SNIPER_CONFIG_Q3_TUNED)
+        if trades_df.empty or trades_df["pnl"].abs().sum() == 0:
+            print("[Patch v27.0.0] 🚨 WFV ได้ 0 trades ทั้งหมด! Fallback: relax entry_signal + ปิด guard")
+            df["tp2_guard_pass"] = True
+            df = df[df["entry_signal"].notnull()]
+            relax_config = {
+                "gain_z_thresh": -0.2,
+                "ema_slope_min": -0.01,
+                "atr_thresh": 0.1,
+                "sniper_risk_score_min": 2.0,
+                "tp_rr_ratio": 4.0,
+                "volume_ratio": 0.4,
+                "disable_buy": False,
+                "disable_sell": False,
+            }
+            df = generate_signals(df, config=relax_config)
+            trades_df = run_autofix_wfv(df, simulate_partial_tp_safe, relax_config)
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         out_path = os.path.join(TRADE_DIR, f"trades_ai_master_{ts}.csv")
         trades_df.to_csv(out_path, index=False)
         print(f"📦 [Patch v22.7.2] Exported trades → {out_path}")
+        if trades_df.empty:
+            print("[Patch v27.0.0] ❌ ยังไม่มี trade หลัง fallback – ตรวจสอบ label/entry logic")
         return trades_df
 
     # [Patch v24.0.0] ✅ เพิ่ม AI Fusion Mode: LSTM + SHAP + Meta + RL Fallback
@@ -630,9 +655,18 @@ def autopipeline(mode="default", train_epochs=1):
         ensure_order_side_enabled(SNIPER_CONFIG_Q3_TUNED)
         df_raw = generate_signals(df_raw, config=SNIPER_CONFIG_Q3_TUNED)
         df = df_raw.merge(df_feat, on="timestamp", how="left")
-        df["tp2_guard_pass"] = df["tp2_proba"] >= 0.7
+        # [Patch v27.0.0] Adaptive threshold (auto fallback)
+        for THRESHOLD in [0.5, 0.4, 0.3, 0.0]:
+            df["tp2_guard_pass"] = df["tp2_proba"] >= THRESHOLD
+            n_signal = df[df["tp2_guard_pass"] & df["entry_signal"].notnull()].shape[0]
+            print(f"[Patch v27.0.0] TP2 Guard @ {THRESHOLD:.2f} → {n_signal} signals")
+            if n_signal > 20:
+                break
+        if n_signal == 0:
+            print("[Patch v27.0.0] 🚨 No signals after TP2 Guard – Fallback: ปิด guard ทุกไม้ (DEV)")
+            df["tp2_guard_pass"] = True
         df = df[df["tp2_guard_pass"] | df["entry_signal"].isnull()]
-        print(f"✅ TP2 Guard Filter → เหลือ {df['entry_signal'].notnull().sum()} signals")
+        print(f"[Patch v27.0.0] TP2 Guard Filter (final) → เหลือ {df['entry_signal'].notnull().sum()} signals")
 
         try:
             from nicegold_v5.meta_classifier import MetaClassifier
@@ -727,9 +761,18 @@ def autopipeline(mode="default", train_epochs=1):
             df_feat["tp2_proba"] = 0.0
 
         df = df.merge(df_feat[["timestamp", "tp2_proba"]], on="timestamp", how="left")
-        df["tp2_guard_pass"] = df["tp2_proba"] >= 0.7
+        # [Patch v27.0.0] Adaptive threshold (auto fallback)
+        for THRESHOLD in [0.5, 0.4, 0.3, 0.0]:
+            df["tp2_guard_pass"] = df["tp2_proba"] >= THRESHOLD
+            n_signal = df[df["tp2_guard_pass"] & df["entry_signal"].notnull()].shape[0]
+            print(f"[Patch v27.0.0] TP2 Guard @ {THRESHOLD:.2f} → {n_signal} signals")
+            if n_signal > 20:
+                break
+        if n_signal == 0:
+            print("[Patch v27.0.0] 🚨 No signals after TP2 Guard – Fallback: ปิด guard ทุกไม้ (DEV)")
+            df["tp2_guard_pass"] = True
         df = df[df["tp2_guard_pass"] | df["entry_signal"].isnull()]
-        print(f"✅ TP2 Guard Filter → เหลือ {df['entry_signal'].notnull().sum()} signals")
+        print(f"[Patch v27.0.0] TP2 Guard Filter (final) → เหลือ {df['entry_signal'].notnull().sum()} signals")
     else:
         n_folds = plan["n_folds"]
 
@@ -740,10 +783,28 @@ def autopipeline(mode="default", train_epochs=1):
         ensure_order_side_enabled(SNIPER_CONFIG_Q3_TUNED),
         n_folds=n_folds,
     )
+    if trades_df.empty or trades_df["pnl"].abs().sum() == 0:
+        print("[Patch v27.0.0] 🚨 WFV ได้ 0 trades ทั้งหมด! Fallback: relax entry_signal + ปิด guard")
+        df["tp2_guard_pass"] = True
+        df = df[df["entry_signal"].notnull()]
+        relax_config = {
+            "gain_z_thresh": -0.2,
+            "ema_slope_min": -0.01,
+            "atr_thresh": 0.1,
+            "sniper_risk_score_min": 2.0,
+            "tp_rr_ratio": 4.0,
+            "volume_ratio": 0.4,
+            "disable_buy": False,
+            "disable_sell": False,
+        }
+        df = generate_signals(df, config=relax_config)
+        trades_df = run_autofix_wfv(df, simulate_partial_tp_safe, relax_config)
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     out_path = os.path.join(TRADE_DIR, f"trades_autopipeline_{ts}.csv")
     trades_df.to_csv(out_path, index=False)
     print(f"📦 Exported AutoPipeline trades → {out_path}")
+    if trades_df.empty:
+        print("[Patch v27.0.0] ❌ ยังไม่มี trade หลัง fallback – ตรวจสอบ label/entry logic")
     maximize_ram()
     return trades_df
 
