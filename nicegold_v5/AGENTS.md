@@ -713,3 +713,6 @@
 
 ### 2026-01-20
 - เพิ่มชุดทดสอบ entry_exit_cov ครอบคลุม entry.py และ exit.py ให้ coverage แตะ 100%\n
+### 2026-01-21
+- เพิ่ม SESSION_CONFIG และ OMS Compound ใน run_clean_backtest (Patch HEDGEFUND-NEXT)
+

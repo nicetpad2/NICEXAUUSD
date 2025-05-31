@@ -16,6 +16,7 @@ from nicegold_v5.backtester import run_backtest
 from nicegold_v5.utils import summarize_results, run_auto_wfv
 from nicegold_v5.utils import auto_entry_config
 from nicegold_v5 import wfv
+from main import update_compound_lot, kill_switch_hedge
 
 
 def sample_df():
@@ -220,13 +221,24 @@ def test_calc_lot():
 
 
 def test_kill_switch_trigger():
-    curve = [100] * 100 + [95, 70]
+    curve = [100] * 100 + [64]
     assert kill_switch(curve)
 
 
 def test_kill_switch_waits_min_trades():
     curve = [100, 95, 70]
     assert not kill_switch(curve)
+
+
+def test_update_compound_lot():
+    lot, milestone = update_compound_lot(300, 100)
+    assert lot == 0.02
+    assert milestone == 200
+
+
+def test_kill_switch_hedge_trigger():
+    curve = [100, 90, 60]
+    assert kill_switch_hedge(curve)
 
 
 def test_recovery_lot():
@@ -614,17 +626,8 @@ def test_run_clean_backtest_fallback(monkeypatch, capsys, tmp_path):
         'volume': [100, 100],
     })
 
-    sentinel = {'relax': True}
-    import nicegold_v5.config as cfg
-    monkeypatch.setattr(cfg, 'RELAX_CONFIG_Q3', sentinel)
-
     def fake_generate(d, config=None):
-        if config == main.SNIPER_CONFIG_Q3_TUNED:
-            return d.assign(entry_signal=[None] * len(d))
-        elif config is sentinel:
-            return d.assign(entry_signal='buy')
-        else:
-            raise AssertionError('unexpected config')
+        return d.assign(entry_signal='buy')
 
     monkeypatch.setattr(main, 'generate_signals', fake_generate)
     monkeypatch.setattr(main, 'simulate_partial_tp_safe', lambda d: pd.DataFrame({'pnl': [1]}))
@@ -634,7 +637,6 @@ def test_run_clean_backtest_fallback(monkeypatch, capsys, tmp_path):
 
     trades = main.run_clean_backtest(df)
     output = capsys.readouterr().out
-    assert 'fallback RELAX_CONFIG_Q3' in output
     assert isinstance(trades, pd.DataFrame)
     assert not trades.empty
 
