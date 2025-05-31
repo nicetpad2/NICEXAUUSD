@@ -71,6 +71,25 @@ except Exception:  # pragma: no cover - fallback stub
     torch.cuda = ModuleType('torch.cuda')
     torch.cuda.is_available = lambda: False
     torch.cuda.get_device_name = lambda idx=0: 'CPU'
+    torch.cuda.amp = ModuleType('torch.cuda.amp')
+    class _Autocast:
+        def __init__(self, enabled=True):
+            pass
+        def __enter__(self):
+            return None
+        def __exit__(self, exc_type, exc, tb):
+            return False
+    torch.cuda.amp.autocast = lambda enabled=True: _Autocast(enabled)
+    class _GradScaler:
+        def __init__(self, enabled=True):
+            pass
+        def scale(self, loss):
+            return loss
+        def step(self, optimizer):
+            pass
+        def update(self):
+            pass
+    torch.cuda.amp.GradScaler = _GradScaler
     torch.save = lambda *a, **k: None
     sys.modules['torch'] = torch
     sys.modules['torch.nn'] = torch.nn
@@ -78,6 +97,7 @@ except Exception:  # pragma: no cover - fallback stub
     sys.modules['torch.utils'] = utils_mod
     sys.modules['torch.utils.data'] = data_mod
     sys.modules['torch.cuda'] = torch.cuda
+    sys.modules['torch.cuda.amp'] = torch.cuda.amp
     sys.modules['torch'] = torch
 
 def test_autopipeline(monkeypatch, tmp_path, capsys):

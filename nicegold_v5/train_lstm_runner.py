@@ -1,9 +1,10 @@
 import pandas as pd
 import numpy as np
 import torch
-from torch import nn, optim
+import torch.nn as nn
+from torch import optim
 from torch.utils.data import DataLoader, TensorDataset
-from sklearn.model_selection import train_test_split
+from torch.cuda.amp import autocast, GradScaler
 from .deep_model_m1 import LSTMClassifier
 
 
@@ -34,27 +35,36 @@ def train_lstm(
 ):
     """Train LSTM classifier with selectable optimizer."""
     model = LSTMClassifier(X.shape[2], hidden_dim)
-    if torch.cuda.is_available():
+    use_amp = torch.cuda.is_available()
+    if use_amp:
         model = model.cuda()
+    else:
+        print("⚠️ [AMP Warning] No GPU detected – switched to CPU mode with fallback config")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     dataset = TensorDataset(X, y)
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
     criterion = nn.BCELoss()
-    if optimizer_name == "sgd":
-        optimizer = optim.SGD(model.parameters(), lr=lr)
-    else:
-        optimizer = optim.Adam(model.parameters(), lr=lr)
+    optimizer = (
+        optim.SGD(model.parameters(), lr=lr)
+        if optimizer_name == "sgd"
+        else optim.Adam(model.parameters(), lr=lr)
+    )
+
+    scaler = GradScaler(enabled=use_amp)
 
     for epoch in range(epochs):
-        total_loss = 0
+        model.train()
+        total_loss = 0.0
         for batch_x, batch_y in loader:
-            if torch.cuda.is_available():
-                batch_x, batch_y = batch_x.cuda(), batch_y.cuda()
+            batch_x, batch_y = batch_x.to(device), batch_y.to(device)
             optimizer.zero_grad()
-            preds = model(batch_x)
-            loss = criterion(preds, batch_y)
-            loss.backward()
-            optimizer.step()
+            with autocast(enabled=use_amp):
+                preds = model(batch_x)
+                loss = criterion(preds, batch_y)
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
             total_loss += loss.item()
         print(f"Epoch {epoch+1}/{epochs} – Loss: {total_loss:.4f}")
     return model

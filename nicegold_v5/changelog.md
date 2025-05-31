@@ -628,3 +628,6 @@
 ## 2025-12-29
 - แก้บั๊ก KeyError 'close' ระหว่าง Optuna ในโหมด `ai_master`
 - ปรับ `autopipeline` ส่ง DataFrame ราคาจริงให้ `start_optimization` (Patch v24.1.1)
+## 2025-12-30
+- เพิ่มการเทรนแบบ Mixed Precision (AMP) ใน `train_lstm_runner`
+- ใช้งาน CPU fallback เมื่อไม่พบ GPU และปรับชุดทดสอบ (Patch v24.2.3)
