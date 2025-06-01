@@ -25,6 +25,7 @@ def test_run_production_wfv(monkeypatch):
     monkeypatch.setattr(main, 'parse_timestamp_safe', lambda s, fmt: s)
     monkeypatch.setattr(main, 'sanitize_price_columns', lambda d: d)
     monkeypatch.setattr(main, 'validate_indicator_inputs', lambda d, min_rows=None: None)
+    monkeypatch.setattr(main, 'check_exit_reason_variety', lambda df: True)
 
     called = {}
     def fake_run(df_in, features, label_col, **kw):
@@ -68,6 +69,7 @@ def test_run_production_wfv_close_fallback(monkeypatch):
     monkeypatch.setattr(main, 'parse_timestamp_safe', lambda s, fmt: s)
     monkeypatch.setattr(main, 'sanitize_price_columns', lambda d: d)
     monkeypatch.setattr(main, 'validate_indicator_inputs', lambda d, min_rows=None: None)
+    monkeypatch.setattr(main, 'check_exit_reason_variety', lambda df: True)
 
     called = {}
     def fake_run(df_in, features, label_col, **kw):
@@ -110,6 +112,7 @@ def test_run_production_wfv_no_open_close(monkeypatch):
     monkeypatch.setattr(main, 'parse_timestamp_safe', lambda s, fmt: s)
     monkeypatch.setattr(main, 'sanitize_price_columns', lambda d: d)
     monkeypatch.setattr(main, 'validate_indicator_inputs', lambda d, min_rows=None: None)
+    monkeypatch.setattr(main, 'check_exit_reason_variety', lambda df: True)
     called = {}
     monkeypatch.setattr(main, 'auto_qa_after_backtest', lambda t, e, label=None: called.update({'qa': True}))
     monkeypatch.setattr(main, 'run_walkforward_backtest', lambda *a, **k: pd.DataFrame({'pnl':[0.0]*5, 'side':['buy']*5, 'exit_reason':['tp2']*5}))
@@ -140,6 +143,7 @@ def test_run_production_wfv_auto_dataset(monkeypatch):
     monkeypatch.setattr(main, 'parse_timestamp_safe', lambda s, fmt: s)
     monkeypatch.setattr(main, 'sanitize_price_columns', lambda d: d)
     monkeypatch.setattr(main, 'validate_indicator_inputs', lambda d, min_rows=None: None)
+    monkeypatch.setattr(main, 'check_exit_reason_variety', lambda df: True)
 
     gen_called = {}
     monkeypatch.setattr('nicegold_v5.ml_dataset_m1.generate_ml_dataset_m1', lambda *a, **k: gen_called.setdefault('called', True))
