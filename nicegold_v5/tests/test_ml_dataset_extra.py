@@ -57,13 +57,26 @@ def test_generate_ml_dataset_prod_fallback(tmp_path, monkeypatch):
     csv_path = tmp_path / 'XAUUSD_M1.csv'
     df.to_csv(csv_path, index=False)
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda d, config=None, **kw: d)
-    monkeypatch.setattr('nicegold_v5.exit.simulate_partial_tp_safe', lambda d, percentile_threshold=75: pd.DataFrame({'entry_time': [], 'exit_reason': []}))
+    def fake_generate(df_in, config=None, **kw):
+        df_in = df_in.copy()
+        if config and config.get('force_entry'):
+            df_in['entry_signal'] = 'buy'
+        else:
+            df_in['entry_signal'] = None
+        return df_in
+
+    def fake_simulate(d, percentile_threshold=75):
+        if d['entry_signal'].notnull().any():
+            return pd.DataFrame({'entry_time': d['timestamp'], 'exit_reason': ['tp2'] * len(d)})
+        return pd.DataFrame({'entry_time': [], 'exit_reason': []})
+
+    monkeypatch.setattr('nicegold_v5.entry.generate_signals', fake_generate)
+    monkeypatch.setattr('nicegold_v5.exit.simulate_partial_tp_safe', fake_simulate)
     monkeypatch.setattr('nicegold_v5.wfv.ensure_buy_sell', lambda trades_df, df, fn: trades_df)
     out_csv = tmp_path / 'out' / 'ml_dataset_m1.csv'
     generate_ml_dataset_m1(str(csv_path), str(out_csv), mode='production')
     out_df = pd.read_csv(out_csv)
-    assert out_df['tp2_hit'].sum() == 0
+    assert out_df['tp2_hit'].sum() > 0
 
 
 def test_generate_ml_dataset_force_near_tp2(tmp_path, monkeypatch):
