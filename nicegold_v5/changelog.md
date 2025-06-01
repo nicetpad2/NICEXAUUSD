@@ -775,3 +775,5 @@
 - [Patch v29.0.0] เพิ่ม Production Guard ป้องกัน oversample/force label ใน production และบังคับให้ WFV มีไม้ TP1/TP2/SL จริง ≥ 5 ไม้
 ## 2026-02-22
 - [Patch v28.2.6] แก้ generate_ml_dataset_m1 เมื่อไม่มี TP2 จริงด้วยการ inject TP2 5 จุด และใช้ ensure_buy_sell ป้องกัน trade log ว่าง
+## 2026-02-23
+- [Patch QA-FIX v28.2.7] ensure_buy_sell เช็ค parameter ก่อนส่ง percentile_threshold เพื่อกัน TypeError

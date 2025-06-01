@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import inspect  # [Patch QA-FIX v28.2.7] dynamic fallback param check
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline
@@ -272,7 +273,10 @@ def ensure_buy_sell(trades_df: pd.DataFrame, df: pd.DataFrame, simulate_fn) -> p
         return trades_df
 
     print("[Patch QA-FIX] ไม่มี BUY/SELL ครบ – ยิง ultra-relax config")
-    trades_df2 = simulate_fn(df, percentile_threshold=1)
+    if "percentile_threshold" in inspect.signature(simulate_fn).parameters:
+        trades_df2 = simulate_fn(df, percentile_threshold=1)
+    else:
+        trades_df2 = simulate_fn(df)
     sides2 = trades_df2.get("side", trades_df2.get("type", pd.Series(dtype=str))).str.lower()
     has_buy2 = "buy" in sides2.values
     has_sell2 = "sell" in sides2.values
