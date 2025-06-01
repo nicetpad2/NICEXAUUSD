@@ -139,7 +139,7 @@ def detect_fold_drift(fold_stats: list[dict]) -> pd.DataFrame:
     return pd.DataFrame(drifts)
 
 
-QA_BASE_PATH = "/content/drive/MyDrive/NICEGOLD/logs/qa"
+QA_BASE_PATH = "logs/qa"
 os.makedirs(QA_BASE_PATH, exist_ok=True)
 
 

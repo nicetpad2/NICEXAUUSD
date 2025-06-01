@@ -98,5 +98,4 @@ def test_auto_qa_after_backtest(tmp_path, monkeypatch):
 
 def test_default_qa_base_path():
     from nicegold_v5.qa import QA_BASE_PATH
-    assert os.path.isabs(QA_BASE_PATH)
-    assert QA_BASE_PATH == "/content/drive/MyDrive/NICEGOLD/logs/qa"
+    assert QA_BASE_PATH == "logs/qa"

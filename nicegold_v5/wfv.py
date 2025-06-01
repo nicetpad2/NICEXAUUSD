@@ -21,7 +21,7 @@ INITIAL_CAPITAL = 10000.0
 
 from nicegold_v5.fix_engine import autofix_fold_run, autorisk_adjust, run_self_diagnostic
 
-TRADE_DIR = "/content/drive/MyDrive/NICEGOLD/logs"  # [Patch v12.3.9] Define log dir
+TRADE_DIR = "logs/trades"  # [Patch v12.3.9] Define log dir
 os.makedirs(TRADE_DIR, exist_ok=True)  # [Patch v12.3.9] Ensure log dir exists
 
 

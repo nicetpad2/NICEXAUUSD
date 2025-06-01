@@ -858,3 +858,5 @@
 ### 2026-03-18
 - ปรับ `__init__.py` ให้ lazy import โมดูล entry ป้องกันวง import ซ้ำ
 
+### 2026-03-19
+- [Patch v30.0.0] Align core function signatures, fix imports, and normalize paths
