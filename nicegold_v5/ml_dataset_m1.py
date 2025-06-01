@@ -53,17 +53,26 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
 
     # Load trade log
     trade_log_path = "logs/trades_v12_tp1tp2.csv"
-    # [Patch v28.2.6] 🛡️ Always regenerate trade log with ultra config for ML (ensure TP2 sample)
-    print("[Patch v28.2.6] 🛡️ Generating trade log for ML with SNIPER_CONFIG_ULTRA_OVERRIDE...")
+    # [Patch v28.2.6] 🛡️ Always regenerate trade log with realistic config
+    print("[Patch v28.2.6] 🛡️ Generating trade log for ML with SNIPER_CONFIG_Q3_TUNED...")
     print("[Patch v28.2.6] 🔎 Volume stat (dev):", df["volume"].describe())
-    from nicegold_v5.config import SNIPER_CONFIG_ULTRA_OVERRIDE
+    from nicegold_v5.config import SNIPER_CONFIG_Q3_TUNED, RELAX_CONFIG_Q3
     from nicegold_v5.entry import generate_signals
     from nicegold_v5.exit import simulate_partial_tp_safe
     from nicegold_v5.wfv import ensure_buy_sell
     import inspect  # [Patch QA-FIX v28.2.7] dynamic fallback param check
 
-    df_signals = generate_signals(df.copy(), config=SNIPER_CONFIG_ULTRA_OVERRIDE)
+    config_main = SNIPER_CONFIG_Q3_TUNED
+    df_signals = generate_signals(df.copy(), config=config_main)
     trade_df = simulate_partial_tp_safe(df_signals)
+    if trade_df.empty or (trade_df.get("exit_reason", pd.Series(dtype=str)).isnull().all()):
+        print("[Patch v28.3.0] Fallback to RELAX_CONFIG_Q3 for entry signals.")
+        df_signals = generate_signals(df.copy(), config=RELAX_CONFIG_Q3)
+        trade_df = simulate_partial_tp_safe(df_signals)
+    if mode == "qa":
+        from nicegold_v5.config import SNIPER_CONFIG_ULTRA_OVERRIDE
+        df_signals = generate_signals(df.copy(), config=SNIPER_CONFIG_ULTRA_OVERRIDE)
+        trade_df = simulate_partial_tp_safe(df_signals)
     if "percentile_threshold" in inspect.signature(simulate_partial_tp_safe).parameters:
         trade_df = ensure_buy_sell(trade_df, df_signals, lambda d: simulate_partial_tp_safe(d, percentile_threshold=1))
     else:
