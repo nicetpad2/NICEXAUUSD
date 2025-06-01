@@ -855,3 +855,6 @@
 ### 2026-03-17
 - ย้าย `adaptive_threshold_dl.py` เข้าไปในแพ็กเกจ `nicegold_v5`
 
+### 2026-03-18
+- ปรับ `__init__.py` ให้ lazy import โมดูล entry ป้องกันวง import ซ้ำ
+
