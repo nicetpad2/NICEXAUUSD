@@ -760,3 +760,5 @@
 - [Patch QA-FIX] แก้ฟังก์ชัน run_production_wfv ให้โหลดข้อมูลครบถ้วนและเพิ่ม unit test coverage
 ## 2026-02-15
 - [Patch QA-FIX] เพิ่ม fallback คอลัมน์ 'Open' ใน run_production_wfv ป้องกัน KeyError
+## 2026-02-16
+- [Patch QA-FIX v28.2.1] เพิ่มการตรวจสอบคอลัมน์ 'open' หรือ 'close' แบบไม่สนตัวพิมพ์ และ raise ValueError หากไม่มี พร้อมทดสอบเพิ่มเติม
