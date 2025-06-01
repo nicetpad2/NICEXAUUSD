@@ -839,42 +839,44 @@ def welcome():
         return
 
 if __name__ == "__main__":
-    print("\n🟡 NICEGOLD Assistant (Enterprise CLI – v28.1.0 QA/Prod)")
+    VERSION = "v28.3.0"
+    print(f"\n🟡 NICEGOLD Assistant (Enterprise CLI – {VERSION})")
     print("[1] Production (WFV/Backtest)")
     print("[2] QA Robustness (ForceEntry/Stress)")
     menu = input("เลือกโหมด (1–2): ")
 
-    prod_flag = False
-    qa_flag = False
     if menu.strip() == "1":
-        prod_flag = True
-        qa_flag = False
-        print("[Patch v28.1.0] 🚀 เริ่ม Production WFV Mode (no ForceEntry, ใช้พารามิเตอร์ปรับจูนจริง)")
+        print("[Patch v28.3.0] 🚀 เริ่ม Production WFV Mode")
+        result = autopipeline(mode="prod", train_epochs=50, test_mode=False, force_entry=False)
+        cfg = {"mode": "prod"}
+        run_type = "WFV"
     elif menu.strip() == "2":
-        prod_flag = False
-        qa_flag = True
-        print("[Patch v28.1.0] 🛡️ เริ่ม QA Robustness Mode (ForceEntry, Stress Test, Noisy Scenario)")
+        print("[Patch v28.3.0] 🚦 QA Robustness: ForceEntry Stress Test กำลังทำงาน ...")
+        from qa import force_entry_stress_test
+        from nicegold_v5.utils import load_data
+        from nicegold_v5.config import SNIPER_CONFIG_Q3_TUNED
+        df = load_data(M1_PATH)
+        cfg = SNIPER_CONFIG_Q3_TUNED.copy()
+        cfg.update({"version": VERSION})
+        result = force_entry_stress_test(df, cfg)
+        run_type = "QA_FORCEENTRY"
     else:
         print("❌ ไม่พบเมนูที่เลือก")
         sys.exit(0)
 
-    result = autopipeline(
-        mode="prod" if prod_flag else "qa",
-        train_epochs=50,
-        test_mode=qa_flag,
-        force_entry=qa_flag,
-    )
-
     try:
         from nicegold_v5.utils import export_audit_report
+        metrics = (
+            result.get("metrics") if isinstance(result, dict) else {"trades": len(result)}
+        )
         export_audit_report(
-            config={"mode": "prod" if prod_flag else "qa"},
-            metrics={"trades": len(result) if hasattr(result, "__len__") else 0},
-            run_type="WFV" if prod_flag else "QA",
-            version="v28.2.0",
+            config=cfg,
+            metrics=metrics,
+            run_type=run_type,
+            version=VERSION,
             fold=None,
             outdir="logs",
         )
-        print("[Patch v28.1.0] 📤 Export Audit/Report อัตโนมัติ (หลังจบ run)")
+        print(f"[Patch v28.3.0] ✅ Export Audit/Report อัตโนมัติ")
     except Exception as e:  # pragma: no cover - best effort
-        print(f"[Patch v28.1.0] ⚠️ Export Audit/Report ล้มเหลว: {e}")
+        print(f"[Patch v28.3.0] ⚠️ Export Audit/Report ล้มเหลว: {e}")

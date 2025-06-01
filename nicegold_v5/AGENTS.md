@@ -770,3 +770,5 @@
 
 ### 2026-02-09
 - ปรับปรุง meta_classifier และชุดทดสอบ autopipeline/core_all/coverage_boost ให้ coverage 100%
+### 2026-02-10
+- [Patch v28.3.0] เพิ่ม ForceEntry Stress Test และ QA Audit Log ใน qa.py พร้อมเมนู CLI แบบย่อ

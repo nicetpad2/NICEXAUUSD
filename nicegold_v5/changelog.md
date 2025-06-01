@@ -748,3 +748,5 @@
 - ปรับปรุงชุดทดสอบ LSTM และ train_lstm_runner ครอบคลุม utils ให้ coverage 100%
 ## 2026-02-09
 - ปรับปรุง meta_classifier และทดสอบ autopipeline, core_all, coverage_boost ครอบคลุมทุกสาขา
+## 2026-02-10
+- [Patch v28.3.0] เพิ่ม qa.py สำหรับ ForceEntry Stress Test และบันทึก QA Audit Log พร้อมปรับเมนู CLI
