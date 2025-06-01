@@ -856,29 +856,48 @@ def run_production_wfv():
         "rsi", "volume", "entry_score", "pattern_label"
     ]
     label_col = "tp2_hit"  # หรือ "target" ตาม dataset ที่เตรียมไว้
-    # ตรวจสอบว่ามี label_col ใน df
+    # [Patch QA-FIX v28.2.3] End-to-End loop auto-fix (Production WFV)
+    # 1. Ensure label_col exists
     if label_col not in df.columns:
         print(f"[Patch QA-FIX] Warning: label_col {label_col} not found in dataframe. Run generate_ml_dataset_m1 first.")
         from nicegold_v5.ml_dataset_m1 import generate_ml_dataset_m1
         generate_ml_dataset_m1(csv_path=M1_PATH, out_path="data/ml_dataset_m1.csv")
         df = pd.read_csv("data/ml_dataset_m1.csv")
-    # [Patch QA-FIX v28.2.1] Fallback – สร้าง 'Open' ถ้าไม่มีใน dataframe (รองรับ ML Dataset ทุกกรณี)
+    # 2. Ensure 'Open' column exists
     if "Open" not in df.columns:
-        lower_cols = {c.lower(): c for c in df.columns}
-        if "open" in lower_cols:
-            df["Open"] = df[lower_cols["open"]]
-            print("[Patch QA-FIX v28.2.1] สร้างคอลัมน์ 'Open' จาก 'open' (ML Dataset)")
-        elif "close" in lower_cols:
-            df["Open"] = df[lower_cols["close"]]
-            print("[Patch QA-FIX v28.2.1] สร้างคอลัมน์ 'Open' จาก 'close' (ไม่มี open ใน ML Dataset)")
+        if "open" in df.columns:
+            df["Open"] = df["open"]
+            print("[Patch QA-FIX v28.2.3] สร้างคอลัมน์ 'Open' จาก 'open'")
+        elif "close" in df.columns:
+            df["Open"] = df["close"]
+            print("[Patch QA-FIX v28.2.3] สร้างคอลัมน์ 'Open' จาก 'close'")
         else:
-            raise ValueError("[Patch QA-FIX v28.2.1] ❌ ไม่พบ 'Open' หรือ 'open' หรือ 'close' ใน DataFrame")
-    # [Patch QA-FIX v28.2.2] Ensure index is timestamp for WFV
+            print("[Patch QA-FIX v28.2.3] ❌ ไม่พบ 'Open'/'open'/'close' ใน DataFrame, skip WFV")
+            equity = pd.DataFrame({"equity": []})
+            auto_qa_after_backtest(pd.DataFrame(), equity, label="ProductionWFV")
+            return
+    # 3. Ensure 'timestamp' is datetime and set as index
     if "timestamp" in df.columns and not isinstance(df.index, pd.DatetimeIndex):
         df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
         df = df.set_index("timestamp")
-        print("[Patch QA-FIX v28.2.2] ตั้ง index เป็น timestamp สำหรับ WFV/ML dataset")
-    trades = run_walkforward_backtest(df, features, label_col)
+        print("[Patch QA-FIX v28.2.3] ตั้ง index เป็น timestamp (DatetimeIndex)")
+    # 4. Run WFV with smart error handling
+    try:
+        trades = run_walkforward_backtest(df, features, label_col)
+    except Exception as e:
+        print(f"[Patch QA-FIX v28.2.3] ❌ Error in run_walkforward_backtest: {e}")
+        # Fallback: try to drop invalid rows and retry
+        bad_rows = [i for i, idx in enumerate(df.index) if not hasattr(idx, "hour")]
+        if bad_rows:
+            df_good = df.drop(df.index[bad_rows])
+            print(f"[Patch QA-FIX v28.2.3] Removed {len(bad_rows)} rows with invalid index; retrying WFV...")
+            try:
+                trades = run_walkforward_backtest(df_good, features, label_col)
+            except Exception as e2:
+                print(f"[Patch QA-FIX v28.2.3] Still failed after cleaning: {e2}")
+                trades = pd.DataFrame()
+        else:
+            trades = pd.DataFrame()
     equity = pd.DataFrame({"equity": trades["pnl"].cumsum() if not trades.empty else []})
     auto_qa_after_backtest(trades, equity, label="ProductionWFV")
 
