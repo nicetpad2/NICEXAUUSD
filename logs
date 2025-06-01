@@ -1,1 +1,61 @@
 
+
+📊 NICEGOLD CLI MENU [QA/Production Enterprise]
+[1] Production (WFV)   [2] QA Robustness
+(Report/export จะ export อัตโนมัติหลัง run)
+เลือกเมนู (1–2): 1
+📥 Loading XAUUSD_M1.csv: 100% 1/1 [00:06<00:00,  6.77s/it]
+✅ Loaded 708,972 rows from /content/drive/MyDrive/NICEGOLD/nicegold_v5/XAUUSD_M1.csv
+[Patch v11.9.23] 📅 ตรวจพบ date/timestamp แบบ พ.ศ. (lowercase) – กำลังแปลง...
+[Patch v11.9.18] ✅ แปลง Date พ.ศ. → timestamp สำเร็จ
+[Patch v11.9.20] 🧠 เริ่ม parse_timestamp_safe()
+[Patch v11.9.20] ✅ parse_timestamp_safe() เสร็จสิ้น – แปลงได้ 708972 row | NaT 0 row
+[Patch v11.9.16] 🧼 Sanitize Columns:
+   ▸ close: 0 NaN
+   ▸ high: 0 NaN
+   ▸ low: 0 NaN
+   ▸ volume: 0 NaN
+[Patch v11.9.11] ✅ ตรวจข้อมูลก่อนเข้า indicator: เหลือ 708972 row หลัง dropna
+[Patch QA-FIX v28.2.4] ⚠️ ไม่พบ tp2_hit ใน dataframe – รัน generate_ml_dataset_m1 อัตโนมัติ
+[Patch v28.2.6] 🛠️ Loading and sanitizing CSV from: /content/drive/MyDrive/NICEGOLD/nicegold_v5/XAUUSD_M1.csv
+[Patch v11.9.23] 📅 ตรวจพบ date/timestamp แบบ พ.ศ. (lowercase) – กำลังแปลง...
+[Patch v11.9.18] ✅ แปลง Date พ.ศ. → timestamp สำเร็จ
+[Patch v11.9.20] 🧠 เริ่ม parse_timestamp_safe()
+[Patch v11.9.20] ✅ parse_timestamp_safe() เสร็จสิ้น – แปลงได้ 708972 row | NaT 0 row
+[Patch v11.9.16] 🧼 Sanitize Columns:
+   ▸ close: 0 NaN
+   ▸ high: 0 NaN
+   ▸ low: 0 NaN
+   ▸ volume: 0 NaN
+[Patch v28.2.6] ✅ Sanitize timestamp success – 708972 rows
+[Patch v28.2.6] 🛡️ Generating trade log for ML with SNIPER_CONFIG_Q3_TUNED...
+[Patch v28.2.6] 🔎 Volume stat (dev): count    708972.000000
+mean          0.032538
+std           0.036727
+min           0.000120
+25%           0.008640
+50%           0.019990
+75%           0.042500
+max           0.952740
+Name: volume, dtype: float64
+[Patch v11.9.5] ✅ entry_blocked_reason assigned: 668603 filled
+[Patch v8.0] Entry Signal Blocked: 94.31%
+[Patch v11.9.5] ✅ entry_blocked_reason assigned: 668603 filled
+[Patch v8.0] Entry Signal Blocked: 94.31%
+[Patch v11.9.5] ✅ entry_blocked_reason assigned: 668603 filled
+[Patch v8.0] Entry Signal Blocked: 94.31%
+[Patch v28.3.2] ⚡️ Fallback: force TP2 hit on near-miss trades (MFE > 90% TP2)
+[Patch v28.3.2] 🚀 Forced 10 near-miss as TP2
+[Patch QA-FIX] ไม่มี BUY/SELL ครบ – ยิง ultra-relax config
+[Patch QA-FIX] ยิง ForceEntry buy/sell ใน row ที่ขาด
+[Patch QA-FIX] ✅ BUY/SELL ครบหลัง forceentry
+Traceback (most recent call last):
+  File "/content/drive/MyDrive/NICEGOLD/main.py", line 996, in <module>
+    main_menu()
+  File "/content/drive/MyDrive/NICEGOLD/main.py", line 988, in main_menu
+    run_production_wfv()
+  File "/content/drive/MyDrive/NICEGOLD/main.py", line 887, in run_production_wfv
+    generate_ml_dataset_m1(csv_path=M1_PATH, out_path="data/ml_dataset_m1.csv", mode="production")
+  File "/content/drive/MyDrive/NICEGOLD/nicegold_v5/ml_dataset_m1.py", line 191, in generate_ml_dataset_m1
+    raise RuntimeError("[Inject Variety] ❌ ไม่พอ TP1/TP2/SL >=5 ใน production")
+RuntimeError: [Inject Variety] ❌ ไม่พอ TP1/TP2/SL >=5 ใน production
