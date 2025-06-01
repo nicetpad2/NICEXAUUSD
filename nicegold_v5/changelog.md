@@ -811,3 +811,6 @@
 - [Patch v30.0.1] จัดการ RuntimeError จาก generate_ml_dataset_m1 ใน run_production_wfv และเรียก auto_qa_after_backtest แบบนิ่มนวล
 ## 2026-03-09
 - [Patch v30.1.0] Relax production exit-variety guard: ต้องมี TP1/TP2/SL อย่างน้อย 1 ไม้ใน generate_ml_dataset_m1
+## 2026-03-10
+- ปรับ wfv.py เรียกใช้ split_by_session จาก utils เพื่อลดโค้ดซ้ำ
+- เพิ่มข้อมูลตำแหน่งไฟล์ผลลัพธ์ใน README
