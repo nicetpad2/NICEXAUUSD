@@ -801,3 +801,5 @@
 - [Patch QA-FIX v28.2.7] ปรับ ensure_buy_sell เรียก simulate_fn แบบ dynamic หากไม่รองรับ percentile_threshold
 ### 2026-02-24
 - [Patch v28.2.8] แก้ generate_ml_dataset_m1 แปลง entry_time แบบปลอดภัย `errors="coerce"` และกรอง NaT ก่อน map TP2
+### 2026-02-25
+- [Patch v28.3.0] ปรับ generate_ml_dataset_m1 ใช้ SNIPER_CONFIG_Q3_TUNED ใน production และ fallback ไปใช้ RELAX_CONFIG_Q3 หากไม่มี trade จริง
