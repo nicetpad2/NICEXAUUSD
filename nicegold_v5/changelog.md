@@ -840,3 +840,4 @@
 ## 2026-03-18
 - แก้ปัญหา ImportError วงวนโดย lazy import โมดูล entry ใน `__init__.py`
 
+\n## 2026-03-19\n- [Patch v30.0.0] Align core function signatures, fix imports, and normalize paths

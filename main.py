@@ -132,7 +132,7 @@ def calc_lot_risk(capital, atr, risk_pct=1.5):
 def run_csv_integrity_check():
     return True
 
-TRADE_DIR = "/content/drive/MyDrive/NICEGOLD/logs"
+TRADE_DIR = "logs/trades"
 M1_PATH = os.getenv(
     "M1_PATH",
     os.path.join(ROOT_DIR, "nicegold_v5", "XAUUSD_M1.csv"),

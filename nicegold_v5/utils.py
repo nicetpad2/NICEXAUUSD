@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
+import logging
 import subprocess
 import json
 from multiprocessing import cpu_count
@@ -236,11 +237,15 @@ def print_qa_summary(trades: pd.DataFrame, equity: pd.DataFrame) -> dict:
     }
 
 # ✅ Fixed Paths for Colab
-TRADE_DIR = "/content/drive/MyDrive/NICEGOLD/logs"
-# os.makedirs(TRADE_DIR, exist_ok=True)  # handled externally
-M1_PATH = "/content/drive/MyDrive/NICEGOLD/XAUUSD_M1.csv"
-M15_PATH = "/content/drive/MyDrive/NICEGOLD/XAUUSD_M15.csv"
-
+TRADE_DIR = "logs/trades"
+logger = logging.getLogger("nicegold_v5")
+handler = logging.StreamHandler()
+formatter = logging.Formatter("[%(asctime)s] %(levelname)s: %(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
+M1_PATH = "data/XAUUSD_M1.csv"
+M15_PATH = "data/XAUUSD_M15.csv"
 
 def ensure_logs_dir(path: str = "logs") -> None:
     """สร้างไดเรกทอรี logs หากยังไม่มี หรือลบไฟล์ที่ชื่อชนกัน"""
