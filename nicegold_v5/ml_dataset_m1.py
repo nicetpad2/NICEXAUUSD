@@ -61,6 +61,7 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
         RELAX_CONFIG_Q3,
         SNIPER_CONFIG_DIAGNOSTIC,
         SNIPER_CONFIG_PROFIT,
+        QA_FORCE_ENTRY_CONFIG,
     )
     from nicegold_v5.entry import generate_signals
     from nicegold_v5.exit import simulate_partial_tp_safe
@@ -110,6 +111,22 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
         df_signals = generate_signals(df.copy(), config=SNIPER_CONFIG_PROFIT)
         trade_df = simulate_partial_tp_safe(df_signals)
         real_trades = trade_df[trade_df.get("exit_reason").isin(["tp1", "tp2", "sl"])]
+        tp2_count = (trade_df.get("exit_reason") == "tp2").sum()
+    # [Patch v28.4.0] Ultra fallback ForceEntry for QA/Dev if still no TP2
+    if tp2_count < 10:
+        print("[Patch v28.4.0] 🚨 Fallback: ForceEntry ultra mode – inject every bar as entry_signal")
+        qa_force_config = QA_FORCE_ENTRY_CONFIG.copy()
+        qa_force_config["tp_rr_ratio"] = 1.1
+        qa_force_config["force_entry"] = True
+        qa_force_config["force_entry_ratio"] = 1.0
+        qa_force_config["force_entry_min_orders"] = 500
+        qa_force_config["force_entry_side"] = "both"
+        qa_force_config["force_entry_session"] = "all"
+        qa_force_config["disable_buy"] = False
+        qa_force_config["disable_sell"] = False
+        df_signals = generate_signals(df.copy(), config=qa_force_config, test_mode=True)
+        trade_df = simulate_partial_tp_safe(df_signals)
+        print("[Patch v28.4.0] ✅ Ultra force entry applied.")
         tp2_count = (trade_df.get("exit_reason") == "tp2").sum()
     if mode == "qa":
         from nicegold_v5.config import SNIPER_CONFIG_ULTRA_OVERRIDE
