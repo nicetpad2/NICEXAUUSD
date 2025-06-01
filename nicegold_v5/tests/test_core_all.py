@@ -1073,9 +1073,9 @@ from nicegold_v5.entry import (
 
 
 def test_apply_tp_logic():
-    tp1, tp2 = apply_tp_logic(100, 'buy', rr1=1.5, rr2=3.0, sl_distance=5)
-    assert tp1 == 107.5
-    assert tp2 == 115.0
+    tp1, tp2 = apply_tp_logic(100, 'buy', sl_distance=5)
+    assert tp1 == 106.0
+    assert tp2 == 110.0
 
 
 def test_generate_entry_signal():
