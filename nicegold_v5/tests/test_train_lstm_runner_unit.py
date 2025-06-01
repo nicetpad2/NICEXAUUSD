@@ -171,6 +171,7 @@ def test_train_lstm_gpu_and_main(monkeypatch):
     code = "\n" * start + textwrap.dedent("\n".join(lines[start + 1:start + 5]))
     compiled = compile(code, tlr.__file__, "exec")
     exec(compiled, {
+        "autotune_resource": lambda: ("cpu", 1),
         "load_dataset": lambda: (X, y),
         "train_lstm": lambda *a, **k: model,
         "torch": types.SimpleNamespace(save=lambda m, p: saved.setdefault("path", p)),

@@ -725,3 +725,9 @@
 - [Patch v28.1.1] ปรับ train_lstm_runner รองรับ `torch.amp` และ fallback เป็น `torch.cuda.amp`
 - บันทึกตัวแปร `_AMP_MODE` แจ้งโหมด AMP ที่เลือก
 
+## 2026-02-01
+- [Patch v29.1.0] เพิ่ม `autotune_resource` และ `print_resource_status` ใน utils พร้อมใช้งานใน train_lstm_runner
+
+## 2026-02-02
+- [Patch v29.2.0] เพิ่ม `dynamic_batch_scaler` เพื่อปรับ batch size อัตโนมัติในกรณี MemoryError
+

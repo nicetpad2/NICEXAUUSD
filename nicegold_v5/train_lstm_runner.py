@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 from torch import optim
 from torch.utils.data import DataLoader, TensorDataset
+from .utils import autotune_resource, print_resource_status, dynamic_batch_scaler
 try:
     from torch.amp import autocast, GradScaler
     _AMP_MODE = "torch.amp"
@@ -67,6 +68,7 @@ def train_lstm(
     scaler = GradScaler(enabled=use_amp)
 
     for epoch in range(epochs):
+        print_resource_status()
         model.train()
         total_loss = 0.0
         load_time = forward_time = backward_time = step_time = 0.0
@@ -108,7 +110,8 @@ def train_lstm(
 
 
 if __name__ == "__main__":
+    device, batch_size = autotune_resource()
     X, y = load_dataset()
-    model = train_lstm(X, y)
+    model = train_lstm(X, y, batch_size=batch_size)
     torch.save(model.state_dict(), "models/model_lstm_tp2.pth")
     print("✅ Model saved to models/model_lstm_tp2.pth")
