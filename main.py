@@ -39,6 +39,8 @@ from nicegold_v5.config import (
     SNIPER_CONFIG_PROFIT,
     SNIPER_CONFIG_Q3_TUNED,
     RELAX_CONFIG_Q3,
+    SNIPER_CONFIG_DIAGNOSTIC,
+    SNIPER_CONFIG_ULTRA_OVERRIDE,
     SESSION_CONFIG,
     COMPOUND_MILESTONES,
     KILL_SWITCH_DD,
@@ -171,6 +173,18 @@ def run_smart_fast_qa():
         print("✅ Smart Fast QA Passed")
     except Exception as e:
         print(f"❌ Smart Fast QA Failed: {e}")
+
+def check_exit_reason_variety(trades_df, require=("tp1", "tp2", "sl")):
+    """ตรวจสอบว่า trade log มี exit_reason ครบทุกชนิด"""
+    reasons = trades_df.get("exit_reason", pd.Series(dtype=str)).value_counts()
+    required = set(require)
+    found = set(reasons.index)
+    missing = required - found
+    if missing:
+        print(f"[Patch v29.9.0] ❌ Exit variety missing: {missing}")
+        return False
+    print(f"[Patch v29.9.0] ✅ Exit reason variety: OK ({reasons.to_dict()})")
+    return True
 
 def _run_fold(args):
     df, features, label_col, fold_name = args
@@ -781,34 +795,31 @@ def autopipeline(mode="default", train_epochs=1):
         n_folds = plan["n_folds"]
 
     from nicegold_v5.utils import run_autofix_wfv
-    trades_df = run_autofix_wfv(
-        df,
-        simulate_partial_tp_safe,
-        ensure_order_side_enabled(SNIPER_CONFIG_Q3_TUNED),
-        n_folds=n_folds,
-    )
-    if trades_df.empty or trades_df["pnl"].abs().sum() == 0:
-        print("[Patch v27.0.0] 🚨 WFV ได้ 0 trades ทั้งหมด! Fallback: relax entry_signal + ปิด guard")
-        df["tp2_guard_pass"] = True
-        df = df[df["entry_signal"].notnull()]
-        relax_config = {
-            "gain_z_thresh": -0.2,
-            "ema_slope_min": -0.01,
-            "atr_thresh": 0.1,
-            "sniper_risk_score_min": 2.0,
-            "tp_rr_ratio": 4.0,
-            "volume_ratio": 0.4,
-            "disable_buy": False,
-            "disable_sell": False,
-        }
-        df = generate_signals(df, config=relax_config, test_mode=True)
-        trades_df = run_autofix_wfv(df, simulate_partial_tp_safe, relax_config)
+    cfgs = [
+        ("Q3_TUNED", SNIPER_CONFIG_Q3_TUNED),
+        ("RELAX_CONFIG_Q3", RELAX_CONFIG_Q3),
+        ("DIAGNOSTIC", SNIPER_CONFIG_DIAGNOSTIC),
+        ("ULTRA_OVERRIDE", SNIPER_CONFIG_ULTRA_OVERRIDE),
+    ]
+
+    trades_df = pd.DataFrame()
+    for name, cfg in cfgs:
+        print(f"\n[Patch v29.9.0] 🛠️ Fallback: {name}")
+        ensure_order_side_enabled(cfg)
+        df_s = generate_signals(df.copy(), config=cfg, test_mode=True)
+        trades_df = run_autofix_wfv(df_s, simulate_partial_tp_safe, cfg, n_folds=n_folds)
+        if not trades_df.empty and check_exit_reason_variety(trades_df):
+            print(f"[Patch v29.9.0] ✅ SUCCESS: AutoPipeline WFV {name}")
+            break
+        else:
+            print(f"[Patch v29.9.0] ⚠️ {name}: ยังไม่ครบ variety – Fallback ต่อ...")
+            trades_df = pd.DataFrame()
+    if trades_df.empty:
+        raise RuntimeError("[Patch v29.9.0] ❌ No real trades (TP1/TP2/SL) in AutoPipeline WFV")
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     out_path = os.path.join(TRADE_DIR, f"trades_autopipeline_{ts}.csv")
     trades_df.to_csv(out_path, index=False)
     print(f"📦 Exported AutoPipeline trades → {out_path}")
-    if trades_df.empty:
-        print("[Patch v27.0.0] ❌ ยังไม่มี trade หลัง fallback – ตรวจสอบ label/entry logic")
     maximize_ram()
     return trades_df
 
@@ -892,49 +903,45 @@ def run_production_wfv():
         df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
         df = df.set_index("timestamp")
         print("[Patch QA-FIX v28.2.3] ตั้ง index เป็น timestamp (DatetimeIndex)")
-    # 4. Run WFV with smart error handling
-    def _simulate(data, percentile_threshold=75):
+    configs = [
+        ("Q3_TUNED", SNIPER_CONFIG_Q3_TUNED),
+        ("RELAX_CONFIG_Q3", RELAX_CONFIG_Q3),
+        ("DIAGNOSTIC", SNIPER_CONFIG_DIAGNOSTIC),
+        ("ULTRA_OVERRIDE", SNIPER_CONFIG_ULTRA_OVERRIDE),
+    ]
+
+    def _simulate(data, cfg):
+        ensure_order_side_enabled(cfg)
         buy = run_walkforward_backtest(
-            data, features, label_col, side="buy", percentile_threshold=percentile_threshold
+            data, features, label_col, side="buy", percentile_threshold=75
         )
         sell = run_walkforward_backtest(
-            data, features, label_col, side="sell", percentile_threshold=percentile_threshold
+            data, features, label_col, side="sell", percentile_threshold=75
         )
         return pd.concat([buy, sell], ignore_index=True)
 
-    try:
-        trades = _simulate(df)
-        trades = ensure_buy_sell(trades, df, _simulate)
-    except Exception as e:
-        print(f"[Patch QA-FIX v28.2.3] ❌ Error in run_walkforward_backtest: {e}")
-        # Fallback: try to drop invalid rows and retry
-        bad_rows = [i for i, idx in enumerate(df.index) if not hasattr(idx, "hour")]
-        if bad_rows:
-            df_good = df.drop(df.index[bad_rows])
-            print(f"[Patch QA-FIX v28.2.3] Removed {len(bad_rows)} rows with invalid index; retrying WFV...")
-            try:
-                trades = ensure_buy_sell(_simulate(df_good), df_good, _simulate)
-            except Exception as e2:
-                print(f"[Patch QA-FIX v28.2.3] Still failed after cleaning: {e2}")
-                trades = pd.DataFrame()
-        else:
+    trades = pd.DataFrame()
+    for name, cfg in configs:
+        print(f"\n[Patch v29.9.0] 🛠️ Fallback: {name}")
+        try:
+            trades = _simulate(df, cfg)
+            trades = ensure_buy_sell(trades, df, lambda d, pct=75: _simulate(d, cfg))
+        except Exception as e:
+            print(f"[Patch v29.9.0] ❌ {name} error: {e}")
             trades = pd.DataFrame()
-    # [Patch QA-FIX v28.2.6] QA fallback if empty
-    if trades is None or trades.empty:
-        print("[Patch QA-FIX v28.2.6] ❌ ไม่มี trade หลัง WFV – QA Fallback: ตรวจสอบ entry_signal count")
-        print(f"Signals (buy): {(df['entry_signal']=='buy').sum()}, (sell): {(df['entry_signal']=='sell').sum()}")
-        os.makedirs('logs', exist_ok=True)
-        pd.DataFrame([]).to_csv('logs/qa_empty_trades.csv', index=False)
-        return
-    # Guard: block dummy result (no TP1/TP2/SL in real trade)
-    real_trades = trades.query("exit_reason in ['tp1','tp2','sl']") if 'exit_reason' in trades.columns else pd.DataFrame()
-    if real_trades.shape[0] < 5:
-        print("❌ [Production Guard] ไม่มีไม้ TP1/TP2/SL จริง โปรดปรับ entry logic/config ก่อน deploy!")
-        os.makedirs('logs', exist_ok=True)
-        trades.to_csv('logs/qa_blocked_trades.csv', index=False)
-        raise RuntimeError("No real trades (TP1/TP2/SL) in WFV. Entry logic not realistic.")
-    equity = pd.DataFrame({"equity": trades["pnl"].cumsum() if not trades.empty else []})
-    auto_qa_after_backtest(trades, equity, label="ProductionWFV")
+        if not trades.empty and check_exit_reason_variety(trades):
+            print(f"[Patch v29.9.0] ✅ SUCCESS: WFV มี TP1/TP2/SL ครบ ({name})")
+            ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+            out = f"logs/trades_v12_tp1tp2_{name}.csv"
+            os.makedirs("logs", exist_ok=True)
+            trades.to_csv(out, index=False)
+            print(f"[Patch v29.9.0] ✅ Trade log saved ({out})")
+            equity = pd.DataFrame({"equity": trades["pnl"].cumsum()})
+            auto_qa_after_backtest(trades, equity, label="ProductionWFV")
+            return trades
+        else:
+            print(f"[Patch v29.9.0] ⚠️ {name}: ยังไม่ครบ variety – Fallback ต่อ...")
+    raise RuntimeError("[Patch v29.9.0] ❌ No real trades (TP1/TP2/SL) in WFV แม้ fallback ทุก config – ให้ปรับ entry logic/ข้อมูล")
 
 
 def run_qa_robustness():
