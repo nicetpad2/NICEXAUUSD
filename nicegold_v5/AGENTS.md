@@ -868,3 +868,5 @@
 - อัปเดต SESSION_CONFIG ใส่ start/end และปรับ utils.load_data ให้ parse timestamp ปลอดภัย
 ### 2026-03-22
 - [Patch v32.0.1] นำเข้า QA_BASE_PATH จาก utils ใน wfv.py และส่ง outdir ให้ ensure_buy_sell
+### 2026-03-23
+- [Patch v32.0.2] ปรับ DEFAULT_RR1/DEFAULT_RR2 ใน apply_tp_logic ให้ TP2 ถึงง่ายขึ้น

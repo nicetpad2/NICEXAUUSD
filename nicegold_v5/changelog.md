@@ -850,3 +850,5 @@
 - SESSION_CONFIG includes start/end time fields; utils.load_data parses timestamps safely
 ## 2026-03-22
 - [Patch v32.0.1] wfv.py imports QA_BASE_PATH from utils and exports zero-trade markers via ensure_buy_sell
+## 2026-03-23
+- [Patch v32.0.2] Lower DEFAULT_RR1/DEFAULT_RR2 in entry.apply_tp_logic for easier TP2

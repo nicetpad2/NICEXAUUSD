@@ -16,11 +16,15 @@ ENABLE_TP1_TP2 = True
 ENABLE_SESSION_FILTER = False
 ENABLE_SIGNAL_LOG = True
 
+# [Patch v32.0.2] 💥 Loosen TP Logic: ลด rr1, rr2 เพื่อให้ TP2 เอื้อมถึงได้ง่ายขึ้น
+DEFAULT_RR1 = 1.2    # จากเดิม 1.5–2.0
+DEFAULT_RR2 = 2.0    # จากเดิม 3.0–5.0
 
-def apply_tp_logic(entry_price: float, direction: str, rr1: float = 1.5, rr2: float = 3.0, sl_distance: float = 5.0) -> tuple[float, float]:
+def apply_tp_logic(entry_price: float, direction: str, rr1: float = 3.0, sl_distance: float = 5.0) -> tuple[float, float]:
     """คำนวณเป้าหมาย TP1/TP2 ตาม Risk Reward"""
-    tp1 = entry_price + rr1 * sl_distance if direction == "buy" else entry_price - rr1 * sl_distance
-    tp2 = entry_price + rr2 * sl_distance if direction == "buy" else entry_price - rr2 * sl_distance
+    # [Patch v32.0.2] ใช้ DEFAULT_RR1, DEFAULT_RR2 แทน rr1*2 เดิม
+    tp1 = entry_price + DEFAULT_RR1 * sl_distance if direction == "buy" else entry_price - DEFAULT_RR1 * sl_distance
+    tp2 = entry_price + DEFAULT_RR2 * sl_distance if direction == "buy" else entry_price - DEFAULT_RR2 * sl_distance
     return tp1, tp2
 
 
@@ -1110,7 +1114,7 @@ def _generate_signals_v12_0_core(
         if pd.notnull(row["entry_signal"]):
             direction = row["entry_signal"]
             sl_dist = row["atr"]
-            tp1, tp2 = apply_tp_logic(row["close"], direction, 1.5, 3.0, sl_dist)
+            tp1, tp2 = apply_tp_logic(row["close"], direction, sl_distance=sl_dist)
             sl = row["close"] - sl_dist if direction == "buy" else row["close"] + sl_dist
 
             df.at[i, "tp1_price"] = tp1
