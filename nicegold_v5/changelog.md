@@ -837,3 +837,6 @@
 
 ## 2026-03-17
 - ย้าย `adaptive_threshold_dl.py` เข้าไปในแพ็กเกจ `nicegold_v5`
+## 2026-03-18
+- แก้ปัญหา ImportError วงวนโดย lazy import โมดูล entry ใน `__init__.py`
+

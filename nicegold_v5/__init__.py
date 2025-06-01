@@ -1,20 +1,33 @@
-from .entry import (
-    generate_signals_v8_0,
-    generate_signals_v9_0,
-    generate_signals_unblock_v9_1,
-    generate_signals_profit_v10,
-    generate_signals_v11_scalper_m1,
-    generate_signals_v12_0,
-    generate_signals,
-    generate_pattern_signals,
-    apply_tp_logic,
-    generate_entry_signal,
-    session_filter,
-    trade_log_fields,
-    rsi,
-    simulate_trades_with_tp,
-    simulate_partial_tp_safe,
-)  # [Patch v10.0] expose latest logic
+"""NICEGOLD package exports."""
+
+import importlib
+
+_ENTRY_ATTRS = [
+    "generate_signals_v8_0",
+    "generate_signals_v9_0",
+    "generate_signals_unblock_v9_1",
+    "generate_signals_profit_v10",
+    "generate_signals_v11_scalper_m1",
+    "generate_signals_v12_0",
+    "generate_signals",
+    "generate_pattern_signals",
+    "apply_tp_logic",
+    "generate_entry_signal",
+    "session_filter",
+    "trade_log_fields",
+    "rsi",
+    "simulate_trades_with_tp",
+    "simulate_partial_tp_safe",
+]
+
+
+def __getattr__(name):
+    """Lazy-load entry attributes to avoid circular imports."""
+    if name in _ENTRY_ATTRS:
+        entry = importlib.import_module(".entry", __name__)
+        return getattr(entry, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 from .backtester import calc_lot
 from .exit import should_exit
 from .backtester import run_backtest
