@@ -234,11 +234,13 @@ def generate_signals_v8_0(df: pd.DataFrame, config: dict | None = None) -> pd.Da
     """ใช้ logic sniper + TP1/TSL แบบล่าสุด (Patch v8.0)."""
     df = df.copy()
 
+    # [Patch v30.0.0] Relaxable Entry Configuration
     config = config or {}
-    gain_z_thresh = config.get("gain_z_thresh", 0.25)
-    ema_slope_min = config.get("ema_slope_min", 0.2)
-    atr_thresh_val = config.get("atr_thresh", 1.0)
-    sniper_risk_score_min = config.get("sniper_risk_score_min", 2.5)  # [Patch v8.1.7]
+    gain_z_thresh = config.get("gain_z_thresh", 0.0)
+    ema_slope_min = config.get("ema_slope_min", 0.0)
+    atr_thresh_val = config.get("atr_thresh", 0.0)
+    sniper_risk_score_min = config.get("sniper_risk_score_min", 2.5)
+    sniper_score_min = config.get("sniper_score_min", 0.0)
     tp_rr_ratio_cfg = config.get("tp_rr_ratio", 4.8)
     volume_ratio = config.get("volume_ratio", 1.0)
     df["entry_signal"] = None
@@ -339,7 +341,7 @@ def generate_signals_v8_0(df: pd.DataFrame, config: dict | None = None) -> pd.Da
     sniper_zone = (
         (df["sniper_risk_score"] >= sniper_risk_score_min)
         & (df["gain_z"] > gain_z_thresh)
-        & (df["ema_slope"] > ema_slope_min)
+        & (df["ema_slope"] > ema_slope_min)       # [Patch] จากเดิม > 0.2 เป็น > 0.0
         & df["confirm_zone"]
     )
     sniper_zone |= (
@@ -412,7 +414,7 @@ def generate_signals_v8_0(df: pd.DataFrame, config: dict | None = None) -> pd.Da
     print(
         f"[Patch v11.9.5] \u2705 entry_blocked_reason assigned: {df['entry_blocked_reason'].notnull().sum()} filled"
     )
-    blocked_pct = df["entry_signal"].isnull().mean() * 100
+    blocked_pct = df["entry_signal"].isnull().mean() * 100    # [Patch] คำนวณ % ที่ถูก Block หลังลด Threshold
     print(f"[Patch v8.0] Entry Signal Blocked: {blocked_pct:.2f}%")
     return df
 

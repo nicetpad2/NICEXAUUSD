@@ -828,3 +828,7 @@
 - [Patch v30.0.2] run_production_wfv ไม่หยุดเมื่อ ML dataset ไม่พอ trade แต่สร้างคอลัมน์
   tp2_hit=0 แล้วดำเนิน WFV ต่อไป
 
+## 2026-03-15
+- [Patch v30.0.0] ปรับลด threshold ใน `generate_signals_v8_0` ให้เป็นศูนย์และเพิ่มตัวแปร
+  `sniper_score_min` ค่าเริ่มต้น 0.0 เพื่อปลดล็อกการเข้าเทรดใน WFV
+

@@ -845,3 +845,7 @@
 - [Patch v30.0.2] ปรับ run_production_wfv ไม่ abort เมื่อ generate_ml_dataset_m1 ไม่พอ trade
   แต่ใส่คอลัมน์ tp2_hit=0 แล้วรัน WFV ต่อ
 
+### 2026-03-15
+- [Patch v30.0.0] ลด threshold ใน `generate_signals_v8_0` เพื่อให้เกิด real trades ในแต่ละ fold
+  เพิ่มตัวแปร `sniper_score_min` และปรับ log แสดงเปอร์เซ็นต์สัญญาณที่ถูกบล็อก
+
