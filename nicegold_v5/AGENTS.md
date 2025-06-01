@@ -826,3 +826,5 @@
 ### 2026-03-07
 - [Patch v30.0.0] เพิ่มฟังก์ชัน `inject_exit_variety` เสริม exit_reason ให้ครบ tp1/tp2/sl ต่อ fold
   และบังคับ guard โหมด production ต้องมีไม้จริง ≥5 ต่อคลาส
+### 2026-03-08
+- [Patch v30.0.1] ปรับ run_production_wfv จัดการ RuntimeError จาก generate_ml_dataset_m1 ให้หยุดรันอย่างปลอดภัยและเรียก auto_qa_after_backtest

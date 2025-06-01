@@ -807,3 +807,5 @@
 ## 2026-03-07
 - [Patch v30.0.0] เพิ่ม `inject_exit_variety` ใช้ใน main.py และ ml_dataset_m1
   พร้อม production guard ต้องมี TP1/TP2/SL ไม่น้อยกว่า 5 ไม้
+## 2026-03-08
+- [Patch v30.0.1] จัดการ RuntimeError จาก generate_ml_dataset_m1 ใน run_production_wfv และเรียก auto_qa_after_backtest แบบนิ่มนวล
