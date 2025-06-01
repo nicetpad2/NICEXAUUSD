@@ -790,3 +790,5 @@
 - [Patch v28.4.0] เพิ่ม ultra force entry fallback ใน generate_ml_dataset_m1 เพื่อบังคับให้มี TP1/TP2/SL จริงเสมอ
 ## 2026-02-29
 - [Patch v28.4.1] บังคับ inject TP2 labels ใน QA/DEV หากยังไม่มี TP2 ครบ 10 จุดหลัง ultra force entry
+## 2026-03-01
+- [Patch v28.4.2] เพิ่มการ inject mock TP2 ลง trade log หากยังมี TP2 ไม่ถึง 10 ไม้ (เฉพาะ QA/DEV)
