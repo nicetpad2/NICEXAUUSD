@@ -776,3 +776,5 @@
 - [Patch v28.2.1] ปรับ main.py เพิ่มฟังก์ชัน QA Robustness Integration และเมนูใหม่
 ### 2026-02-12
 - แก้คำเตือน FutureWarning ใน qa.py โดยใช้ `np.nan` แทน `pd.NA` และเติม `.fillna(0.0)`
+### 2026-02-13
+- [Patch v28.2.1] ปรับ main_menu และ export_audit ใช้งานง่าย รองรับ Audit Log แบบ Enterprise

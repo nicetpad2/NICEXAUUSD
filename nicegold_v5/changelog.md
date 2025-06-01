@@ -754,3 +754,5 @@
 - [Patch v28.2.1] ปรับ main.py เพิ่มเมนู QA Robustness Integration และฟังก์ชัน stress test
 ## 2026-02-12
 - แก้คำเตือน FutureWarning ใน qa.py ระหว่าง unittest
+## 2026-02-13
+- [Patch v28.2.1] ปรับเมนู CLI และ export_audit ให้บันทึก Audit Log อัตโนมัติ
