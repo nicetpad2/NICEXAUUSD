@@ -124,7 +124,7 @@ def make_stub(monkeypatch):
 
 def test_threshold_dataset(tmp_path, monkeypatch):
     make_stub(monkeypatch)
-    adaptive = importlib.reload(importlib.import_module('adaptive_threshold_dl'))
+    adaptive = importlib.reload(importlib.import_module('nicegold_v5.adaptive_threshold_dl'))
     df = pd.DataFrame({
         'timestamp': pd.date_range('2024-01-01', periods=65, freq='h'),
         'gain_z': np.linspace(0,1,65),
@@ -148,7 +148,7 @@ def test_threshold_dataset(tmp_path, monkeypatch):
 
 def test_threshold_predictor_forward(monkeypatch):
     make_stub(monkeypatch)
-    adaptive = importlib.reload(importlib.import_module('adaptive_threshold_dl'))
+    adaptive = importlib.reload(importlib.import_module('nicegold_v5.adaptive_threshold_dl'))
     model = adaptive.ThresholdPredictor()
     seq = np.zeros((2,60,3), dtype=np.float32)
     fb = np.zeros((2,3), dtype=np.float32)

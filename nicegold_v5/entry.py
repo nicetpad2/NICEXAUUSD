@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 from .config import SESSION_CONFIG, HEDGEFUND_ENTRY_CONFIG, THRESHOLD_MODEL_PATH
-from adaptive_threshold_dl import predict_thresholds
+from .adaptive_threshold_dl import predict_thresholds
 
 # --- CONFIG FLAGS (Patch v11.1) ---
 ENABLE_TP1_TP2 = True
