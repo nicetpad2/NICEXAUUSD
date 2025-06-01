@@ -821,3 +821,5 @@
 - [Patch v29.9.0] Ultra-Relax Fallback & Exit Variety Guard ใน main.py และ autopipeline
 ### 2026-03-05
 - [Patch v29.9.1] แก้ check_exit_reason_variety รองรับค่า 'TP' และอักษรใหญ่
+### 2026-03-06
+- [Patch v29.9.2] แก้ run_walkforward_backtest inject class variety อัตโนมัติเมื่อเหลือคลาสเดียว

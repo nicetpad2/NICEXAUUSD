@@ -57,6 +57,12 @@ def sample_wfv_df_close_only():
     df['close'] = range(100, 140)
     return df
 
+# Dataset with single class label
+def sample_wfv_df_single_class():
+    df = sample_wfv_df()
+    df['label'] = 0
+    return df
+
 
 def sample_qa_df():
     dates = pd.date_range('2024-01-01 09:00', periods=100, freq='h')
@@ -413,6 +419,17 @@ def test_run_walkforward_backtest():
     assert not trades.empty
     assert 'r_multiple' in trades.columns
     assert 'session' in trades.columns
+
+def test_run_walkforward_backtest_single_class():
+    df = sample_wfv_df_single_class()
+    trades = wfv.run_walkforward_backtest(
+        df,
+        features=['feat1', 'feat2'],
+        label_col='label',
+        n_folds=2
+    )
+    assert isinstance(trades, pd.DataFrame)
+    assert not trades.empty
 
 
 def test_session_performance():
