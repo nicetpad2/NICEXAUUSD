@@ -8,7 +8,10 @@ from datetime import datetime
 import time
 
 # [Patch v29.1.0] AI Resource AutoTune & Monitor แบบเทพ
-import torch
+try:  # pragma: no cover - optional torch dependency
+    import torch
+except Exception:  # pragma: no cover - handle missing torch
+    torch = None
 try:  # pragma: no cover - optional dependency
     import psutil
 except Exception:  # pragma: no cover - handle missing psutil
@@ -72,7 +75,7 @@ def export_audit_report(
 
 def autotune_resource(max_batch_size: int = 4096, min_batch_size: int = 64, safety_vram_gb: int = 1) -> tuple[str, int]:
     """Auto-detect device & memory and return optimal ``(device, batch_size)``."""
-    if torch.cuda.is_available():
+    if torch and torch.cuda.is_available():
         device = "cuda"
         vram_total = torch.cuda.get_device_properties(0).total_memory // (1024 ** 3)
         batch_size = min(max_batch_size, int((vram_total - safety_vram_gb) * 128))
@@ -97,7 +100,7 @@ def print_resource_status() -> None:
         )
     else:
         print("[Patch v29.1.0] [Monitor] RAM: psutil not available")
-    if torch.cuda.is_available():
+    if torch and torch.cuda.is_available():
         vram = torch.cuda.memory_allocated() / 1024 ** 3
         vram_total = torch.cuda.get_device_properties(0).total_memory / 1024 ** 3
         print(f"[Patch v29.1.0] [Monitor] GPU VRAM: {vram:.1f} / {vram_total:.1f} GB")
@@ -124,7 +127,7 @@ def dynamic_batch_scaler(
             print(f"[Patch v29.2.0] [DynBatch] {type(e).__name__}: {e} | ลด batch_size...")
             batch_size = max(min_batch, int(batch_size * 0.6))
             retry += 1
-            if torch.cuda.is_available():
+            if torch and torch.cuda.is_available():
                 torch.cuda.empty_cache()
             time.sleep(2)
     print("[Patch v29.2.0] [DynBatch] ⚠️ Auto-scaling ไม่สำเร็จหลัง retry.")
