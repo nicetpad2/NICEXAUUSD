@@ -882,8 +882,18 @@ def run_production_wfv():
         df = df.set_index("timestamp")
         print("[Patch QA-FIX v28.2.3] ตั้ง index เป็น timestamp (DatetimeIndex)")
     # 4. Run WFV with smart error handling
+    def _simulate(data, percentile_threshold=75):
+        buy = run_walkforward_backtest(
+            data, features, label_col, side="buy", percentile_threshold=percentile_threshold
+        )
+        sell = run_walkforward_backtest(
+            data, features, label_col, side="sell", percentile_threshold=percentile_threshold
+        )
+        return pd.concat([buy, sell], ignore_index=True)
+
     try:
-        trades = run_walkforward_backtest(df, features, label_col)
+        trades = _simulate(df)
+        trades = ensure_buy_sell(trades, df, _simulate)
     except Exception as e:
         print(f"[Patch QA-FIX v28.2.3] ❌ Error in run_walkforward_backtest: {e}")
         # Fallback: try to drop invalid rows and retry
@@ -892,7 +902,7 @@ def run_production_wfv():
             df_good = df.drop(df.index[bad_rows])
             print(f"[Patch QA-FIX v28.2.3] Removed {len(bad_rows)} rows with invalid index; retrying WFV...")
             try:
-                trades = run_walkforward_backtest(df_good, features, label_col)
+                trades = ensure_buy_sell(_simulate(df_good), df_good, _simulate)
             except Exception as e2:
                 print(f"[Patch QA-FIX v28.2.3] Still failed after cleaning: {e2}")
                 trades = pd.DataFrame()

@@ -766,3 +766,5 @@
 - [Patch QA-FIX v28.2.2] ตั้ง index เป็น timestamp หากยังไม่ใช่ DatetimeIndex เพื่อป้องกัน AttributeError ใน pass_filters
 ## 2026-02-18
 - [Patch QA-FIX v28.2.3] ปรับปรุง run_production_wfv ให้แก้ index/dtype/column อัตโนมัติและบันทึก QA log ทุกกรณี
+## 2026-02-19
+- [Patch QA-FIX v29.2.0] เพิ่มฟังก์ชัน ensure_buy_sell ป้องกัน session หรือ fold ที่ไม่มีฝั่ง BUY/SELL
