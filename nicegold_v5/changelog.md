@@ -717,3 +717,7 @@
 ## 2026-01-29
 - [Patch v28.1.0] เพิ่ม ForceEntry System สำหรับ QA/Backtest เท่านั้น และปรับ interface main/autopipeline
 
+## 2026-01-30
+- เพิ่มพารามิเตอร์ `test_mode` ใน `generate_signals_v12_0` เพื่อรองรับ Dev QA/Force Entry
+- ปรับ `main.py` ไม่ส่ง `test_mode` ใน production pipeline
+

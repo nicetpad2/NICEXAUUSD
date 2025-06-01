@@ -433,7 +433,7 @@ def autopipeline(mode="default", train_epochs=1):
         validate_indicator_inputs(df)
     ensure_order_side_enabled(SNIPER_CONFIG_Q3_TUNED)
     test_mode = mode in ["QA", "test", "WFV", "diagnose"]
-    df = generate_signals(df, config=SNIPER_CONFIG_Q3_TUNED, test_mode=test_mode)
+    df = generate_signals(df, config=SNIPER_CONFIG_Q3_TUNED)  # เอา test_mode ออกถ้าไม่ได้ใช้จริง
     if df["entry_signal"].isnull().mean() >= 1.0:
         print("[AutoPipeline] ⚠️ ไม่มีสัญญาณ – fallback RELAX_CONFIG_Q3")
         ensure_order_side_enabled(RELAX_CONFIG_Q3)
