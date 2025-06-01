@@ -862,3 +862,7 @@
 - [Patch v30.0.0] Align core function signatures, fix imports, and normalize paths
 ### 2026-03-20
 - [Patch v32.0.0] ปรับปรุง wfv ให้รองรับ QA_BASE_PATH และบันทึก zero-trade ต่อ fold
+### 2026-03-21
+- ปรับ main.py ใช้ M1_PATH/TRADE_DIR จาก utils และสร้างไดเรกทอรีอัตโนมัติ
+- เพิ่ม alias generate_signals_v8_0 และ generate_signals_v12_0 ใน entry.py
+- อัปเดต SESSION_CONFIG ใส่ start/end และปรับ utils.load_data ให้ parse timestamp ปลอดภัย
