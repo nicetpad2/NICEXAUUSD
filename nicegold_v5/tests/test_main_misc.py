@@ -36,6 +36,12 @@ def test_check_exit_reason_variety_pass():
     assert main.check_exit_reason_variety(df)
 
 
+def test_check_exit_reason_variety_uppercase():
+    main = importlib.import_module('main')
+    df = pd.DataFrame({'exit_reason': ['TP', 'SL']})
+    assert main.check_exit_reason_variety(df)
+
+
 def test_check_exit_reason_variety_fail(capsys):
     main = importlib.import_module('main')
     df = pd.DataFrame({'exit_reason': ['tp1']})

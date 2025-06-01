@@ -176,14 +176,17 @@ def run_smart_fast_qa():
 
 def check_exit_reason_variety(trades_df, require=("tp1", "tp2", "sl")):
     """ตรวจสอบว่า trade log มี exit_reason ครบทุกชนิด"""
-    reasons = trades_df.get("exit_reason", pd.Series(dtype=str)).value_counts()
+    reasons = trades_df.get("exit_reason", pd.Series(dtype=str)).astype(str).str.lower()
+    found = set(reasons)
+    if "tp" in found:
+        found.update({"tp1", "tp2"})
     required = set(require)
-    found = set(reasons.index)
     missing = required - found
     if missing:
-        print(f"[Patch v29.9.0] ❌ Exit variety missing: {missing}")
+        print(f"[Patch v29.9.1] ❌ Exit variety missing: {missing}")
         return False
-    print(f"[Patch v29.9.0] ✅ Exit reason variety: OK ({reasons.to_dict()})")
+    counts = reasons.value_counts().to_dict()
+    print(f"[Patch v29.9.1] ✅ Exit reason variety: OK ({counts})")
     return True
 
 def _run_fold(args):

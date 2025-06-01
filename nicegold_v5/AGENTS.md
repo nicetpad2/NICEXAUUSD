@@ -819,3 +819,5 @@
 - [Patch v29.8.1] Ultra Override QA Mode – Inject signal/exit variety ทันทีใน ML dataset และ entry logic
 ### 2026-03-04
 - [Patch v29.9.0] Ultra-Relax Fallback & Exit Variety Guard ใน main.py และ autopipeline
+### 2026-03-05
+- [Patch v29.9.1] แก้ check_exit_reason_variety รองรับค่า 'TP' และอักษรใหญ่
