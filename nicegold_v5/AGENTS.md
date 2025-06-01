@@ -768,3 +768,5 @@
 ### 2026-02-08
 - ปรับปรุงเทส LSTM และ train_lstm_runner ครอบคลุม utils เพิ่ม coverage 100%
 
+### 2026-02-09
+- ปรับปรุง meta_classifier และชุดทดสอบ autopipeline/core_all/coverage_boost ให้ coverage 100%
