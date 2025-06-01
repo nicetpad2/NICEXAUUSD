@@ -750,3 +750,5 @@
 - ปรับปรุง meta_classifier และทดสอบ autopipeline, core_all, coverage_boost ครอบคลุมทุกสาขา
 ## 2026-02-10
 - [Patch v28.3.0] เพิ่ม qa.py สำหรับ ForceEntry Stress Test และบันทึก QA Audit Log พร้อมปรับเมนู CLI
+## 2026-02-11
+- [Patch v28.2.1] ปรับ main.py เพิ่มเมนู QA Robustness Integration และฟังก์ชัน stress test

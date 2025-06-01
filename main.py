@@ -45,7 +45,8 @@ from nicegold_v5.config import (
     ensure_order_side_enabled,
 )
 from nicegold_v5.optuna_tuner import start_optimization
-from nicegold_v5.qa import run_qa_guard, auto_qa_after_backtest
+# [Patch v28.2.1] QA Robustness Integration (Enterprise Grade)
+from nicegold_v5.qa import run_qa_guard, auto_qa_after_backtest, force_entry_stress_test
 from nicegold_v5.utils import (
     safe_calculate_net_change,
     convert_thai_datetime,
@@ -838,45 +839,52 @@ def welcome():
         maximize_ram()
         return
 
-if __name__ == "__main__":
-    VERSION = "v28.3.0"
-    print(f"\n🟡 NICEGOLD Assistant (Enterprise CLI – {VERSION})")
-    print("[1] Production (WFV/Backtest)")
-    print("[2] QA Robustness (ForceEntry/Stress)")
-    menu = input("เลือกโหมด (1–2): ")
+def run_production_wfv():
+    """[Patch v28.2.1] Production WFV + Auto QA"""
+    trades, equity = run_walkforward_backtest()
+    auto_qa_after_backtest(trades, equity, label="ProductionWFV")
 
-    if menu.strip() == "1":
-        print("[Patch v28.3.0] 🚀 เริ่ม Production WFV Mode")
-        result = autopipeline(mode="prod", train_epochs=50, test_mode=False, force_entry=False)
-        cfg = {"mode": "prod"}
-        run_type = "WFV"
-    elif menu.strip() == "2":
-        print("[Patch v28.3.0] 🚦 QA Robustness: ForceEntry Stress Test กำลังทำงาน ...")
-        from nicegold_v5.qa import force_entry_stress_test
-        from nicegold_v5.utils import load_data
-        from nicegold_v5.config import SNIPER_CONFIG_Q3_TUNED
-        df = load_data(M1_PATH)
-        cfg = SNIPER_CONFIG_Q3_TUNED.copy()
-        cfg.update({"version": VERSION})
-        result = force_entry_stress_test(df, cfg)
-        run_type = "QA_FORCEENTRY"
+
+def run_qa_robustness():
+    """[Patch v28.2.1] Full QA Robustness: Overfit, Noise, Leak, Bias"""
+    trades, equity = run_walkforward_backtest()
+    features = pd.read_csv("data/ml_dataset_m1.csv") if os.path.exists("data/ml_dataset_m1.csv") else None
+    if features is not None:
+        run_qa_guard(trades, features)
+    auto_qa_after_backtest(trades, equity, label="QA_Robustness")
+
+
+def run_forceentry_stress():
+    """[Patch v28.2.1] ForceEntry Stress Test"""
+    df = pd.read_csv("XAUUSD_M1.csv")
+    config = {"version": "v28.2.1", "run": "ForceEntryStress"}
+    force_entry_stress_test(df, config)
+
+
+def export_audit():
+    """[Patch v28.2.1] Audit Export Example"""
+    print("🔒 [Audit Export] ฟีเจอร์นี้บันทึกอัตโนมัติหลัง QA/Production ทุกครั้ง")
+
+
+def main_menu():
+    print("\n📊 NICEGOLD CLI MENU")
+    print("1. Run Production WFV")
+    print("2. Run Full QA Robustness")
+    print("3. Run ForceEntry Stress Test")
+    print("4. Export Audit Report")
+    print("5. (Dev Only) Test Custom Scenario")
+    choice = input("เลือกเมนู (1–5): ")
+    if choice == "1":
+        run_production_wfv()
+    elif choice == "2":
+        run_qa_robustness()
+    elif choice == "3":
+        run_forceentry_stress()
+    elif choice == "4":
+        export_audit()
     else:
-        print("❌ ไม่พบเมนูที่เลือก")
-        sys.exit(0)
+        print("ฟังก์ชัน Dev/Custom ยังไม่เปิด")
 
-    try:
-        from nicegold_v5.utils import export_audit_report
-        metrics = (
-            result.get("metrics") if isinstance(result, dict) else {"trades": len(result)}
-        )
-        export_audit_report(
-            config=cfg,
-            metrics=metrics,
-            run_type=run_type,
-            version=VERSION,
-            fold=None,
-            outdir="logs",
-        )
-        print(f"[Patch v28.3.0] ✅ Export Audit/Report อัตโนมัติ")
-    except Exception as e:  # pragma: no cover - best effort
-        print(f"[Patch v28.3.0] ⚠️ Export Audit/Report ล้มเหลว: {e}")
+
+if __name__ == "__main__":
+    main_menu()
