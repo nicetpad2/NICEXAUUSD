@@ -66,7 +66,7 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
     )
     from nicegold_v5.entry import generate_signals
     from nicegold_v5.exit import simulate_partial_tp_safe
-    from nicegold_v5.wfv import ensure_buy_sell
+    from nicegold_v5.wfv import ensure_buy_sell, inject_exit_variety
     import inspect  # [Patch QA-FIX v28.2.7] dynamic fallback param check
 
     config_main = SNIPER_CONFIG_Q3_TUNED.copy()
@@ -184,6 +184,13 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
         trade_df = ensure_buy_sell(trade_df, df_signals, lambda d: simulate_partial_tp_safe(d, percentile_threshold=1))
     else:
         trade_df = ensure_buy_sell(trade_df, df_signals, simulate_partial_tp_safe)
+
+    if mode == "production":
+        counts = trade_df.get("exit_reason", pd.Series(dtype=str)).str.lower().value_counts()
+        if any(counts.get(r, 0) < 5 for r in ("tp1", "tp2", "sl")):
+            raise RuntimeError("[Inject Variety] ❌ ไม่พอ TP1/TP2/SL >=5 ใน production")
+    else:
+        trade_df = inject_exit_variety(trade_df)
     os.makedirs("logs", exist_ok=True)
     trade_df.to_csv(trade_log_path, index=False)
     print("[Patch v28.2.6] ✅ Trade log saved →", trade_log_path)

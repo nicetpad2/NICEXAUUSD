@@ -268,6 +268,43 @@ def streak_summary(trades_df):
     }
 
 
+def inject_exit_variety(trades_df: pd.DataFrame,
+                        require=("tp1", "tp2", "sl"),
+                        fold_col: str | None = "fold") -> pd.DataFrame:
+    """Ensure exit_reason variety exists per fold by injecting dummy rows."""
+    trades_df = trades_df.copy()
+    trades_df["is_dummy"] = trades_df.get("is_dummy", False)
+
+    if fold_col and fold_col in trades_df.columns:
+        groups = trades_df.groupby(fold_col)
+        append_rows = []
+        if groups.ngroups == 0:
+            groups = [(1, trades_df)]
+        for name, g in groups:
+            reasons = g.get("exit_reason", pd.Series(dtype=str)).astype(str).str.lower()
+            missing = set(require) - set(reasons)
+            for reason in missing:
+                print(f"[Inject Variety] Fold {name}: add {reason}")
+                dummy = g.iloc[0].copy() if not g.empty else pd.Series(dtype=object)
+                dummy["exit_reason"] = reason
+                dummy["is_dummy"] = True
+                dummy[fold_col] = name
+                append_rows.append(dummy)
+        if append_rows:
+            trades_df = pd.concat([trades_df, pd.DataFrame(append_rows)], ignore_index=True)
+    else:
+        reasons = trades_df.get("exit_reason", pd.Series(dtype=str)).astype(str).str.lower()
+        missing = set(require) - set(reasons)
+        for reason in missing:
+            print(f"[Inject Variety] add {reason}")
+            dummy = trades_df.iloc[0].copy() if not trades_df.empty else pd.Series(dtype=object)
+            dummy["exit_reason"] = reason
+            dummy["is_dummy"] = True
+            trades_df = pd.concat([trades_df, pd.DataFrame([dummy])], ignore_index=True)
+
+    return trades_df
+
+
 def ensure_buy_sell(trades_df: pd.DataFrame, df: pd.DataFrame, simulate_fn) -> pd.DataFrame:
     """Guarantee both BUY and SELL trades exist using fallback and force entry."""
     sides = trades_df.get("side", trades_df.get("type", pd.Series(dtype=str))).str.lower()

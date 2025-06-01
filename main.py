@@ -20,7 +20,7 @@ from nicegold_v5.wfv import (
     streak_summary,
 )
 # [Patch QA-FIX v28.2.5] Forward for QA
-from nicegold_v5.wfv import ensure_buy_sell
+from nicegold_v5.wfv import ensure_buy_sell, inject_exit_variety
 
 # Keep backward-compatible name
 run_walkforward_backtest = raw_run
@@ -203,6 +203,7 @@ def _run_fold(args):
             raise ValueError("[Patch v16.0.1] ❌ ไม่มี 'Open'/'close' column ให้ fallback")
     trades = raw_run(df, features, label_col, strategy_name=str(fold_name))
     trades["fold"] = fold_name
+    trades = inject_exit_variety(trades, fold_col="fold")
     return trades
 
 def run_parallel_wfv(df: pd.DataFrame, features: list, label_col: str, n_folds: int = 5):

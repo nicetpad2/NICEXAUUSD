@@ -804,3 +804,6 @@
 
 ## 2026-03-06
 - [Patch v29.9.2] แก้ run_walkforward_backtest inject class variety อัตโนมัติเมื่อเหลือคลาสเดียว
+## 2026-03-07
+- [Patch v30.0.0] เพิ่ม `inject_exit_variety` ใช้ใน main.py และ ml_dataset_m1
+  พร้อม production guard ต้องมี TP1/TP2/SL ไม่น้อยกว่า 5 ไม้
