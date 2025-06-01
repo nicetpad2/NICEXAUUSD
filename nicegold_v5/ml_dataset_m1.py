@@ -162,7 +162,11 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
             if "entry_price" in mock_trade:
                 mock_trade["tp2_price"] = mock_trade.get("entry_price", 0) + 1
             mock_trades.append(mock_trade)
-        trade_df = pd.concat([trade_df, pd.DataFrame(mock_trades)], ignore_index=True)
+        new_trades_df = pd.DataFrame(mock_trades)
+        if trade_df.empty:
+            trade_df = new_trades_df.copy()
+        else:
+            trade_df = pd.concat([trade_df, new_trades_df], ignore_index=True)
         print(f"[ADA-BI] ✅ Injected {n_force} mock TP2 orders (QA/DEV only).")
         tp2_count = (trade_df.get("exit_reason") == "tp2").sum()
     if "percentile_threshold" in inspect.signature(simulate_partial_tp_safe).parameters:
@@ -175,7 +179,9 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
 
     trades = pd.read_csv(trade_log_path)
     # [Patch v28.2.8] บาง trade อาจมี entry_time เป็น '0' จาก ensure_buy_sell – แปลงแบบปลอดภัย
-    trades["entry_time"] = pd.to_datetime(trades["entry_time"], errors="coerce")
+    trades["entry_time"] = pd.to_datetime(
+        trades["entry_time"], format="%Y-%m-%d %H:%M:%S", errors="coerce"
+    )
     trades = trades.dropna(subset=["entry_time"])
     # [Patch v24.1.1] 🛠️ Ensure 'entry_score', 'gain_z' columns exist in trades
     if "entry_score" not in trades.columns:
