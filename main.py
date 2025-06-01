@@ -46,7 +46,7 @@ from nicegold_v5.config import (
 )
 from nicegold_v5.optuna_tuner import start_optimization
 # [Patch v28.2.1] QA Robustness Integration (Enterprise Grade)
-from nicegold_v5.qa import run_qa_guard, auto_qa_after_backtest, force_entry_stress_test
+from nicegold_v5.qa import run_qa_guard, auto_qa_after_backtest, force_entry_stress_test  # [Patch v28.2.1] QA Robustness Integration (Enterprise Grade)
 from nicegold_v5.utils import (
     safe_calculate_net_change,
     convert_thai_datetime,
@@ -862,28 +862,31 @@ def run_forceentry_stress():
 
 
 def export_audit():
-    """[Patch v28.2.1] Audit Export Example"""
-    print("🔒 [Audit Export] ฟีเจอร์นี้บันทึกอัตโนมัติหลัง QA/Production ทุกครั้ง")
+    """[Patch v28.2.1] Audit Export Example (Enterprise Grade)"""
+    from nicegold_v5.utils import export_audit_report
+    path = "/content/drive/MyDrive/NICEGOLD/logs/qa"
+    export_audit_report(
+        config={"example": True},
+        metrics={"result": "pass"},
+        run_type="manual_export",
+        version="v28.2.1",
+        fold="manual",
+        outdir=path,
+    )
+    print(f"🔒 [Audit Export] QA report example → {path}")
 
 
 def main_menu():
-    print("\n📊 NICEGOLD CLI MENU")
-    print("1. Run Production WFV")
-    print("2. Run Full QA Robustness")
-    print("3. Run ForceEntry Stress Test")
-    print("4. Export Audit Report")
-    print("5. (Dev Only) Test Custom Scenario")
-    choice = input("เลือกเมนู (1–5): ")
+    print("\n📊 NICEGOLD CLI MENU [QA/Production Enterprise]")
+    print("[1] Production (WFV)   [2] QA Robustness")
+    print("(Report/export จะ export อัตโนมัติหลัง run)")
+    choice = input("เลือกเมนู (1–2): ")
     if choice == "1":
         run_production_wfv()
     elif choice == "2":
         run_qa_robustness()
-    elif choice == "3":
-        run_forceentry_stress()
-    elif choice == "4":
-        export_audit()
     else:
-        print("ฟังก์ชัน Dev/Custom ยังไม่เปิด")
+        print("❌ เมนูไม่ถูกต้อง [เลือก 1 หรือ 2]")
 
 
 if __name__ == "__main__":
