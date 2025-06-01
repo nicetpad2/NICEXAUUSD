@@ -818,3 +818,6 @@
 ## 2026-03-11
 - [Patch v31.0.0] ปรับ entry/exit logic, ลด threshold entry_score, ลด TP2_HOLD_MIN, เพิ่ม time_exit, ปรับ RR1/RR2, disable session_filter และ inject exit variety อัตโนมัติใน production
 
+## 2026-03-12
+- [Patch v31.1.0] Inject exit variety automatically in Production when any of TP1/TP2/SL missing and avoid RuntimeError
+

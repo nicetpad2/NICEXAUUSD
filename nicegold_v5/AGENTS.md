@@ -835,3 +835,6 @@
 ### 2026-03-11
 - [Patch v31.0.0] ปรับ entry/exit logic, ลด RR1/RR2, เพิ่ม time_exit และ auto-inject exit variety
 
+### 2026-03-12
+- [Patch v31.1.0] Always inject missing exit-types in Production และไม่ abort เมื่อ variety ไม่ครบ
+
