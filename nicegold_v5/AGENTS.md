@@ -813,3 +813,5 @@
 - [Patch v28.4.1] Inject TP2 label ใน QA/DEV หากยังไม่มี TP2 ครบ 10 จุดหลัง ultra force entry
 ### 2026-03-01
 - [Patch v28.4.2] Inject mock TP2 trades เมื่อ trade log ยังมี TP2 ไม่ถึง 10 ไม้ (QA/DEV เท่านั้น)
+### 2026-03-02
+- [Patch v28.4.3] แก้ FutureWarning การ concat DataFrame ว่างใน generate_ml_dataset_m1 และลดจำนวนคำเตือนระหว่างทดสอบ
