@@ -735,3 +735,6 @@
 - [Patch v28.2.0] เพิ่มฟังก์ชัน `export_audit_report` และ `get_git_hash` รองรับการบันทึกผลแบบ CSV/JSON พร้อม commit hash
 - อัปเดต main.py, wfv.py, qa.py ให้เรียกใช้ฟังก์ชันนี้หลังจบรัน
 
+
+## 2026-02-04
+- ปรับ conftest.py patch RandomForestClassifier ให้เร็วขึ้น ลดเวลา unittest

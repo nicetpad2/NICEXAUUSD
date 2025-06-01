@@ -755,3 +755,6 @@
 - [Patch v28.2.0] เพิ่ม `export_audit_report` และ `get_git_hash` สำหรับบันทึก audit log
 - อัปเดต main.py, wfv.py, qa.py ให้เรียกใช้งานฟังก์ชันใหม่นี้
 
+### 2026-02-04
+- ปรับ conftest.py ให้ patch `RandomForestClassifier` เป็นรุ่นเร็ว ลดเวลา unittest
+
