@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 import os  # [Patch v12.3.9] Added for export
 from datetime import datetime  # [Patch v12.3.9] Added for timestamp
 
+# ลดการซ้ำซ้อน โดยไม่เก็บโค้ดซ้ำซ้อนในโมดูลนี้
+
 COMMISSION_PER_LOT = 0.10
 SPREAD_VALUE = 0.2
 SLIPPAGE = 0.3
@@ -35,16 +37,11 @@ def auto_entry_config(fold_df: pd.DataFrame) -> dict:
     }
 
 
+
 def split_by_session(df: pd.DataFrame) -> dict:
-    """Split dataframe into session-based subsets"""
-    df = df.copy()
-    df["timestamp"] = pd.to_datetime(df.get("timestamp", pd.date_range("2000-01-01", periods=len(df), freq="h")))
-    df["hour"] = df["timestamp"].dt.hour
-    df = df.set_index("timestamp")
-    asia_df = df[df["hour"].between(3, 7)]
-    london_df = df[df["hour"].between(8, 14)]
-    ny_df = df[df["hour"].between(15, 23)]
-    return {"Asia": asia_df, "London": london_df, "NY": ny_df}
+    """เรียกใช้ฟังก์ชันจาก utils เพื่อแบ่งเซสชัน"""
+    from .utils import split_by_session as util_split_by_session
+    return util_split_by_session(df)
 
 
 def apply_order_costs(entry, sl, tp1, tp2, lot, direction):
