@@ -29,7 +29,7 @@ def test_generate_ml_dataset_alt_path(monkeypatch, tmp_path):
     monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df, config=None, **kw: df)
     monkeypatch.setattr('nicegold_v5.exit.simulate_partial_tp_safe', lambda df: pd.DataFrame({'entry_time': df['timestamp'].iloc[:2], 'exit_reason': ['tp2', 'sl']}))
     out_csv = tmp_path / 'out.csv'
-    generate_ml_dataset_m1('does_not_exist.csv', str(out_csv))
+    generate_ml_dataset_m1('does_not_exist.csv', str(out_csv), mode="qa")
     assert out_csv.exists()
     alt_path.unlink()
 
@@ -42,7 +42,7 @@ def test_generate_ml_dataset_missing_timestamp(tmp_path, monkeypatch):
     monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df, config=None, **kw: df)
     monkeypatch.setattr('nicegold_v5.exit.simulate_partial_tp_safe', lambda df: pd.DataFrame())
     with pytest.raises(KeyError):
-        generate_ml_dataset_m1(None, str(tmp_path / 'out.csv'))
+        generate_ml_dataset_m1(None, str(tmp_path / 'out.csv'), mode="qa")
 
 
 def test_print_qa_summary_no_commission():

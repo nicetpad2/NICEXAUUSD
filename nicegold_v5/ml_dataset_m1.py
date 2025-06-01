@@ -4,7 +4,7 @@ import os
 import importlib
 
 
-def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv"):
+def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mode="production"):
     """สร้างชุดข้อมูล ML จากไฟล์ M1 โดยดึงพาธจาก main.M1_PATH หากไม่ได้ระบุ"""
     if csv_path is None:
         try:
@@ -80,25 +80,32 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv"):
     df.loc[df["timestamp"].isin(tp2_entries), "tp2_hit"] = 1
     tp2_count = df["tp2_hit"].sum()
     print(f"[Patch v24.3.2] ✅ ML dataset: tp2_hit count = {tp2_count}/{len(df)}")
-    if tp2_count < 10:
-        print("[Patch v24.3.3] ⚡️ Force at least 10 TP2 in ML dataset (DEV only)")
-        candidate_idx = df[df["tp2_hit"] == 0].sample(n=10, random_state=42).index
-        df.loc[candidate_idx, "tp2_hit"] = 1
 
-    # [Patch v27.0.0] Oversample/Clone TP2 rows ให้ TP2 ≥ 2% (เทพ)
-    n_total = len(df)
-    n_tp2 = df["tp2_hit"].sum() if "tp2_hit" in df.columns else 0
-    if n_tp2 > 0 and n_tp2 < 0.02 * n_total:
-        n_needed = int(0.02 * n_total) - n_tp2
-        df_tp2 = df[df["tp2_hit"] == 1]
-        df_oversampled = pd.concat(
-            [df, df_tp2.sample(n=n_needed, replace=True, random_state=42)],
-            ignore_index=True,
-        )
-        print(f"[Patch v27.0.0] ✅ Oversampled TP2: {n_tp2} → {df_oversampled['tp2_hit'].sum()}")
-        df = df_oversampled
+    if mode == "qa":
+        # เดิม QA/DEV สามารถ oversample label
+        if tp2_count < 10:
+            print("[Patch v24.3.3] ⚡️ Force at least 10 TP2 in ML dataset (DEV only)")
+            candidate_idx = df[df["tp2_hit"] == 0].sample(n=10, random_state=42).index
+            df.loc[candidate_idx, "tp2_hit"] = 1
+
+        n_total = len(df)
+        n_tp2 = df["tp2_hit"].sum() if "tp2_hit" in df.columns else 0
+        if n_tp2 > 0 and n_tp2 < 0.02 * n_total:
+            n_needed = int(0.02 * n_total) - n_tp2
+            df_tp2 = df[df["tp2_hit"] == 1]
+            df_oversampled = pd.concat(
+                [df, df_tp2.sample(n=n_needed, replace=True, random_state=42)],
+                ignore_index=True,
+            )
+            print(f"[Patch v27.0.0] ✅ Oversampled TP2: {n_tp2} → {df_oversampled['tp2_hit'].sum()}")
+            df = df_oversampled
+        else:
+            print(f"[Patch v27.0.0] TP2 class balance ok: {n_tp2}/{n_total}")
     else:
-        print(f"[Patch v27.0.0] TP2 class balance ok: {n_tp2}/{n_total}")
+        # Production: No oversample/force label
+        if tp2_count < 5:
+            print("❌ [Prod Guard] ไม่มี TP2 จริงใน dataset - โปรดปรับ entry logic!")
+            raise RuntimeError("No real TP2 hit in production dataset")
 
     df = df.sample(frac=1, random_state=42).reset_index(drop=True)  # shuffle
     df = df.dropna().reset_index(drop=True)

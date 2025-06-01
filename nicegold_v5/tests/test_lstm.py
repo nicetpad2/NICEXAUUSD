@@ -144,7 +144,7 @@ def test_generate_ml_dataset_m1(tmp_path, monkeypatch):
         'nicegold_v5.exit.simulate_partial_tp_safe',
         lambda df: pd.DataFrame({'entry_time': df['entry_time'].iloc[[10, 20]].astype(str).reset_index(drop=True), 'exit_reason': ['tp2', 'sl']})
     )
-    generate_ml_dataset_m1(str(csv_path), str(out_csv))
+    generate_ml_dataset_m1(str(csv_path), str(out_csv), mode="qa")
     assert out_csv.exists()
     out_df = pd.read_csv(out_csv)
     assert 'tp2_hit' in out_df.columns
@@ -164,7 +164,7 @@ def test_generate_ml_dataset_auto_trade_log(tmp_path, monkeypatch):
         'nicegold_v5.exit.simulate_partial_tp_safe',
         lambda df: pd.DataFrame({'entry_time': df['entry_time'], 'exit_reason': ['tp2'] * len(df)})
     )
-    generate_ml_dataset_m1(str(csv_path), str(out_csv))
+    generate_ml_dataset_m1(str(csv_path), str(out_csv), mode="qa")
     assert out_csv.exists()
     assert (tmp_path / 'logs' / 'trades_v12_tp1tp2.csv').exists()
 
@@ -182,7 +182,7 @@ def test_train_lstm(tmp_path, monkeypatch):
         'nicegold_v5.exit.simulate_partial_tp_safe',
         lambda df: pd.DataFrame({'entry_time': df['entry_time'].iloc[[10, 20]].astype(str).reset_index(drop=True), 'exit_reason': ['tp2', 'sl']})
     )
-    generate_ml_dataset_m1(str(csv_path), str(out_csv))
+    generate_ml_dataset_m1(str(csv_path), str(out_csv), mode="qa")
     X, y = load_dataset(str(out_csv), seq_len=5)
     class LocalModel(torch.nn.Module):
         def forward(self, x):
@@ -215,5 +215,5 @@ def test_generate_ml_dataset_creates_dir(tmp_path, monkeypatch):
         'nicegold_v5.exit.simulate_partial_tp_safe',
         lambda df: pd.DataFrame({'entry_time': df['entry_time'], 'exit_reason': ['tp2'] * len(df)})
     )
-    generate_ml_dataset_m1(str(csv_path), str(out_csv))
+    generate_ml_dataset_m1(str(csv_path), str(out_csv), mode="qa")
     assert out_csv.exists()
