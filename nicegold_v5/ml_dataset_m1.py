@@ -56,7 +56,12 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
     # [Patch v28.2.6] 🛡️ Always regenerate trade log with realistic config
     print("[Patch v28.2.6] 🛡️ Generating trade log for ML with SNIPER_CONFIG_Q3_TUNED...")
     print("[Patch v28.2.6] 🔎 Volume stat (dev):", df["volume"].describe())
-    from nicegold_v5.config import SNIPER_CONFIG_Q3_TUNED, RELAX_CONFIG_Q3
+    from nicegold_v5.config import (
+        SNIPER_CONFIG_Q3_TUNED,
+        RELAX_CONFIG_Q3,
+        SNIPER_CONFIG_DIAGNOSTIC,
+        SNIPER_CONFIG_PROFIT,
+    )
     from nicegold_v5.entry import generate_signals
     from nicegold_v5.exit import simulate_partial_tp_safe
     from nicegold_v5.wfv import ensure_buy_sell
@@ -65,10 +70,22 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
     config_main = SNIPER_CONFIG_Q3_TUNED
     df_signals = generate_signals(df.copy(), config=config_main)
     trade_df = simulate_partial_tp_safe(df_signals)
-    if trade_df.empty or (trade_df.get("exit_reason", pd.Series(dtype=str)).isnull().all()):
-        print("[Patch v28.3.0] Fallback to RELAX_CONFIG_Q3 for entry signals.")
+    real_trades = trade_df[trade_df.get("exit_reason").isin(["tp1", "tp2", "sl"])]
+    if real_trades.empty:
+        print("[Patch v28.3.1] Fallback to RELAX_CONFIG_Q3 for entry signals.")
         df_signals = generate_signals(df.copy(), config=RELAX_CONFIG_Q3)
         trade_df = simulate_partial_tp_safe(df_signals)
+        real_trades = trade_df[trade_df.get("exit_reason").isin(["tp1", "tp2", "sl"])]
+    if real_trades.empty:
+        print("[Patch v28.3.1] Fallback to SNIPER_CONFIG_DIAGNOSTIC for entry signals.")
+        df_signals = generate_signals(df.copy(), config=SNIPER_CONFIG_DIAGNOSTIC)
+        trade_df = simulate_partial_tp_safe(df_signals)
+        real_trades = trade_df[trade_df.get("exit_reason").isin(["tp1", "tp2", "sl"])]
+    if real_trades.empty:
+        print("[Patch v28.3.1] Fallback to SNIPER_CONFIG_PROFIT for entry signals.")
+        df_signals = generate_signals(df.copy(), config=SNIPER_CONFIG_PROFIT)
+        trade_df = simulate_partial_tp_safe(df_signals)
+        real_trades = trade_df[trade_df.get("exit_reason").isin(["tp1", "tp2", "sl"])]
     if mode == "qa":
         from nicegold_v5.config import SNIPER_CONFIG_ULTRA_OVERRIDE
         df_signals = generate_signals(df.copy(), config=SNIPER_CONFIG_ULTRA_OVERRIDE)
@@ -95,7 +112,12 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
     tp2_entries = trades[trades["exit_reason"] == "tp2"]["entry_time"]
     df.loc[df["timestamp"].isin(tp2_entries), "tp2_hit"] = 1
     tp2_count = df["tp2_hit"].sum()
-    print(f"[Patch v28.2.6] ✅ TP2 Hit Count: {tp2_count}")
+    real_trades = trades[trades["exit_reason"].isin(["tp1", "tp2", "sl"])]
+    print(
+        f"[Patch v28.3.1] ✅ Real trades found: {len(real_trades)} | TP2 Hit: {tp2_count}"
+    )
+    if not real_trades.empty:
+        print("[Patch v28.3.1] ➡️ First real trade:", real_trades.iloc[0].to_dict())
 
     if mode == "qa":
         # เดิม QA/DEV สามารถ oversample label
@@ -117,12 +139,7 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
             df = df_oversampled
         else:
             print(f"[Patch v27.0.0] TP2 class balance ok: {n_tp2}/{n_total}")
-    else:
-        # Production: No oversample/force label
-        if tp2_count < 5:
-            print("[Patch QA-FIX] 🚨 ไม่มี TP2 – สร้าง force TP2 อย่างน้อย 5 ตัว")
-            candidate_idx = df[df["tp2_hit"] == 0].sample(n=5, random_state=42).index
-            df.loc[candidate_idx, "tp2_hit"] = 1
+
 
     df = df.sample(frac=1, random_state=42).reset_index(drop=True)  # shuffle
     df = df.dropna().reset_index(drop=True)
