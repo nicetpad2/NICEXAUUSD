@@ -758,3 +758,5 @@
 - [Patch v28.2.1] ปรับเมนู CLI และ export_audit ให้บันทึก Audit Log อัตโนมัติ
 ## 2026-02-14
 - [Patch QA-FIX] แก้ฟังก์ชัน run_production_wfv ให้โหลดข้อมูลครบถ้วนและเพิ่ม unit test coverage
+## 2026-02-15
+- [Patch QA-FIX] เพิ่ม fallback คอลัมน์ 'Open' ใน run_production_wfv ป้องกัน KeyError

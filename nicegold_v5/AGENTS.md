@@ -780,3 +780,5 @@
 - [Patch v28.2.1] ปรับ main_menu และ export_audit ใช้งานง่าย รองรับ Audit Log แบบ Enterprise
 ### 2026-02-14
 - [Patch QA-FIX] ปรับ run_production_wfv ให้โหลดข้อมูลและส่งพารามิเตอร์ถูกต้อง พร้อมเพิ่มชุดทดสอบใหม่
+### 2026-02-15
+- [Patch QA-FIX] เพิ่ม fallback คอลัมน์ 'Open' ใน run_production_wfv ป้องกัน KeyError

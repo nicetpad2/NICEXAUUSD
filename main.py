@@ -862,6 +862,16 @@ def run_production_wfv():
         from nicegold_v5.ml_dataset_m1 import generate_ml_dataset_m1
         generate_ml_dataset_m1(csv_path=M1_PATH, out_path="data/ml_dataset_m1.csv")
         df = pd.read_csv("data/ml_dataset_m1.csv")
+    # [Patch QA-FIX] Fallback – สร้าง 'Open' ถ้าไม่มีใน dataframe
+    if "Open" not in df.columns:
+        if "open" in df.columns:
+            df["Open"] = df["open"]
+            print("[Patch QA-FIX] สร้างคอลัมน์ 'Open' จาก 'open'")
+        elif "close" in df.columns:
+            df["Open"] = df["close"]
+            print("[Patch QA-FIX] สร้างคอลัมน์ 'Open' จาก 'close' (ไม่มี open)")
+        else:
+            raise ValueError("ไม่พบ 'Open' หรือ 'open' หรือ 'close' ใน DataFrame")
     trades = run_walkforward_backtest(df, features, label_col)
     equity = pd.DataFrame({"equity": trades["pnl"].cumsum() if not trades.empty else []})
     auto_qa_after_backtest(trades, equity, label="ProductionWFV")
