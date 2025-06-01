@@ -752,3 +752,5 @@
 - [Patch v28.3.0] เพิ่ม qa.py สำหรับ ForceEntry Stress Test และบันทึก QA Audit Log พร้อมปรับเมนู CLI
 ## 2026-02-11
 - [Patch v28.2.1] ปรับ main.py เพิ่มเมนู QA Robustness Integration และฟังก์ชัน stress test
+## 2026-02-12
+- แก้คำเตือน FutureWarning ใน qa.py ระหว่าง unittest
