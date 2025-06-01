@@ -834,3 +834,6 @@
 
 ## 2026-03-16
 - [Patch vA.1.0] เพิ่มระบบ Adaptive Threshold ใช้โมเดล LSTM+MLP ทำนายค่า gain_z_thresh, ema_slope_min และ atr_thresh อัตโนมัติ
+
+## 2026-03-17
+- ย้าย `adaptive_threshold_dl.py` เข้าไปในแพ็กเกจ `nicegold_v5`

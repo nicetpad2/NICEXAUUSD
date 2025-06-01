@@ -852,3 +852,6 @@
 ### 2026-03-16
 - [Patch vA.1.0] เพิ่มโมดูล adaptive_threshold_dl และ integrate generate_signals_v8_0_adaptive พร้อมฟังก์ชันช่วยใน utils
 
+### 2026-03-17
+- ย้าย `adaptive_threshold_dl.py` เข้าไปในแพ็กเกจ `nicegold_v5`
+
