@@ -839,19 +839,42 @@ def welcome():
         return
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1 and sys.argv[1] == "clean":
-        print("📥 Loading CSV...")
-        df = load_csv_safe(M1_PATH)
-        df = convert_thai_datetime(df)
-        df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
-        df = df.dropna(subset=["timestamp"])
-        run_clean_backtest(df)
-        print("✅ Done: Clean Backtest Completed")
+    print("\n🟡 NICEGOLD Assistant (Enterprise CLI – v28.1.0 QA/Prod)")
+    print("[1] Production (WFV/Backtest)")
+    print("[2] QA Robustness (ForceEntry/Stress)")
+    menu = input("เลือกโหมด (1–2): ")
+
+    prod_flag = False
+    qa_flag = False
+    if menu.strip() == "1":
+        prod_flag = True
+        qa_flag = False
+        print("[Patch v28.1.0] 🚀 เริ่ม Production WFV Mode (no ForceEntry, ใช้พารามิเตอร์ปรับจูนจริง)")
+    elif menu.strip() == "2":
+        prod_flag = False
+        qa_flag = True
+        print("[Patch v28.1.0] 🛡️ เริ่ม QA Robustness Mode (ForceEntry, Stress Test, Noisy Scenario)")
     else:
-        welcome()
-    # [Patch v12.4.1] Example of how choice 7 might be handled if menu was active
-    # elif choice == 7:  # This would be part of the active menu loop in welcome()
-    #     print("\n🚀 เริ่มรัน CleanBacktest ด้วย AutoFix + Export...")
-    #     df = load_csv_safe(M1_PATH)  # Ensure M1_PATH is defined
-    #     # Potentially convert_thai_datetime(df) and other pre-processing here
-    #     trades_df = run_clean_backtest(df)
+        print("❌ ไม่พบเมนูที่เลือก")
+        sys.exit(0)
+
+    result = autopipeline(
+        mode="prod" if prod_flag else "qa",
+        train_epochs=50,
+        test_mode=qa_flag,
+        force_entry=qa_flag,
+    )
+
+    try:
+        from nicegold_v5.utils import export_audit_report
+        export_audit_report(
+            config={"mode": "prod" if prod_flag else "qa"},
+            metrics={"trades": len(result) if hasattr(result, "__len__") else 0},
+            run_type="WFV" if prod_flag else "QA",
+            version="v28.2.0",
+            fold=None,
+            outdir="logs",
+        )
+        print("[Patch v28.1.0] 📤 Export Audit/Report อัตโนมัติ (หลังจบ run)")
+    except Exception as e:  # pragma: no cover - best effort
+        print(f"[Patch v28.1.0] ⚠️ Export Audit/Report ล้มเหลว: {e}")

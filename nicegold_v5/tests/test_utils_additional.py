@@ -257,3 +257,15 @@ def test_dynamic_batch_scaler(monkeypatch):
     monkeypatch.setattr(utils_mod, 'time', types.SimpleNamespace(sleep=lambda x: None))
     bs = utils_mod.dynamic_batch_scaler(train_fn, batch_start=128, min_batch=64, max_retry=2)
     assert bs == 64
+
+
+def test_export_audit_report(tmp_path):
+    import importlib as _imp
+    utils_mod = _imp.reload(importlib.import_module('nicegold_v5.utils'))
+    cfg = {"param": 1}
+    metrics = {"score": 0.5}
+    utils_mod.export_audit_report(cfg, metrics, run_type="QA", version="v28.2.0", fold=1, outdir=str(tmp_path))
+    csv_files = list(tmp_path.glob('QA_audit_*.csv'))
+    json_files = list(tmp_path.glob('QA_audit_*.json'))
+    assert len(csv_files) == 1
+    assert len(json_files) == 1

@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 import os
+import subprocess
+import json
 from multiprocessing import cpu_count
 from datetime import datetime
 import time
@@ -19,6 +21,53 @@ from nicegold_v5.entry import (
 from nicegold_v5.backtester import run_backtest
 
 from nicegold_v5.wfv import run_autofix_wfv  # re-export for CLI (Patch v21.2.1)
+
+
+# [Patch v28.2.0] ✨ Enterprise QA Audit Export
+def get_git_hash() -> str:
+    try:
+        return subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode().strip()
+    except Exception:
+        return ""
+
+
+def export_audit_report(
+    config: dict | None,
+    metrics: dict | None,
+    run_type: str,
+    version: str = "",
+    fold: int | None = None,
+    outdir: str = "logs",
+) -> None:
+    ts = datetime.now().strftime("%Y%m%d_%H%M")
+    commit_hash = get_git_hash()
+    os.makedirs(outdir, exist_ok=True)
+    fname = f"{run_type}_audit_{ts}{'_fold'+str(fold) if fold is not None else ''}"
+    payload = {
+        "version": version,
+        "commit_hash": commit_hash,
+        "run_type": run_type,
+        "fold": fold,
+        "timestamp": ts,
+        "config": config,
+        "metrics": metrics,
+    }
+    with open(os.path.join(outdir, f"{fname}.json"), "w") as f:
+        json.dump(payload, f, indent=2)
+
+    summary = {
+        "version": version,
+        "commit_hash": commit_hash,
+        "run_type": run_type,
+        "fold": fold,
+        "timestamp": ts,
+    }
+    if isinstance(config, dict):
+        summary.update(config)
+    if isinstance(metrics, dict):
+        summary.update(metrics)
+    pd.DataFrame([summary]).to_csv(os.path.join(outdir, f"{fname}.csv"), index=False)
+    print(f"[Patch v28.2.0] ✅ Exported audit report: {fname}.csv")
 
 
 def autotune_resource(max_batch_size: int = 4096, min_batch_size: int = 64, safety_vram_gb: int = 1) -> tuple[str, int]:

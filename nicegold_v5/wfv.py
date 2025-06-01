@@ -270,6 +270,7 @@ def streak_summary(trades_df):
 
 def run_autofix_wfv(df: pd.DataFrame, simulate_fn, base_config: dict, n_folds: int = 5) -> pd.DataFrame:
     """Run walk-forward validation แบบ AutoFix Adaptive ต่อเนื่อง"""
+    from nicegold_v5.utils import export_audit_report
     fold_size = len(df) // n_folds
     all_trades = []
     config = base_config.copy()
@@ -284,6 +285,15 @@ def run_autofix_wfv(df: pd.DataFrame, simulate_fn, base_config: dict, n_folds: i
         out_path = os.path.join(TRADE_DIR, f"trades_autofix_{fold_name}_{ts}.csv")
         trades_df.to_csv(out_path, index=False)
         print(f"📤 Exported {len(trades_df):,} trades → {out_path}")
+        metrics = {"trades": len(trades_df), "profit": trades_df.get("pnl", pd.Series(dtype=float)).sum()}
+        export_audit_report(
+            config=config,
+            metrics=metrics,
+            run_type="WFV",
+            version="v28.2.0",
+            fold=fold + 1,
+            outdir=TRADE_DIR,
+        )
         all_trades.append(trades_df)
 
     return pd.concat(all_trades, ignore_index=True)
