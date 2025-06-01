@@ -8,6 +8,9 @@ ENTRY_CONFIG_PER_FOLD = {
     5: {"gain_z_thresh": -0.15, "ema_slope_min": 0.001},
 }
 
+# [Patch vA.1.0] path ของโมเดลทำนาย threshold
+THRESHOLD_MODEL_PATH = "model/threshold_predictor.pt"
+
 # --- PATCH v26.0.1: Ensure BUY/SELL always enabled ---
 def ensure_order_side_enabled(cfg: dict) -> dict:
     """Force disable_buy/disable_sell to False for safety."""

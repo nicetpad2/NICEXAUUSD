@@ -832,3 +832,5 @@
 - [Patch v30.0.0] ปรับลด threshold ใน `generate_signals_v8_0` ให้เป็นศูนย์และเพิ่มตัวแปร
   `sniper_score_min` ค่าเริ่มต้น 0.0 เพื่อปลดล็อกการเข้าเทรดใน WFV
 
+## 2026-03-16
+- [Patch vA.1.0] เพิ่มระบบ Adaptive Threshold ใช้โมเดล LSTM+MLP ทำนายค่า gain_z_thresh, ema_slope_min และ atr_thresh อัตโนมัติ
