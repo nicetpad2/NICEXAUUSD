@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
+import sys
 import logging
 import subprocess
 import json
@@ -330,11 +331,31 @@ def get_resource_plan() -> dict:
     return plan
 
 
-def load_data(path):
+def load_data(path: str = M1_PATH) -> pd.DataFrame:
+    """Load CSV and parse timestamp safely."""
+    if not os.path.exists(path):
+        print(
+            f"❌ File not found: {path}. โปรดตรวจสอบว่ามีไฟล์ `XAUUSD_M1.csv` ในโฟลเดอร์ `data/`"
+        )
+        sys.exit(1)
+
     df = pd.read_csv(path)
-    df["timestamp"] = pd.to_datetime(
-        df["timestamp"], format="%Y-%m-%d %H:%M:%S", errors="coerce"
-    )
+    if {"Date", "Timestamp"}.issubset(df.columns):
+        df["timestamp"] = convert_thai_datetime(df["Date"], df["Timestamp"])
+    elif {"date", "timestamp"}.issubset(df.columns):
+        df["timestamp"] = parse_timestamp_safe(
+            pd.to_datetime(df["date"] + " " + df["timestamp"], errors="coerce"),
+            format="%Y-%m-%d %H:%M:%S",
+        )
+    elif "timestamp" in df.columns:
+        df["timestamp"] = parse_timestamp_safe(
+            pd.to_datetime(df["timestamp"], errors="coerce"),
+            format="%Y-%m-%d %H:%M:%S",
+        )
+    else:
+        print("❌ ไม่พบคอลัมน์ Date/Timestamp หรือ date/timestamp เพื่อแปลงเป็น datetime")
+        sys.exit(1)
+
     df = df.sort_values("timestamp")
     return df
 

@@ -1,7 +1,13 @@
 import pandas as pd
 import numpy as np
+from typing import Dict
 from tqdm import tqdm
 from .config import SESSION_CONFIG, HEDGEFUND_ENTRY_CONFIG, THRESHOLD_MODEL_PATH
+
+# [Patch v32.0.0] ✨ เพิ่ม alias ฟังก์ชัน generate_signals_v8_0, generate_signals_v12_0
+def generate_signals_v8_0(df: pd.DataFrame, config: Dict | None = None) -> pd.DataFrame:
+    """[Patch v32.0.0] Core logic version 8.0 alias."""
+    return _generate_signals_v8_0_core(df, config)
 from .adaptive_threshold_dl import predict_thresholds
 
 # --- CONFIG FLAGS (Patch v11.1) ---
@@ -153,7 +159,6 @@ def sanitize_price_columns(df: pd.DataFrame) -> pd.DataFrame:
         print(f"   ▸ {col}: {count} NaN")
     return df
 
-
 def filter_entry_signals(df: pd.DataFrame, config: dict, session: str | None = None) -> pd.DataFrame:
     """Filter entry rows based on config thresholds."""
     df = df.copy()
@@ -248,7 +253,7 @@ def generate_signals_v8_0_adaptive(df: pd.DataFrame, config: dict | None = None)
     return generate_signals_v8_0(df, tmp_cfg)
 
 
-def generate_signals_v8_0(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
+def _generate_signals_v8_0_core(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
     """ใช้ logic sniper + TP1/TSL แบบล่าสุด (Patch v8.0)."""
     df = df.copy()
 
@@ -1022,7 +1027,7 @@ def simulate_trades_with_tp(df: pd.DataFrame, sl_distance: float = 5.0):
     return trades, logs
 
 
-def generate_signals_v12_0(
+def _generate_signals_v12_0_core(
     df: pd.DataFrame,
     config: dict | None = None,
     test_mode: bool = False,
@@ -1143,6 +1148,15 @@ def generate_signals_v12_0(
     coverage = df["entry_signal"].notnull().mean() * 100
     print(f"[Patch v12.0] 📊 Entry Signal Coverage: {coverage:.2f}%")
     return df
+
+# [Patch v32.0.0] ✨ alias generate_signals_v12_0
+def generate_signals_v12_0(
+    df: pd.DataFrame,
+    config: Dict | None = None,
+    test_mode: bool = False,
+) -> pd.DataFrame:
+    """[Patch v32.0.0] alias ของ generate_signals_v12_0 core"""
+    return _generate_signals_v12_0_core(df, config=config, test_mode=test_mode)
 
 
 def simulate_partial_tp_safe(df: pd.DataFrame):
