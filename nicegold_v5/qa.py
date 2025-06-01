@@ -3,6 +3,7 @@ import json
 from datetime import datetime
 import pandas as pd
 import numpy as np
+from nicegold_v5.utils import export_audit_report
 
 # --- QA Guard Functions ---
 
@@ -157,3 +158,12 @@ def auto_qa_after_backtest(trades: pd.DataFrame, equity: pd.DataFrame, label: st
     save_csv_path = os.path.join(QA_BASE_PATH, f"fold_qa_{label_full.lower()}.csv")
     pd.DataFrame([stats | {"bias_score": bias} | dd]).to_csv(save_csv_path, index=False)
     print(f"✅ QA Auto Export → {save_csv_path}")
+
+    export_audit_report(
+        config={},
+        metrics=stats | {"bias_score": bias} | dd,
+        run_type="QA",
+        version="v28.2.0",
+        fold=None,
+        outdir=QA_BASE_PATH,
+    )

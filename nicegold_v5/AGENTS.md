@@ -751,3 +751,7 @@
 ### 2026-02-02
 - [Patch v29.2.0] เพิ่ม `dynamic_batch_scaler` สำหรับลด batch size อัตโนมัติเมื่อเกิด OOM ในการเทรน LSTM
 
+### 2026-02-03
+- [Patch v28.2.0] เพิ่ม `export_audit_report` และ `get_git_hash` สำหรับบันทึก audit log
+- อัปเดต main.py, wfv.py, qa.py ให้เรียกใช้งานฟังก์ชันใหม่นี้
+

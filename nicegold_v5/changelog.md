@@ -731,3 +731,7 @@
 ## 2026-02-02
 - [Patch v29.2.0] เพิ่ม `dynamic_batch_scaler` เพื่อปรับ batch size อัตโนมัติในกรณี MemoryError
 
+## 2026-02-03
+- [Patch v28.2.0] เพิ่มฟังก์ชัน `export_audit_report` และ `get_git_hash` รองรับการบันทึกผลแบบ CSV/JSON พร้อม commit hash
+- อัปเดต main.py, wfv.py, qa.py ให้เรียกใช้ฟังก์ชันนี้หลังจบรัน
+
