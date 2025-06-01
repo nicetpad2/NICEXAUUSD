@@ -760,4 +760,7 @@
 ### 2026-02-05
 - ปรับปรุงระบบทดสอบรวม เพิ่มไฟล์ `test_smoke.py` ตรวจสอบการ import โมดูลทั้งหมด
 - ใส่ stub `torch` ใน `test_utils_additional` เพื่อให้รันได้แม้ไม่มี torch
+### 2026-02-06
+- แก้ `export_audit_report` รองรับ numpy int64 และ
+  ปรับ `print_resource_status` ให้ใช้ psutil/torch stub ได้ไม่พัง
 

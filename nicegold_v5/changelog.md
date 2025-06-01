@@ -740,3 +740,5 @@
 - ปรับ conftest.py patch RandomForestClassifier ให้เร็วขึ้น ลดเวลา unittest
 ## 2026-02-05
 - [Patch v29.3.0] เพิ่ม `test_smoke.py` ตรวจสอบ import โมดูลทั้งหมด และเพิ่ม stub `torch` ในชุดทดสอบ
+## 2026-02-06
+- รองรับ numpy int64 ใน `export_audit_report` และแก้ `print_resource_status` ไม่ crash เมื่อใช้ stub
