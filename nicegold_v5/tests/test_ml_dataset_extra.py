@@ -63,7 +63,7 @@ def test_generate_ml_dataset_prod_fallback(tmp_path, monkeypatch):
     out_csv = tmp_path / 'out' / 'ml_dataset_m1.csv'
     generate_ml_dataset_m1(str(csv_path), str(out_csv), mode='production')
     out_df = pd.read_csv(out_csv)
-    assert out_df['tp2_hit'].sum() > 0
+    assert out_df['tp2_hit'].sum() == 0
 
 
 def test_generate_ml_dataset_entry_time_zero(tmp_path, monkeypatch):

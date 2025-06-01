@@ -803,3 +803,5 @@
 - [Patch v28.2.8] แก้ generate_ml_dataset_m1 แปลง entry_time แบบปลอดภัย `errors="coerce"` และกรอง NaT ก่อน map TP2
 ### 2026-02-25
 - [Patch v28.3.0] ปรับ generate_ml_dataset_m1 ใช้ SNIPER_CONFIG_Q3_TUNED ใน production และ fallback ไปใช้ RELAX_CONFIG_Q3 หากไม่มี trade จริง
+### 2026-02-26
+- [Patch v28.3.1] ขยาย fallback ML dataset เป็น SNIPER_CONFIG_DIAGNOSTIC และ SNIPER_CONFIG_PROFIT เมื่อยังไม่มี trade จริง พร้อมบันทึกจำนวนไม้จริง
