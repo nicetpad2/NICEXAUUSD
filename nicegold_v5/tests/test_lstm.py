@@ -113,6 +113,14 @@ load_dataset = train_lstm_runner.load_dataset
 train_lstm = train_lstm_runner.train_lstm
 
 
+def test_dummy_model_forward():
+    """Ensure _DummyModel.forward executes for coverage."""
+    if not HAS_TORCH:
+        m = _DummyModel()
+        out = m(torch.zeros((3, 1)))
+        assert out.shape == (3, 1)
+
+
 def sample_m1_data(rows=30):
     return pd.DataFrame({
         'timestamp': pd.date_range('2024-01-01', periods=rows, freq='min'),
@@ -183,6 +191,8 @@ def test_train_lstm(tmp_path, monkeypatch):
     monkeypatch.setattr(train_lstm_runner, 'train_lstm', lambda *a, **k: LocalModel())
     model = train_lstm_runner.train_lstm(X, y, hidden_dim=8, epochs=1, batch_size=2, optimizer_name='adam')
     assert isinstance(model, torch.nn.Module)
+    out = model(torch.zeros((1, 5, X.shape[2])))
+    assert out.shape == (1, 1)
 
 
 def test_train_lstm_cpu_warning(capsys):

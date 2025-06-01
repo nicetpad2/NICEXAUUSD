@@ -765,4 +765,6 @@
   ปรับ `print_resource_status` ให้ใช้ psutil/torch stub ได้ไม่พัง
 ### 2026-02-07
 - เพิ่มชุดทดสอบ entry/ml_dataset/optuna_tuner ดัน coverage 100%
+### 2026-02-08
+- ปรับปรุงเทส LSTM และ train_lstm_runner ครอบคลุม utils เพิ่ม coverage 100%
 
