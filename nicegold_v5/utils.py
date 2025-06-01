@@ -6,6 +6,7 @@ import json
 from multiprocessing import cpu_count
 from datetime import datetime
 import time
+from types import SimpleNamespace
 
 # [Patch v29.1.0] AI Resource AutoTune & Monitor แบบเทพ
 try:  # pragma: no cover - optional torch dependency
@@ -56,7 +57,12 @@ def export_audit_report(
         "metrics": metrics,
     }
     with open(os.path.join(outdir, f"{fname}.json"), "w") as f:
-        json.dump(payload, f, indent=2)
+        json.dump(
+            payload,
+            f,
+            indent=2,
+            default=lambda o: o.item() if hasattr(o, "item") else o,
+        )
 
     summary = {
         "version": version,
@@ -92,17 +98,25 @@ def autotune_resource(max_batch_size: int = 4096, min_batch_size: int = 64, safe
 
 
 def print_resource_status() -> None:
-    """Display current RAM/VRAM usage."""
-    if psutil:
+    """Display current RAM/VRAM usage, handling stubs gracefully."""
+    if psutil and hasattr(psutil, "virtual_memory"):
         ram = psutil.virtual_memory()
-        print(
-            f"[Patch v29.1.0] [Monitor] RAM: {ram.used / 1024 ** 3:.1f} / {ram.total / 1024 ** 3:.1f} GB"
-        )
+        used = getattr(ram, "used", None)
+        total = getattr(ram, "total", None)
+        if used is not None and total is not None:
+            print(
+                f"[Patch v29.1.0] [Monitor] RAM: {used / 1024 ** 3:.1f} / {total / 1024 ** 3:.1f} GB"
+            )
+        else:
+            print("[Patch v29.1.0] [Monitor] RAM: psutil stub")
     else:
         print("[Patch v29.1.0] [Monitor] RAM: psutil not available")
-    if torch and torch.cuda.is_available():
-        vram = torch.cuda.memory_allocated() / 1024 ** 3
-        vram_total = torch.cuda.get_device_properties(0).total_memory / 1024 ** 3
+
+    if torch and getattr(getattr(torch, "cuda", None), "is_available", lambda: False)():
+        mem_fn = getattr(torch.cuda, "memory_allocated", lambda: 0)
+        prop_fn = getattr(torch.cuda, "get_device_properties", lambda idx=0: types.SimpleNamespace(total_memory=0))
+        vram = mem_fn() / 1024 ** 3
+        vram_total = prop_fn(0).total_memory / 1024 ** 3
         print(f"[Patch v29.1.0] [Monitor] GPU VRAM: {vram:.1f} / {vram_total:.1f} GB")
 
 
