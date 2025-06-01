@@ -466,6 +466,15 @@ def test_run_parallel_wfv_close_fallback(tmp_path, monkeypatch):
     trades = main.run_parallel_wfv(df, ['Open', 'feat1', 'feat2'], 'label', n_folds=2)
     assert isinstance(trades, pd.DataFrame)
 
+def test_run_parallel_wfv_exit_variety(tmp_path, monkeypatch):
+    import importlib
+    main = importlib.import_module('main')
+    df = sample_wfv_df_single_class()
+    monkeypatch.setattr(main, 'TRADE_DIR', str(tmp_path))
+    monkeypatch.setattr(main, 'maximize_ram', lambda: None)
+    trades = main.run_parallel_wfv(df, ['Open', 'feat1', 'feat2'], 'label', n_folds=2)
+    assert main.check_exit_reason_variety(trades)
+
 
 def test_run_wfv_with_progress_session_split(monkeypatch):
     import importlib
