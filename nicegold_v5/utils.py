@@ -7,6 +7,7 @@ from multiprocessing import cpu_count
 from datetime import datetime
 import time
 from types import SimpleNamespace
+from typing import List
 
 # [Patch v29.1.0] AI Resource AutoTune & Monitor แบบเทพ
 try:  # pragma: no cover - optional torch dependency
@@ -25,6 +26,38 @@ from nicegold_v5.entry import (
 from nicegold_v5.backtester import run_backtest
 
 from nicegold_v5.wfv import run_autofix_wfv  # re-export for CLI (Patch v21.2.1)
+
+
+# [Patch vA.1.0] helper functions for adaptive threshold
+def load_recent_indicators(df: pd.DataFrame, seq_len: int = 60) -> np.ndarray:
+    required = {"gain_z", "ema_slope", "atr"}
+    if not required.issubset(df.columns):
+        raise ValueError(f"DataFrame ต้องมีคอลัมน์ {required}")
+    arr = df[["gain_z", "ema_slope", "atr"]].values.astype(np.float32)
+    if len(arr) < seq_len:
+        pad = np.zeros((seq_len - len(arr), 3), dtype=np.float32)
+        arr = np.vstack([pad, arr])
+    else:
+        arr = arr[-seq_len:]
+    return arr.reshape(1, seq_len, 3)
+
+
+def load_previous_performance(logs_dir: str = "logs/") -> List[float]:
+    import json
+    json_path = os.path.join(logs_dir, "last_fold_performance.json")
+    if os.path.exists(json_path):
+        with open(json_path, "r") as f:
+            data = json.load(f)
+            return [data.get("pnl", 0.0), data.get("max_dd", 0.0), data.get("winrate", 0.0)]
+    csv_files = [f for f in os.listdir(logs_dir) if f.startswith("wfv_results_fold") and f.endswith(".csv")]
+    if not csv_files:
+        return [0.0, 0.0, 0.0]
+    latest = sorted(csv_files, key=lambda x: int(x.replace("wfv_results_fold", "").replace(".csv", "")))[-1]
+    df = pd.read_csv(os.path.join(logs_dir, latest))
+    pnl = float(df["pnl"].values[-1]) if "pnl" in df.columns else 0.0
+    max_dd = float(df["max_dd"].values[-1]) if "max_dd" in df.columns else 0.0
+    winrate = float(df["winrate"].values[-1]) if "winrate" in df.columns else 0.0
+    return [pnl, max_dd, winrate]
 
 
 # [Patch v28.2.0] ✨ Enterprise QA Audit Export

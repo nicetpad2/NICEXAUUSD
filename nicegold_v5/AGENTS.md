@@ -849,3 +849,6 @@
 - [Patch v30.0.0] ลด threshold ใน `generate_signals_v8_0` เพื่อให้เกิด real trades ในแต่ละ fold
   เพิ่มตัวแปร `sniper_score_min` และปรับ log แสดงเปอร์เซ็นต์สัญญาณที่ถูกบล็อก
 
+### 2026-03-16
+- [Patch vA.1.0] เพิ่มโมดูล adaptive_threshold_dl และ integrate generate_signals_v8_0_adaptive พร้อมฟังก์ชันช่วยใน utils
+

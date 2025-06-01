@@ -1,7 +1,8 @@
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
-from .config import SESSION_CONFIG, HEDGEFUND_ENTRY_CONFIG
+from .config import SESSION_CONFIG, HEDGEFUND_ENTRY_CONFIG, THRESHOLD_MODEL_PATH
+from adaptive_threshold_dl import predict_thresholds
 
 # --- CONFIG FLAGS (Patch v11.1) ---
 ENABLE_TP1_TP2 = True
@@ -228,6 +229,23 @@ def generate_pattern_signals(df: pd.DataFrame) -> pd.DataFrame:
     ] = "sell"
 
     return df
+
+
+def generate_signals_v8_0_adaptive(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
+    """ใช้โมเดล Deep Learning ทำนาย threshold ก่อนเรียก generate_signals_v8_0"""
+    df = df.copy()
+
+    from .utils import load_recent_indicators, load_previous_performance
+    seq_recent = load_recent_indicators(df, seq_len=60)
+    prev_perf = load_previous_performance()
+    model_path = config.get("model_path", THRESHOLD_MODEL_PATH) if config else THRESHOLD_MODEL_PATH
+    thresholds = predict_thresholds(seq_recent=seq_recent, feedback_scalar=prev_perf, model_path=model_path)
+    print(
+        f"[Patch vA.1.0] \ud83d\udd25 DeepAI Thresholds \u2192 gain_z: {thresholds['gain_z_thresh']:.4f}, ema_slope: {thresholds['ema_slope_min']:.4f}, atr: {thresholds['atr_thresh']:.4f}"
+    )
+    tmp_cfg = (config or {}).copy()
+    tmp_cfg.update(thresholds)
+    return generate_signals_v8_0(df, tmp_cfg)
 
 
 def generate_signals_v8_0(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
