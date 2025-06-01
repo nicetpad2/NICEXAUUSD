@@ -755,19 +755,14 @@ def generate_signals(
     test_mode: bool = False,
 ) -> pd.DataFrame:
     """
-    [Patch v26.0.1] Generate signals with BUY/SELL *always* enabled.
-    ปลดล็อกฝั่ง Buy/Sell ทุกจุด (QA Guard)
+    [Patch v29.8.1] UltraOverride QA: ปลดล็อก BUY/SELL ทุกกรณี พร้อม log เมื่อใช้งาน force_entry
     """
     config = config or {}
-    # Force unlock both sides regardless of any caller config
-    if config.get("disable_buy", None) is not False:
-        print("[Patch v26.0.1] QA Override: force disable_buy = False")
-    if config.get("disable_sell", None) is not False:
-        print("[Patch v26.0.1] QA Override: force disable_sell = False")
+    # [Patch v29.8.1] UltraOverride QA: force unlock + log
     config["disable_buy"] = False
     config["disable_sell"] = False
-    assert not config.get("disable_buy", False), "QA BLOCK: disable_buy=True not allowed"
-    assert not config.get("disable_sell", False), "QA BLOCK: disable_sell=True not allowed"
+    if config.get("force_entry", False):
+        print("[Patch v29.8.1] UltraOverride QA: force_entry active (inject signal ทุก bar)")
     df = generate_signals_v8_0(df, config=config)
 
     # [Patch v28.1.0] QA ForceEntry System (with full config guard)

@@ -794,3 +794,6 @@
 - [Patch v28.4.2] เพิ่มการ inject mock TP2 ลง trade log หากยังมี TP2 ไม่ถึง 10 ไม้ (เฉพาะ QA/DEV)
 ## 2026-03-02
 - [Patch v28.4.3] แก้ FutureWarning การ concat DataFrame ว่างใน generate_ml_dataset_m1 เพื่อลดคำเตือนระหว่าง pytest
+
+## 2026-03-03
+- [Patch v29.8.1] Ultra Override QA Mode – inject signal/exit variety ครบทุกกรณี

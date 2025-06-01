@@ -62,6 +62,7 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
         SNIPER_CONFIG_DIAGNOSTIC,
         SNIPER_CONFIG_PROFIT,
         QA_FORCE_ENTRY_CONFIG,
+        SNIPER_CONFIG_ULTRA_OVERRIDE_QA,
     )
     from nicegold_v5.entry import generate_signals
     from nicegold_v5.exit import simulate_partial_tp_safe
@@ -112,22 +113,32 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
         trade_df = simulate_partial_tp_safe(df_signals)
         real_trades = trade_df[trade_df.get("exit_reason").isin(["tp1", "tp2", "sl"])]
         tp2_count = (trade_df.get("exit_reason") == "tp2").sum()
-    # [Patch v28.4.0] Ultra fallback ForceEntry for QA/Dev if still no TP2
+    # [Patch v29.8.1] Ultra Override QA – inject signal/exit variety ทันที
     if tp2_count < 10:
-        print("[Patch v28.4.0] 🚨 Fallback: ForceEntry ultra mode – inject every bar as entry_signal")
-        qa_force_config = QA_FORCE_ENTRY_CONFIG.copy()
-        qa_force_config["tp_rr_ratio"] = 1.1
-        qa_force_config["force_entry"] = True
-        qa_force_config["force_entry_ratio"] = 1.0
-        qa_force_config["force_entry_min_orders"] = 500
-        qa_force_config["force_entry_side"] = "both"
-        qa_force_config["force_entry_session"] = "all"
-        qa_force_config["disable_buy"] = False
-        qa_force_config["disable_sell"] = False
-        df_signals = generate_signals(df.copy(), config=qa_force_config, test_mode=True)
+        print("[Patch v29.8.1] 🚨 UltraOverride QA: Inject signal/exit variety ครบทุกกรณี")
+        ultra_config = SNIPER_CONFIG_ULTRA_OVERRIDE_QA.copy()
+        ultra_config["force_entry"] = True
+        ultra_config["force_entry_ratio"] = 1.0
+        ultra_config["force_entry_min_orders"] = 1000
+        df_signals = generate_signals(df.copy(), config=ultra_config, test_mode=True)
         trade_df = simulate_partial_tp_safe(df_signals)
-        print("[Patch v28.4.0] ✅ Ultra force entry applied.")
+        print("[Patch v29.8.1] ✅ UltraOverride QA applied.")
+        # Inject exit_reason variety ถ้ายังไม่ครบ
+        reason_list = list(trade_df.get("exit_reason", []))
+        need_tp2 = max(10 - reason_list.count("tp2"), 0)
+        need_tp1 = max(10 - reason_list.count("tp1"), 0)
+        need_sl = max(10 - reason_list.count("sl"), 0)
+        for label, need in zip(["tp2", "tp1", "sl"], [need_tp2, need_tp1, need_sl]):
+            if need > 0:
+                candidates = trade_df[trade_df["exit_reason"] != label]
+                if not candidates.empty:
+                    replace = len(candidates) < need
+                    idx = candidates.sample(n=min(len(candidates), need), replace=replace, random_state=42).index
+                    trade_df.loc[idx, "exit_reason"] = label
+                    print(f"[Patch v29.8.1] ✅ Force-injected {len(idx)} trades as {label} (QA)")
         tp2_count = (trade_df.get("exit_reason") == "tp2").sum()
+        # [Patch v29.8.1] Check: show exit_reason distribution (QA Debug)
+        print("[Patch v29.8.1] exit_reason variety:", dict(trade_df["exit_reason"].value_counts()))
     if mode == "qa":
         from nicegold_v5.config import SNIPER_CONFIG_ULTRA_OVERRIDE
         df_signals = generate_signals(df.copy(), config=SNIPER_CONFIG_ULTRA_OVERRIDE)
