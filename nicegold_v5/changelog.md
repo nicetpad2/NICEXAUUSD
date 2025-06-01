@@ -821,3 +821,6 @@
 ## 2026-03-12
 - [Patch v31.1.0] Inject exit variety automatically in Production when any of TP1/TP2/SL missing and avoid RuntimeError
 
+## 2026-03-13
+- [Patch v31.2.0] เพิ่มตรรกะ ForceEntry เต็มรูปแบบใน `generate_signals_v12_0` สำหรับโหมดทดสอบ
+

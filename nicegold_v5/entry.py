@@ -1022,9 +1022,6 @@ def generate_signals_v12_0(
     assert not config.get("disable_buy", False), "QA BLOCK: disable_buy=True not allowed"
     assert not config.get("disable_sell", False), "QA BLOCK: disable_sell=True not allowed"
 
-    if test_mode:
-        # logic สำหรับ QA หรือ force entry
-        pass
     # เดิม...
     # [Patch v12.3.4] ✅ Entry Score Filter (TP2 Potential only)
     df = df.copy()
@@ -1094,6 +1091,33 @@ def generate_signals_v12_0(
             df.at[i, "tp1_price"] = tp1
             df.at[i, "tp2_price"] = tp2
             df.at[i, "sl_price"] = sl
+
+    if test_mode and config.get("force_entry"):
+        np.random.seed(config.get("force_entry_seed", 42))
+        mask = df["entry_signal"].isnull()
+        ratio = float(config.get("force_entry_ratio", 0.01))
+        min_orders = int(config.get("force_entry_min_orders", 10))
+        side = config.get("force_entry_side", "both")
+        session = config.get("force_entry_session", "all")
+        sess_col = (
+            "session" if "session" in df.columns else "session_name" if "session_name" in df.columns else None
+        )
+        eligible = mask.copy()
+        if session != "all" and sess_col:
+            eligible &= df[sess_col] == session
+        num_eligible = int(eligible.sum())
+        if num_eligible < 1:
+            print("[Patch v31.2.0] ⚠️ No eligible bars for ForceEntry injection (v12)")
+        else:
+            num_force = max(int(num_eligible * ratio), min_orders)
+            idx_force = np.random.choice(
+                df[eligible].index, size=min(num_force, num_eligible), replace=False
+            )
+            if side in ("buy", "sell"):
+                df.loc[idx_force, "entry_signal"] = side
+            else:
+                df.loc[idx_force, "entry_signal"] = np.random.choice(["buy", "sell"], size=len(idx_force))
+            print(f"[Patch v31.2.0] ✅ ForceEntry injected {len(idx_force)} orders (v12)")
 
     print("[Patch v12.0] ✅ Signals Generated with Multi-Pattern Strategy Layer")
     coverage = df["entry_signal"].notnull().mean() * 100
