@@ -786,3 +786,5 @@
 - [Patch QA-FIX v28.2.1] ปรับปรุง fallback 'Open' ให้ตรวจสอบแบบไม่สนตัวพิมพ์และเพิ่ม log ระหว่างสร้างคอลัมน์ พร้อมทดสอบกรณีไม่มี open/close
 ### 2026-02-17
 - [Patch QA-FIX v28.2.2] ตั้ง index เป็น timestamp หากยังไม่ใช่ DatetimeIndex เพื่อแก้ AttributeError ใน pass_filters
+### 2026-02-18
+- [Patch QA-FIX v28.2.3] ปรับปรุง run_production_wfv ให้ auto-fix index/dtype/column ครบถ้วนและ export QA log เสมอ

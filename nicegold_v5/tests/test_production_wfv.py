@@ -102,5 +102,9 @@ def test_run_production_wfv_no_open_close(monkeypatch):
     monkeypatch.setattr(main, 'parse_timestamp_safe', lambda s, fmt: s)
     monkeypatch.setattr(main, 'sanitize_price_columns', lambda d: d)
     monkeypatch.setattr(main, 'validate_indicator_inputs', lambda d, min_rows=None: None)
-    with pytest.raises(ValueError):
-        main.run_production_wfv()
+    called = {}
+    monkeypatch.setattr(main, 'auto_qa_after_backtest', lambda t, e, label=None: called.update({'qa': True}))
+
+    main.run_production_wfv()
+
+    assert 'qa' in called
