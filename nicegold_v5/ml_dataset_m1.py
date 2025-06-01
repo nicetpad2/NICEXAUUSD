@@ -60,10 +60,14 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
     from nicegold_v5.entry import generate_signals
     from nicegold_v5.exit import simulate_partial_tp_safe
     from nicegold_v5.wfv import ensure_buy_sell
+    import inspect  # [Patch QA-FIX v28.2.7] dynamic fallback param check
 
     df_signals = generate_signals(df.copy(), config=SNIPER_CONFIG_ULTRA_OVERRIDE)
     trade_df = simulate_partial_tp_safe(df_signals)
-    trade_df = ensure_buy_sell(trade_df, df_signals, simulate_partial_tp_safe)
+    if "percentile_threshold" in inspect.signature(simulate_partial_tp_safe).parameters:
+        trade_df = ensure_buy_sell(trade_df, df_signals, lambda d: simulate_partial_tp_safe(d, percentile_threshold=1))
+    else:
+        trade_df = ensure_buy_sell(trade_df, df_signals, simulate_partial_tp_safe)
     os.makedirs("logs", exist_ok=True)
     trade_df.to_csv(trade_log_path, index=False)
     print("[Patch v28.2.6] ✅ Trade log saved →", trade_log_path)

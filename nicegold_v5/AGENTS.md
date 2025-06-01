@@ -797,3 +797,5 @@
 - [Patch v29.0.0] เพิ่ม Production Guard ป้องกัน oversample/force label ในโหมด production และต้องมีไม้ TP1/TP2/SL จริงอย่างน้อย 5 ไม้
 ### 2026-02-22
 - [Patch v28.2.6] Fix TP2 Missing – Inject Fallback TP2 ใน ML dataset และใช้ ensure_buy_sell ใน generate_ml_dataset_m1
+### 2026-02-23
+- [Patch QA-FIX v28.2.7] ปรับ ensure_buy_sell เรียก simulate_fn แบบ dynamic หากไม่รองรับ percentile_threshold
