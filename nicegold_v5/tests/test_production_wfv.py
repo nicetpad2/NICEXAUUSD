@@ -109,3 +109,36 @@ def test_run_production_wfv_no_open_close(monkeypatch):
     main.run_production_wfv()
 
     assert 'qa' in called
+
+
+def test_run_production_wfv_auto_dataset(monkeypatch):
+    main = importlib.import_module('main')
+    df = pd.DataFrame({
+        'timestamp': pd.date_range('2025-01-01', periods=2, freq='min'),
+        'open': [1, 2],
+        'high': [1, 2],
+        'low': [1, 2],
+        'close': [1, 2],
+        'gain_z': [0.0, 0.0],
+        'ema_slope': [0.0, 0.0],
+        'atr': [1.0, 1.0],
+        'rsi': [50, 50],
+        'volume': [100, 100],
+        'entry_score': [0.1, 0.2],
+        'pattern_label': [1, 0],
+    })
+    monkeypatch.setattr(main, 'load_csv_safe', lambda p: df)
+    monkeypatch.setattr(main, 'convert_thai_datetime', lambda d: d)
+    monkeypatch.setattr(main, 'parse_timestamp_safe', lambda s, fmt: s)
+    monkeypatch.setattr(main, 'sanitize_price_columns', lambda d: d)
+    monkeypatch.setattr(main, 'validate_indicator_inputs', lambda d, min_rows=None: None)
+
+    gen_called = {}
+    monkeypatch.setattr('nicegold_v5.ml_dataset_m1.generate_ml_dataset_m1', lambda *a, **k: gen_called.setdefault('called', True))
+    monkeypatch.setattr(pd, 'read_csv', lambda p: df.assign(tp2_hit=[0, 1]))
+    monkeypatch.setattr(main, 'run_walkforward_backtest', lambda *a, **k: pd.DataFrame({'pnl':[0.0], 'side':['buy']}))
+    monkeypatch.setattr(main, 'auto_qa_after_backtest', lambda *a, **k: None)
+
+    main.run_production_wfv()
+
+    assert gen_called.get('called')

@@ -19,6 +19,8 @@ from nicegold_v5.wfv import (
     session_performance,
     streak_summary,
 )
+# [Patch QA-FIX v28.2.5] Forward for QA
+from nicegold_v5.wfv import ensure_buy_sell
 
 # Keep backward-compatible name
 run_walkforward_backtest = raw_run
@@ -852,17 +854,26 @@ def run_production_wfv():
         validate_indicator_inputs(df)
     # WFV FEATURES
     features = [
-        "open", "high", "low", "close", "gain_z", "ema_slope", "atr",
-        "rsi", "volume", "entry_score", "pattern_label"
+        "gain_z",
+        "ema_slope",
+        "atr",
+        "rsi",
+        "volume",
+        "entry_score",
+        "pattern_label",
     ]
-    label_col = "tp2_hit"  # หรือ "target" ตาม dataset ที่เตรียมไว้
-    # [Patch QA-FIX v28.2.3] End-to-End loop auto-fix (Production WFV)
-    # 1. Ensure label_col exists
+    label_col = "tp2_hit"
+    # [Patch QA-FIX v28.2.4] Ensure label_col exists (auto-regenerate ML dataset if needed)
     if label_col not in df.columns:
-        print(f"[Patch QA-FIX] Warning: label_col {label_col} not found in dataframe. Run generate_ml_dataset_m1 first.")
+        print(
+            f"[Patch QA-FIX v28.2.4] ⚠️ ไม่พบ {label_col} ใน dataframe – รัน generate_ml_dataset_m1 อัตโนมัติ"
+        )
         from nicegold_v5.ml_dataset_m1 import generate_ml_dataset_m1
         generate_ml_dataset_m1(csv_path=M1_PATH, out_path="data/ml_dataset_m1.csv")
         df = pd.read_csv("data/ml_dataset_m1.csv")
+        print(f"[Patch QA-FIX v28.2.4] ✅ Reloaded ML dataset – columns: {df.columns.tolist()}")
+    # [Patch QA-FIX v28.2.5] Ensure ensure_buy_sell available
+    from nicegold_v5.wfv import ensure_buy_sell
     # 2. Ensure 'Open' column exists
     if "Open" not in df.columns:
         if "open" in df.columns:
@@ -908,6 +919,13 @@ def run_production_wfv():
                 trades = pd.DataFrame()
         else:
             trades = pd.DataFrame()
+    # [Patch QA-FIX v28.2.6] QA fallback if empty
+    if trades is None or trades.empty:
+        print("[Patch QA-FIX v28.2.6] ❌ ไม่มี trade หลัง WFV – QA Fallback: ตรวจสอบ entry_signal count")
+        print(f"Signals (buy): {(df['entry_signal']=='buy').sum()}, (sell): {(df['entry_signal']=='sell').sum()}")
+        os.makedirs('logs', exist_ok=True)
+        pd.DataFrame([]).to_csv('logs/qa_empty_trades.csv', index=False)
+        return
     equity = pd.DataFrame({"equity": trades["pnl"].cumsum() if not trades.empty else []})
     auto_qa_after_backtest(trades, equity, label="ProductionWFV")
 

@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 from nicegold_v5.utils import export_audit_report
 from nicegold_v5.entry import validate_indicator_inputs, simulate_partial_tp_safe
+from nicegold_v5.wfv import ensure_buy_sell  # [Patch QA-FIX v28.2.5] Forward for QA
 
 # --- QA Guard Functions ---
 

@@ -35,8 +35,11 @@ from .wfv import (
     session_performance,
     streak_summary,
     build_trade_log,
-    ensure_buy_sell,
 )
+# [Patch QA-FIX v28.2.5] ensure_buy_sell must be accessible (for QA)
+def ensure_buy_sell(*args, **kwargs):
+    from nicegold_v5.wfv import ensure_buy_sell as orig
+    return orig(*args, **kwargs)
 from .config import ENTRY_CONFIG_PER_FOLD
 from .optuna_tuner import start_optimization, objective
 from .qa import (
