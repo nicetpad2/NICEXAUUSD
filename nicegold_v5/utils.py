@@ -27,7 +27,10 @@ from nicegold_v5.entry import (
 )
 from nicegold_v5.backtester import run_backtest
 
-from nicegold_v5.wfv import run_autofix_wfv  # re-export for CLI (Patch v21.2.1)
+
+def run_autofix_wfv(*args, **kwargs):  # re-export for CLI (Patch v21.2.1)
+    from nicegold_v5.wfv import run_autofix_wfv as orig
+    return orig(*args, **kwargs)
 
 
 # [Patch vA.1.0] helper functions for adaptive threshold

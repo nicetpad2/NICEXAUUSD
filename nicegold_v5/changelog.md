@@ -848,3 +848,5 @@
 - main.py now imports M1_PATH and TRADE_DIR from utils with auto directory creation
 - entry.py exposes aliases generate_signals_v8_0 and generate_signals_v12_0
 - SESSION_CONFIG includes start/end time fields; utils.load_data parses timestamps safely
+## 2026-03-22
+- [Patch v32.0.1] wfv.py imports QA_BASE_PATH from utils and exports zero-trade markers via ensure_buy_sell

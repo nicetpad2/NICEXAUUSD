@@ -866,3 +866,5 @@
 - ปรับ main.py ใช้ M1_PATH/TRADE_DIR จาก utils และสร้างไดเรกทอรีอัตโนมัติ
 - เพิ่ม alias generate_signals_v8_0 และ generate_signals_v12_0 ใน entry.py
 - อัปเดต SESSION_CONFIG ใส่ start/end และปรับ utils.load_data ให้ parse timestamp ปลอดภัย
+### 2026-03-22
+- [Patch v32.0.1] นำเข้า QA_BASE_PATH จาก utils ใน wfv.py และส่ง outdir ให้ ensure_buy_sell
