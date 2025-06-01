@@ -188,8 +188,9 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
 
     if mode == "production":
         counts = trade_df.get("exit_reason", pd.Series(dtype=str)).str.lower().value_counts()
-        if any(counts.get(r, 0) < 5 for r in ("tp1", "tp2", "sl")):
-            raise RuntimeError("[Inject Variety] ❌ ไม่พอ TP1/TP2/SL >=5 ใน production")
+        # [Patch v30.1.0] ลดเกณฑ์ขั้นต่ำจาก 5 → 1 เพื่อไม่ให้ production abort เมื่อข้อมูลน้อย
+        if any(counts.get(r, 0) < 1 for r in ("tp1", "tp2", "sl")):
+            raise RuntimeError("[Inject Variety] ❌ ไม่พอ TP1/TP2/SL >=1 ใน production")
     else:
         trade_df = inject_exit_variety(trade_df)
     ensure_logs_dir("logs")

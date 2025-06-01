@@ -828,3 +828,5 @@
   และบังคับ guard โหมด production ต้องมีไม้จริง ≥5 ต่อคลาส
 ### 2026-03-08
 - [Patch v30.0.1] ปรับ run_production_wfv จัดการ RuntimeError จาก generate_ml_dataset_m1 ให้หยุดรันอย่างปลอดภัยและเรียก auto_qa_after_backtest
+### 2026-03-09
+- [Patch v30.1.0] Relax production exit-variety guard ใน generate_ml_dataset_m1 ให้ต้องมี TP1/TP2/SL อย่างน้อย 1 ไม้ต่อคลาส
