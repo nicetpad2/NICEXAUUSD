@@ -22,6 +22,8 @@ from nicegold_v5.wfv import (
 # [Patch QA-FIX v28.2.5] Forward for QA
 from nicegold_v5.wfv import ensure_buy_sell, inject_exit_variety
 from nicegold_v5.utils import ensure_logs_dir
+from nicegold_v5.utils import M1_PATH, TRADE_DIR
+os.makedirs(TRADE_DIR, exist_ok=True)
 
 # Keep backward-compatible name
 run_walkforward_backtest = raw_run
@@ -132,17 +134,7 @@ def calc_lot_risk(capital, atr, risk_pct=1.5):
 def run_csv_integrity_check():
     return True
 
-TRADE_DIR = "logs/trades"
-M1_PATH = os.getenv(
-    "M1_PATH",
-    os.path.join(ROOT_DIR, "nicegold_v5", "XAUUSD_M1.csv"),
-)
-M15_PATH = os.getenv(
-    "M15_PATH",
-    os.path.join(ROOT_DIR, "nicegold_v5", "XAUUSD_M15.csv"),
-)
 DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
-os.makedirs(TRADE_DIR, exist_ok=True)
 
 # [Patch C.2] Enable full RAM mode
 MAX_RAM_MODE = True

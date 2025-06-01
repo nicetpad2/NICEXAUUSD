@@ -1,4 +1,5 @@
 # config.py – Fold-Based Entry Config
+from datetime import time
 
 ENTRY_CONFIG_PER_FOLD = {
     1: {"gain_z_thresh": -0.05, "ema_slope_min": 0.0001},
@@ -220,9 +221,33 @@ AUTOFIX_WFV_CONFIG = {
 }
 # [Patch v26.0.0] Adaptive Session Config
 SESSION_CONFIG = {
-    "Asia":   {"gain_z_thresh": -0.08, "tp1_rr_ratio": 1.10, "tp2_rr_ratio": 2.0,  "disable_buy": False, "disable_sell": False},
-    "London": {"gain_z_thresh":  0.00, "tp1_rr_ratio": 1.15, "tp2_rr_ratio": 2.15, "disable_buy": False, "disable_sell": False},
-    "NY":     {"gain_z_thresh":  0.03, "tp1_rr_ratio": 1.18, "tp2_rr_ratio": 2.30, "disable_buy": False, "disable_sell": False},
+    "Asia": {
+        "gain_z_thresh": -0.08,
+        "tp1_rr_ratio": 1.10,
+        "tp2_rr_ratio": 2.0,
+        "disable_buy": False,
+        "disable_sell": False,
+        "start": time(1, 0),
+        "end": time(8, 59),
+    },
+    "London": {
+        "gain_z_thresh": 0.00,
+        "tp1_rr_ratio": 1.15,
+        "tp2_rr_ratio": 2.15,
+        "disable_buy": False,
+        "disable_sell": False,
+        "start": time(9, 0),
+        "end": time(16, 59),
+    },
+    "NY": {
+        "gain_z_thresh": 0.03,
+        "tp1_rr_ratio": 1.18,
+        "tp2_rr_ratio": 2.30,
+        "disable_buy": False,
+        "disable_sell": False,
+        "start": time(17, 0),
+        "end": time(23, 59),
+    },
 }
 
 # [Patch v28.1.0] QA ForceEntry Config (for QA/backtest only)

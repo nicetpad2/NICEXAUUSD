@@ -844,3 +844,7 @@
 - [Patch v30.0.0] Align core function signatures, fix imports, and normalize paths
 ## 2026-03-20
 - [Patch v32.0.0] Updated wfv.ensure_buy_sell to export zero-trade markers and added QA_BASE_PATH constant
+## 2026-03-21
+- main.py now imports M1_PATH and TRADE_DIR from utils with auto directory creation
+- entry.py exposes aliases generate_signals_v8_0 and generate_signals_v12_0
+- SESSION_CONFIG includes start/end time fields; utils.load_data parses timestamps safely
