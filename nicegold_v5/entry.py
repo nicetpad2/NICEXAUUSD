@@ -358,12 +358,12 @@ def _generate_signals_v8_0_core(df: pd.DataFrame, config: dict | None = None) ->
     except ValueError:
         df["entry_tier"] = "C"
     df["confirm_zone"] = (
-        (df["gain_z"] > 0.0)
-        & (df["ema_slope"] > 0.02)
-        & ((df["atr"] > 0.15) | ((df["atr"] / df["atr_ma"]) > 0.8))
-        & ((df["volume"] > df["volume_ma"] * 0.4) | df["volume"].isna())
+        (df["gain_z"] > gain_z_thresh)
+        & (df["ema_slope"] > ema_slope_min)
+        & ((df["atr"] > atr_thresh_val) | ((df["atr"] / df["atr_ma"]) > 0.6))
+        & ((df["volume"] > df["volume_ma"] * 0.3) | df["volume"].isna())
         & (df["entry_score"] > 0)
-    )  # [Patch] ปรับ ConfirmZone ให้เข้มงวดขึ้น
+    )  # [Patch v32.0.3] Loosen ConfirmZone
 
     sniper_zone = (
         (df["sniper_risk_score"] >= sniper_risk_score_min)
@@ -501,18 +501,19 @@ def generate_signals_profit_v10(df: pd.DataFrame, config: dict | None = None) ->
     """[Patch v10.0] Entry logic เต็มระบบ: gain_z slope, atr slope, confirm zone, dynamic RR"""
     df = df.copy()
     config = config or {}
-    gain_z_thresh = config.get("gain_z_thresh", -0.05)
-    ema_slope_min = config.get("ema_slope_min", 0.01)
-    atr_thresh = config.get("atr_thresh", 0.15)
+    # [Patch v32.0.3] Loosen confirm filters
+    gain_z_thresh = config.get("gain_z_thresh", -0.10)  # ลดจาก -0.05 → -0.10
+    ema_slope_min = config.get("ema_slope_min", 0.005)  # ลดจาก 0.01 → 0.005
+    atr_thresh = config.get("atr_thresh", 0.10)         # ลดจาก 0.15 → 0.10
     sniper_score_min = config.get("sniper_risk_score_min", 3.0)
     tp_rr_ratio = config.get("tp_rr_ratio", 5.5)
 
     # Indicators
     df["ema_fast"] = df["close"].ewm(span=15).mean()
     df["ema_slow"] = df["close"].ewm(span=50).mean()
-    df["ema_slope"] = df["ema_fast"].diff()
-    df["atr"] = (df["high"] - df["low"]).rolling(14).mean()
-    df["atr_ma"] = df["atr"].rolling(50).mean()
+    df["ema_slope"] = df["ema_fast"] - df["ema_slow"]
+    df["atr"] = df["close"].rolling(14).apply(lambda x: max(x) - min(x), raw=False).fillna(0)
+    df["atr_ma"] = df["atr"].rolling(50).mean().fillna(0)
     df["gain"] = df["close"].diff()
     df["gain_z"] = (df["gain"] - df["gain"].rolling(20).mean()) / (df["gain"].rolling(20).std() + 1e-9)
     df["gain_z_slope"] = df["gain_z"].diff()
@@ -548,18 +549,19 @@ def generate_signals_v11_scalper_m1(df: pd.DataFrame, config: dict | None = None
     df = df.copy()
     config = config or {}
 
-    gain_z_thresh = config.get("gain_z_thresh", -0.05)
-    ema_slope_min = config.get("ema_slope_min", 0.01)
-    atr_thresh = config.get("atr_thresh", 0.15)
+    # [Patch v32.0.3] Loosen confirm filters
+    gain_z_thresh = config.get("gain_z_thresh", -0.10)  # ลดจาก -0.05 → -0.10
+    ema_slope_min = config.get("ema_slope_min", 0.005)  # ลดจาก 0.01 → 0.005
+    atr_thresh = config.get("atr_thresh", 0.10)         # ลดจาก 0.15 → 0.10
     sniper_score_min = config.get("sniper_risk_score_min", 3.0)
     tp_rr_ratio = config.get("tp_rr_ratio", 5.5)
 
     # --- Indicators ---
     df["ema_fast"] = df["close"].ewm(span=15).mean()
     df["ema_slow"] = df["close"].ewm(span=50).mean()
-    df["ema_slope"] = df["ema_fast"].diff()
-    df["atr"] = (df["high"] - df["low"]).rolling(14).mean()
-    df["atr_ma"] = df["atr"].rolling(50).mean()
+    df["ema_slope"] = df["ema_fast"] - df["ema_slow"]
+    df["atr"] = df["close"].rolling(14).apply(lambda x: max(x) - min(x), raw=False).fillna(0)
+    df["atr_ma"] = df["atr"].rolling(50).mean().fillna(0)
     df["gain"] = df["close"].diff()
     df["gain_z"] = (df["gain"] - df["gain"].rolling(20).mean()) / (df["gain"].rolling(20).std() + 1e-9)
     df["gain_z_slope"] = df["gain_z"].diff()
@@ -573,9 +575,9 @@ def generate_signals_v11_scalper_m1(df: pd.DataFrame, config: dict | None = None
     df["tp_rr_ratio"] = tp_rr_ratio
 
     confirm_zone = (
-        (df["gain_z"] > gain_z_thresh)
-        & (df["ema_slope"] > ema_slope_min)
-        & (df["atr"] > atr_thresh)
+        (df["gain_z"] > gain_z_thresh)            # [Patch v32.0.3] loosen gain_z
+        & (df["ema_slope"] > ema_slope_min)        # [Patch v32.0.3] loosen slope
+        & ((df["atr"] > atr_thresh) | ((df["atr"] / df["atr_ma"]) > 0.6))
         & (df["gain_z_slope"] > 0)
         & (df["atr_slope"] > 0)
     )

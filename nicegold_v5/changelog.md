@@ -852,3 +852,6 @@
 - [Patch v32.0.1] wfv.py imports QA_BASE_PATH from utils and exports zero-trade markers via ensure_buy_sell
 ## 2026-03-23
 - [Patch v32.0.2] Lower DEFAULT_RR1/DEFAULT_RR2 in entry.apply_tp_logic for easier TP2
+
+## 2026-03-24
+- [Patch v32.0.3] Relaxed confirm_zone thresholds and ATR handling in entry.generate_signals and scalper_v11

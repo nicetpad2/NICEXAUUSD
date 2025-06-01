@@ -870,3 +870,6 @@
 - [Patch v32.0.1] นำเข้า QA_BASE_PATH จาก utils ใน wfv.py และส่ง outdir ให้ ensure_buy_sell
 ### 2026-03-23
 - [Patch v32.0.2] ปรับ DEFAULT_RR1/DEFAULT_RR2 ใน apply_tp_logic ให้ TP2 ถึงง่ายขึ้น
+
+### 2026-03-24
+- [Patch v32.0.3] ปรับลด threshold ใน generate_signals และ scalper_v11 ให้เทรดง่ายขึ้น
