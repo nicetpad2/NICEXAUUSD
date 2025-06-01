@@ -226,3 +226,34 @@ def test_simulate_tp_exit_extra_branches():
     assert result.loc[0, 'exit_reason'] == 'TP2'
     assert result.loc[1, 'exit_reason'] == 'SL'
     assert result.loc[2, 'exit_reason'] == 'TP1'
+
+
+def test_autotune_resource_cpu(monkeypatch):
+    dummy_psutil = types.SimpleNamespace(
+        virtual_memory=lambda: types.SimpleNamespace(total=8 * 1024**3)
+    )
+    dummy_cuda = types.SimpleNamespace(is_available=lambda: False)
+    dummy_torch = types.SimpleNamespace(cuda=dummy_cuda)
+    monkeypatch.setitem(sys.modules, 'torch', dummy_torch)
+    monkeypatch.setitem(sys.modules, 'psutil', dummy_psutil)
+    utils_mod = importlib.reload(importlib.import_module('nicegold_v5.utils'))
+    device, batch = utils_mod.autotune_resource()
+    assert device == 'cpu'
+    assert batch >= 64
+
+
+def test_dynamic_batch_scaler(monkeypatch):
+    import importlib as _imp
+    utils_mod = _imp.reload(importlib.import_module('nicegold_v5.utils'))
+
+    called = {'count': 0}
+
+    def train_fn(batch_size, **kwargs):
+        called['count'] += 1
+        if called['count'] == 1:
+            raise RuntimeError('OOM')
+        return True
+
+    monkeypatch.setattr(utils_mod, 'time', types.SimpleNamespace(sleep=lambda x: None))
+    bs = utils_mod.dynamic_batch_scaler(train_fn, batch_start=128, min_batch=64, max_retry=2)
+    assert bs == 64

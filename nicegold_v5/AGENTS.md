@@ -742,6 +742,12 @@
 - ปรับ main.py ตัดการใช้ `test_mode` เมื่อรัน production
 
 ### 2026-01-31
-- [Patch v28.1.1] ปรับ train_lstm_runner ใช้ `torch.amp` หากมี และ fallback ไปใช้ `torch.cuda.amp` 
+- [Patch v28.1.1] ปรับ train_lstm_runner ใช้ `torch.amp` หากมี และ fallback ไปใช้ `torch.cuda.amp`
   บันทึก `_AMP_MODE` เพื่อแสดงโหมด AMP ที่ใช้
+
+### 2026-02-01
+- [Patch v29.1.0] เพิ่มฟังก์ชัน `autotune_resource` และ `print_resource_status` สำหรับตรวจสอบและปรับการใช้ทรัพยากร
+
+### 2026-02-02
+- [Patch v29.2.0] เพิ่ม `dynamic_batch_scaler` สำหรับลด batch size อัตโนมัติเมื่อเกิด OOM ในการเทรน LSTM
 

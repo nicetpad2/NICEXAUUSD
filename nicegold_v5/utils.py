@@ -3,13 +3,83 @@ import numpy as np
 import os
 from multiprocessing import cpu_count
 from datetime import datetime
+import time
+
+# [Patch v29.1.0] AI Resource AutoTune & Monitor แบบเทพ
+import torch
+try:  # pragma: no cover - optional dependency
+    import psutil
+except Exception:  # pragma: no cover - handle missing psutil
+    psutil = None
 from nicegold_v5.entry import (
     generate_signals,
     sanitize_price_columns,
     validate_indicator_inputs,
 )
 from nicegold_v5.backtester import run_backtest
+
 from nicegold_v5.wfv import run_autofix_wfv  # re-export for CLI (Patch v21.2.1)
+
+
+def autotune_resource(max_batch_size: int = 4096, min_batch_size: int = 64, safety_vram_gb: int = 1) -> tuple[str, int]:
+    """Auto-detect device & memory and return optimal ``(device, batch_size)``."""
+    if torch.cuda.is_available():
+        device = "cuda"
+        vram_total = torch.cuda.get_device_properties(0).total_memory // (1024 ** 3)
+        batch_size = min(max_batch_size, int((vram_total - safety_vram_gb) * 128))
+        batch_size = max(min_batch_size, batch_size)
+    else:
+        device = "cpu"
+        ram_total = psutil.virtual_memory().total // (1024 ** 3) if psutil else 0
+        batch_size = min(1024, int(ram_total * 16)) if psutil else min_batch_size
+        batch_size = max(min_batch_size, batch_size)
+    print(
+        f"[Patch v29.1.0] [Resource] Device: {device.upper()} | VRAM: {locals().get('vram_total', '-')} GB | BatchSize={batch_size}"
+    )
+    return device, batch_size
+
+
+def print_resource_status() -> None:
+    """Display current RAM/VRAM usage."""
+    if psutil:
+        ram = psutil.virtual_memory()
+        print(
+            f"[Patch v29.1.0] [Monitor] RAM: {ram.used / 1024 ** 3:.1f} / {ram.total / 1024 ** 3:.1f} GB"
+        )
+    else:
+        print("[Patch v29.1.0] [Monitor] RAM: psutil not available")
+    if torch.cuda.is_available():
+        vram = torch.cuda.memory_allocated() / 1024 ** 3
+        vram_total = torch.cuda.get_device_properties(0).total_memory / 1024 ** 3
+        print(f"[Patch v29.1.0] [Monitor] GPU VRAM: {vram:.1f} / {vram_total:.1f} GB")
+
+
+def dynamic_batch_scaler(
+    train_fn,
+    batch_start: int = 2048,
+    min_batch: int = 64,
+    max_retry: int = 3,
+    **kwargs,
+) -> int | None:
+    """Try training with decreasing batch size on OOM/Runtime errors."""
+    batch_size = batch_start
+    retry = 0
+    while retry < max_retry:
+        try:
+            print(f"[Patch v29.2.0] [DynBatch] Try batch_size={batch_size}")
+            ok = train_fn(batch_size=batch_size, **kwargs)
+            if ok:
+                return batch_size
+            raise RuntimeError("[DynBatch] Train fn returned False")
+        except (RuntimeError, MemoryError) as e:
+            print(f"[Patch v29.2.0] [DynBatch] {type(e).__name__}: {e} | ลด batch_size...")
+            batch_size = max(min_batch, int(batch_size * 0.6))
+            retry += 1
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+            time.sleep(2)
+    print("[Patch v29.2.0] [DynBatch] ⚠️ Auto-scaling ไม่สำเร็จหลัง retry.")
+    return None
 
 
 def print_qa_summary(trades: pd.DataFrame, equity: pd.DataFrame) -> dict:
