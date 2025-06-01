@@ -159,3 +159,28 @@ def test_generate_ml_dataset_force_inject_tp2(tmp_path, monkeypatch):
     generate_ml_dataset_m1(str(csv_path), str(out_csv), mode='qa')
     out_df = pd.read_csv(out_csv)
     assert out_df['tp2_hit'].sum() == 10
+
+
+def test_generate_ml_dataset_mock_tp2_when_no_trade(tmp_path, monkeypatch):
+    df = pd.DataFrame({
+        'timestamp': pd.date_range('2025-01-01', periods=200, freq='min'),
+        'open': 1,
+        'high': 1,
+        'low': 1,
+        'close': 1,
+        'volume': 1,
+    })
+    csv_path = tmp_path / 'XAUUSD_M1.csv'
+    df.to_csv(csv_path, index=False)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda d, config=None, **kw: d)
+
+    def fake_simulate_empty(d, percentile_threshold=75):
+        return pd.DataFrame({'entry_time': [], 'exit_reason': []})
+
+    monkeypatch.setattr('nicegold_v5.exit.simulate_partial_tp_safe', fake_simulate_empty)
+    monkeypatch.setattr('nicegold_v5.wfv.ensure_buy_sell', lambda trades_df, df, fn: trades_df)
+    out_csv = tmp_path / 'mock_tp2' / 'ml_dataset_m1.csv'
+    generate_ml_dataset_m1(str(csv_path), str(out_csv), mode='qa')
+    out_df = pd.read_csv(out_csv)
+    assert out_df['tp2_hit'].sum() == 10

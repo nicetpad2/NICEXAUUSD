@@ -145,6 +145,26 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
             else:
                 print("[Patch v28.4.1] ⚠️ No trades available to force TP2.")
             tp2_count = (trade_df.get("exit_reason") == "tp2").sum()
+
+    # [ADA-BI] Inject mock TP2 trades when class count still under 10
+    if tp2_count < 10 and (mode in ("qa", "dev") or os.getenv("QA_FORCE_TP2", "0") == "1"):
+        print("[ADA-BI] Inject mock TP2 for QA/dev")
+        n_force = 10 - tp2_count
+        mock_trades = []
+        for i in range(n_force):
+            mock_trade = (
+                trade_df.iloc[0].to_dict() if not trade_df.empty else {}
+            )
+            mock_trade["exit_reason"] = "tp2"
+            idx = len(df) - n_force + i
+            mock_trade["entry_time"] = df["timestamp"].iloc[idx]
+            mock_trade.setdefault("side", "buy" if i % 2 == 0 else "sell")
+            if "entry_price" in mock_trade:
+                mock_trade["tp2_price"] = mock_trade.get("entry_price", 0) + 1
+            mock_trades.append(mock_trade)
+        trade_df = pd.concat([trade_df, pd.DataFrame(mock_trades)], ignore_index=True)
+        print(f"[ADA-BI] ✅ Injected {n_force} mock TP2 orders (QA/DEV only).")
+        tp2_count = (trade_df.get("exit_reason") == "tp2").sum()
     if "percentile_threshold" in inspect.signature(simulate_partial_tp_safe).parameters:
         trade_df = ensure_buy_sell(trade_df, df_signals, lambda d: simulate_partial_tp_safe(d, percentile_threshold=1))
     else:

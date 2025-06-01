@@ -811,3 +811,5 @@
 - [Patch v28.4.0] บังคับ ultra force entry ใน generate_ml_dataset_m1 หากยังไม่มี TP2 ครบ 10 จุด
 ### 2026-02-29
 - [Patch v28.4.1] Inject TP2 label ใน QA/DEV หากยังไม่มี TP2 ครบ 10 จุดหลัง ultra force entry
+### 2026-03-01
+- [Patch v28.4.2] Inject mock TP2 trades เมื่อ trade log ยังมี TP2 ไม่ถึง 10 ไม้ (QA/DEV เท่านั้น)
