@@ -185,7 +185,10 @@ def force_entry_stress_test(
 
     equity = trades_df["pnl"].cumsum()
     peak = equity.cummax()
-    trades_df["drawdown"] = ((peak - equity) / peak.replace(0, pd.NA)).fillna(0)
+    trades_df["drawdown"] = (
+        ((peak - equity) / peak.replace(0, np.nan))
+        .fillna(0.0)
+    )
 
     audit = {
         "run_type": "QA_FORCEENTRY",
