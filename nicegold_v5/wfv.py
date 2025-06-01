@@ -149,9 +149,13 @@ def run_walkforward_backtest(df, features, label_col, side='buy', n_folds=3, per
 
         if y_train.nunique() < 2:
             print(
-                f"[{strategy_name}] Fold {fold + 1}: insufficient class variety – skipping"
+                f"[{strategy_name}] Fold {fold + 1}: insufficient class variety – injecting dummy"
             )
-            continue
+            dummy = df_train.iloc[[0]].copy()
+            dummy[label_col] = 1 - y_train.iloc[0]
+            df_train = pd.concat([df_train, dummy], ignore_index=True)
+            X_train = df_train[features].astype(float)
+            y_train = df_train[label_col]
 
         model = Pipeline(
             [

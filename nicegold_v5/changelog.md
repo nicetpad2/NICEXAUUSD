@@ -801,3 +801,6 @@
 - [Patch v29.9.0] เพิ่มระบบเช็ก exit_reason variety และ fallback config หลายระดับใน main.py และ autopipeline
 ## 2026-03-05
 - [Patch v29.9.1] ปรับฟังก์ชัน check_exit_reason_variety ให้รองรับค่า 'TP' และอักษรใหญ่
+
+## 2026-03-06
+- [Patch v29.9.2] แก้ run_walkforward_backtest inject class variety อัตโนมัติเมื่อเหลือคลาสเดียว
