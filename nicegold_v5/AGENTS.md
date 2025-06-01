@@ -838,3 +838,6 @@
 ### 2026-03-12
 - [Patch v31.1.0] Always inject missing exit-types in Production และไม่ abort เมื่อ variety ไม่ครบ
 
+### 2026-03-13
+- [Patch v31.2.0] เพิ่ม ForceEntry logic ใน generate_signals_v12_0 สำหรับ QA/dev
+
