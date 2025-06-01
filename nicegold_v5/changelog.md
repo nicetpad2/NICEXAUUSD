@@ -788,3 +788,5 @@
 - [Patch v28.3.2] ลด tp_rr_ratio แบบ progressive และ force TP2 จาก near-miss เพื่อให้มี TP2 จริงอย่างน้อย 10 จุด
 ## 2026-02-28
 - [Patch v28.4.0] เพิ่ม ultra force entry fallback ใน generate_ml_dataset_m1 เพื่อบังคับให้มี TP1/TP2/SL จริงเสมอ
+## 2026-02-29
+- [Patch v28.4.1] บังคับ inject TP2 labels ใน QA/DEV หากยังไม่มี TP2 ครบ 10 จุดหลัง ultra force entry

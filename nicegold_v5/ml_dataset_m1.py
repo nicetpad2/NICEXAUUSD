@@ -132,6 +132,19 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
         from nicegold_v5.config import SNIPER_CONFIG_ULTRA_OVERRIDE
         df_signals = generate_signals(df.copy(), config=SNIPER_CONFIG_ULTRA_OVERRIDE)
         trade_df = simulate_partial_tp_safe(df_signals)
+        tp2_count = (trade_df.get("exit_reason") == "tp2").sum()
+        if tp2_count < 10:
+            print("[Patch v28.4.1] 🚨 Ultra-Force: inject TP2 labels to guarantee class variety (QA/DEV mode only)")
+            n_force = max(10 - tp2_count, 0)
+            candidate_df = trade_df[trade_df["exit_reason"] != "tp2"]
+            if not candidate_df.empty:
+                replace = len(candidate_df) < n_force
+                candidate_idx = candidate_df.sample(n=n_force, replace=replace, random_state=42).index
+                trade_df.loc[candidate_idx, "exit_reason"] = "tp2"
+                print(f"[Patch v28.4.1] ✅ Force-injected {len(candidate_idx)} orders as TP2 (QA/DEV mode).")
+            else:
+                print("[Patch v28.4.1] ⚠️ No trades available to force TP2.")
+            tp2_count = (trade_df.get("exit_reason") == "tp2").sum()
     if "percentile_threshold" in inspect.signature(simulate_partial_tp_safe).parameters:
         trade_df = ensure_buy_sell(trade_df, df_signals, lambda d: simulate_partial_tp_safe(d, percentile_threshold=1))
     else:

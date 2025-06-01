@@ -809,3 +809,5 @@
 - [Patch v28.3.2] ปรับลด tp_rr_ratio แบบ progressive และบังคับ TP2 อย่างน้อย 10 จุดด้วย near-miss fallback ใน generate_ml_dataset_m1
 ### 2026-02-28
 - [Patch v28.4.0] บังคับ ultra force entry ใน generate_ml_dataset_m1 หากยังไม่มี TP2 ครบ 10 จุด
+### 2026-02-29
+- [Patch v28.4.1] Inject TP2 label ใน QA/DEV หากยังไม่มี TP2 ครบ 10 จุดหลัง ultra force entry
