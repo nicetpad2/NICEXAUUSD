@@ -721,3 +721,7 @@
 - เพิ่มพารามิเตอร์ `test_mode` ใน `generate_signals_v12_0` เพื่อรองรับ Dev QA/Force Entry
 - ปรับ `main.py` ไม่ส่ง `test_mode` ใน production pipeline
 
+## 2026-01-31
+- [Patch v28.1.1] ปรับ train_lstm_runner รองรับ `torch.amp` และ fallback เป็น `torch.cuda.amp`
+- บันทึกตัวแปร `_AMP_MODE` แจ้งโหมด AMP ที่เลือก
+

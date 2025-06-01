@@ -4,7 +4,12 @@ import torch
 import torch.nn as nn
 from torch import optim
 from torch.utils.data import DataLoader, TensorDataset
-from torch.cuda.amp import autocast, GradScaler
+try:
+    from torch.amp import autocast, GradScaler
+    _AMP_MODE = "torch.amp"
+except Exception:  # pragma: no cover - fallback for older PyTorch
+    from torch.cuda.amp import autocast, GradScaler
+    _AMP_MODE = "torch.cuda.amp"
 import time
 from .deep_model_m1 import LSTMClassifier
 

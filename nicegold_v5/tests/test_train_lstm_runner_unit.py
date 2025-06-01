@@ -166,7 +166,9 @@ def test_train_lstm_gpu_and_main(monkeypatch):
     monkeypatch.setattr(tlr.torch, "save", lambda m, path: saved.setdefault("path", path), raising=False)
 
     import textwrap
-    code = "\n" * 105 + textwrap.dedent("\n".join(open(tlr.__file__).read().splitlines()[105:109]))
+    lines = open(tlr.__file__).read().splitlines()
+    start = next(i for i, l in enumerate(lines) if "__main__" in l)
+    code = "\n" * start + textwrap.dedent("\n".join(lines[start + 1:start + 5]))
     compiled = compile(code, tlr.__file__, "exec")
     exec(compiled, {
         "load_dataset": lambda: (X, y),
@@ -174,3 +176,45 @@ def test_train_lstm_gpu_and_main(monkeypatch):
         "torch": types.SimpleNamespace(save=lambda m, p: saved.setdefault("path", p)),
     })
     assert saved["path"] == "models/model_lstm_tp2.pth"
+
+
+def test_amp_mode_detection(monkeypatch):
+    import importlib, sys, types
+
+    amp_mod = types.ModuleType('torch.amp')
+    class DummyCast:
+        def __init__(self, enabled=True):
+            pass
+        def __enter__(self):
+            return None
+        def __exit__(self, exc_type, exc, tb):
+            return False
+    amp_mod.autocast = lambda enabled=True: DummyCast(enabled)
+    class DummyScaler:
+        def __init__(self, enabled=True):
+            pass
+    amp_mod.GradScaler = DummyScaler
+
+    torch_mod = types.ModuleType('torch')
+    torch_mod.amp = amp_mod
+    torch_mod.nn = types.ModuleType('torch.nn')
+    torch_mod.optim = types.ModuleType('torch.optim')
+    torch_mod.utils = types.ModuleType('torch.utils')
+    torch_mod.utils.data = types.ModuleType('torch.utils.data')
+    torch_mod.utils.data.DataLoader = lambda *a, **k: []
+    torch_mod.utils.data.TensorDataset = lambda *a, **k: None
+    torch_mod.device = lambda x=None: 'cpu'
+    torch_mod.float32 = 0.0
+    torch_mod.cuda = types.SimpleNamespace(is_available=lambda: False)
+
+    monkeypatch.setitem(sys.modules, 'torch', torch_mod)
+    monkeypatch.setitem(sys.modules, 'torch.nn', torch_mod.nn)
+    monkeypatch.setitem(sys.modules, 'torch.optim', torch_mod.optim)
+    monkeypatch.setitem(sys.modules, 'torch.utils', torch_mod.utils)
+    monkeypatch.setitem(sys.modules, 'torch.utils.data', torch_mod.utils.data)
+    monkeypatch.setitem(sys.modules, 'torch.cuda', torch_mod.cuda)
+    monkeypatch.setitem(sys.modules, 'torch.amp', amp_mod)
+
+    tlr = importlib.reload(tlr_module)
+    assert tlr._AMP_MODE == 'torch.amp'
+
