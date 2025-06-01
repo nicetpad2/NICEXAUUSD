@@ -757,4 +757,7 @@
 
 ### 2026-02-04
 - ปรับ conftest.py ให้ patch `RandomForestClassifier` เป็นรุ่นเร็ว ลดเวลา unittest
+### 2026-02-05
+- ปรับปรุงระบบทดสอบรวม เพิ่มไฟล์ `test_smoke.py` ตรวจสอบการ import โมดูลทั้งหมด
+- ใส่ stub `torch` ใน `test_utils_additional` เพื่อให้รันได้แม้ไม่มี torch
 
