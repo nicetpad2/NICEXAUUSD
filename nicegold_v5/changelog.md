@@ -814,3 +814,7 @@
 ## 2026-03-10
 - ปรับ wfv.py เรียกใช้ split_by_session จาก utils เพื่อลดโค้ดซ้ำ
 - เพิ่มข้อมูลตำแหน่งไฟล์ผลลัพธ์ใน README
+
+## 2026-03-11
+- [Patch v31.0.0] ปรับ entry/exit logic, ลด threshold entry_score, ลด TP2_HOLD_MIN, เพิ่ม time_exit, ปรับ RR1/RR2, disable session_filter และ inject exit variety อัตโนมัติใน production
+

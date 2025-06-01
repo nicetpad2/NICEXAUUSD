@@ -104,11 +104,16 @@ SNIPER_CONFIG_Q3_TUNED = {
     "sniper_risk_score_min": 3.5,    # [Patch v9.0] เลือกเฉพาะเทรดคุณภาพสูงขึ้น
     "tp_rr_ratio": 5.5,              # [Patch v9.0] ลด TP ลงเล็กน้อย เพิ่ม Win Rate
     "tp1_rr_ratio": 1.5,             # [Patch v9.0] กำหนด TP1 ชัดเจน (ถ้าใช้)
+    # [Patch v31.0.0] ลด RR1/RR2 เพื่อให้ TP1/TP2 เกิดง่ายขึ้นบนแท่ง M1
+    "rr1": 0.8,
+    "rr2": 1.2,
     "volume_ratio": 0.3,             # [Patch v16.2.1] ลดเงื่อนไข volume guard
     "disable_buy": False,             # [Patch v16.0.2] ปิดฝั่ง Buy -> Force Enabled
     "min_volume": 0.05,              # [Patch v16.1.9] Volume filter
     "enable_be": True,               # [Patch v16.1.9] เปิด Breakeven
     "enable_trailing": True,         # [Patch v16.1.9] ใช้ Trailing SL
+    # [Patch v31.0.0] ปิด session_filter ชั่วคราว
+    "session_filter": False,
 }
 
 # [Patch v11.8] Relaxed fallback config หลัง Q3 ปรับลดเงื่อนไขให้ค้นหาสัญญาณได้กว้างขึ้น
@@ -119,6 +124,8 @@ RELAX_CONFIG_Q3 = {
     "sniper_risk_score_min": 2.0,
     "tp_rr_ratio": 4.5,
     "tp1_rr_ratio": 1.2,
+    "rr1": 0.6,
+    "rr2": 1.0,
     "volume_ratio": 0.4,
 }
 

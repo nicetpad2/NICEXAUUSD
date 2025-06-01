@@ -5,7 +5,8 @@ from .config import SESSION_CONFIG, HEDGEFUND_ENTRY_CONFIG
 
 # --- CONFIG FLAGS (Patch v11.1) ---
 ENABLE_TP1_TP2 = True
-ENABLE_SESSION_FILTER = True
+# [Patch v31.0.0] ปิด session_filter ชั่วคราว เพื่อให้เกิด entry ตลอดวัน
+ENABLE_SESSION_FILTER = False
 ENABLE_SIGNAL_LOG = True
 
 
@@ -820,7 +821,13 @@ def simulate_trades_with_tp(df: pd.DataFrame, sl_distance: float = 5.0):
         window = df[(df["timestamp"] >= entry_time) & (df["timestamp"] <= exit_window)]
 
         entry_price = row["close"]
-        direction = (row.get("entry_signal") or row.get("signal") or "buy").lower()
+        sig = row.get("entry_signal")
+        if pd.isna(sig):
+            sig = None
+        sig2 = row.get("signal")
+        if pd.isna(sig2):
+            sig2 = None
+        direction = (sig or sig2 or "buy").lower()
         if direction == "long":
             direction = "buy"
         elif direction == "short":  # pragma: no cover - rarely used alias
@@ -1022,8 +1029,9 @@ def generate_signals_v12_0(
     # [Patch v12.3.4] ✅ Entry Score Filter (TP2 Potential only)
     df = df.copy()
     if "entry_score" in df.columns:
-        df = df[df["entry_score"] > 3.5]
-        print(f"[Patch v12.3.4] ⚙️ Filtered by Entry Score > 3.5 → {len(df)} rows")
+        # [Patch v31.0.0] ลด threshold entry_score จาก 3.5 → 2.5 เพื่อให้มีโอกาสเข้าเทรดมากขึ้น
+        df = df[df["entry_score"] > 2.5]
+        print(f"[Patch v31.0.0] ⚙️ Filtered by Entry Score > 2.5 → {len(df)} rows")
     df = sanitize_price_columns(df)
     validate_indicator_inputs(df)
 

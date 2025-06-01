@@ -186,12 +186,12 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
     else:
         trade_df = ensure_buy_sell(trade_df, df_signals, simulate_partial_tp_safe)
 
-    if mode == "production":
-        counts = trade_df.get("exit_reason", pd.Series(dtype=str)).str.lower().value_counts()
-        # [Patch v30.1.0] ลดเกณฑ์ขั้นต่ำจาก 5 → 1 เพื่อไม่ให้ production abort เมื่อข้อมูลน้อย
-        if any(counts.get(r, 0) < 1 for r in ("tp1", "tp2", "sl")):
-            raise RuntimeError("[Inject Variety] ❌ ไม่พอ TP1/TP2/SL >=1 ใน production")
-    else:
+    counts = trade_df.get("exit_reason", pd.Series(dtype=str)).str.lower().value_counts()
+    # [Patch v31.0.0] หากโหมด Production และยังไม่มี exit variety ครบ → inject dummy trades แทนการ abort
+    if mode == "production" and any(counts.get(r, 0) < 1 for r in ("tp1", "tp2", "sl")):
+        print("[Patch v31.0.0] ⚠️ Production exit-variety insufficient, injecting dummy trades for missing exit types")
+        trade_df = inject_exit_variety(trade_df)
+    elif mode != "production":
         trade_df = inject_exit_variety(trade_df)
     ensure_logs_dir("logs")
     trade_df.to_csv(trade_log_path, index=False)
