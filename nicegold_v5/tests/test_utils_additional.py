@@ -294,3 +294,80 @@ def test_export_audit_report(tmp_path):
     json_files = list(tmp_path.glob('QA_audit_*.json'))
     assert len(csv_files) == 1
     assert len(json_files) == 1
+
+
+def test_get_git_hash(monkeypatch):
+    utils_mod = importlib.reload(importlib.import_module('nicegold_v5.utils'))
+    monkeypatch.setattr(utils_mod.subprocess, 'check_output', lambda cmd: b'abc')
+    assert utils_mod.get_git_hash() == 'abc'
+
+    def raise_err(cmd):
+        raise OSError('fail')
+
+    monkeypatch.setattr(utils_mod.subprocess, 'check_output', raise_err)
+    assert utils_mod.get_git_hash() == ""
+
+
+def test_autotune_resource_gpu(monkeypatch):
+    dummy_torch = types.SimpleNamespace(
+        cuda=types.SimpleNamespace(
+            is_available=lambda: True,
+            get_device_properties=lambda idx=0: types.SimpleNamespace(total_memory=8 * 1024**3)
+        )
+    )
+    monkeypatch.setitem(sys.modules, 'torch', dummy_torch)
+    utils_mod = importlib.reload(importlib.import_module('nicegold_v5.utils'))
+    device, batch = utils_mod.autotune_resource(max_batch_size=512, min_batch_size=64)
+    assert device == 'cuda'
+    assert batch >= 64
+
+
+def test_print_resource_status(monkeypatch, capsys):
+    dummy_psutil = types.SimpleNamespace(
+        virtual_memory=lambda: types.SimpleNamespace(used=2 * 1024**3, total=4 * 1024**3)
+    )
+    dummy_torch = types.SimpleNamespace(
+        cuda=types.SimpleNamespace(
+            is_available=lambda: True,
+            memory_allocated=lambda: 1024**3,
+            get_device_properties=lambda idx=0: types.SimpleNamespace(total_memory=2 * 1024**3)
+        )
+    )
+    monkeypatch.setitem(sys.modules, 'psutil', dummy_psutil)
+    monkeypatch.setitem(sys.modules, 'torch', dummy_torch)
+    utils_mod = importlib.reload(importlib.import_module('nicegold_v5.utils'))
+    utils_mod.print_resource_status()
+    out_full = capsys.readouterr().out
+    assert 'Monitor' in out_full
+
+    monkeypatch.setitem(sys.modules, 'psutil', None)
+    monkeypatch.setitem(sys.modules, 'torch', types.SimpleNamespace(cuda=types.SimpleNamespace(is_available=lambda: False)))
+    utils_mod = importlib.reload(importlib.import_module('nicegold_v5.utils'))
+    utils_mod.print_resource_status()
+    out_none = capsys.readouterr().out
+    assert 'not available' in out_none
+
+
+def test_dynamic_batch_scaler_fail(monkeypatch):
+    utils_mod = importlib.reload(importlib.import_module('nicegold_v5.utils'))
+    monkeypatch.setattr(utils_mod.time, 'sleep', lambda x: None)
+    dummy_cuda = types.SimpleNamespace(is_available=lambda: True, empty_cache=lambda: None)
+    utils_mod.torch = types.SimpleNamespace(cuda=dummy_cuda)
+
+    def always_fail(batch_size, **kw):
+        raise MemoryError('OOM')
+
+    bs = utils_mod.dynamic_batch_scaler(always_fail, batch_start=64, min_batch=32, max_retry=1)
+    assert bs is None
+
+
+def test_dynamic_batch_scaler_return_false(monkeypatch):
+    utils_mod = importlib.reload(importlib.import_module('nicegold_v5.utils'))
+    monkeypatch.setattr(utils_mod.time, 'sleep', lambda x: None)
+    utils_mod.torch = types.SimpleNamespace(cuda=types.SimpleNamespace(is_available=lambda: False))
+
+    def return_false(batch_size, **kw):
+        return False
+
+    bs = utils_mod.dynamic_batch_scaler(return_false, batch_start=64, min_batch=32, max_retry=1)
+    assert bs is None

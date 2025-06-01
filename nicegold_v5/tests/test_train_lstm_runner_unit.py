@@ -57,7 +57,7 @@ def test_train_lstm_stub(monkeypatch):
         def zero_grad(self):
             pass
         def step(self):
-            pass
+            return "stepped"
 
     class DummyScaler:
         def __init__(self, enabled=True):
@@ -89,6 +89,8 @@ def test_train_lstm_stub(monkeypatch):
 
     X = DummyTensor(np.zeros((2,5,1)))
     y = DummyTensor(np.zeros((2,1)))
+    assert X.size(1) == 5
+    assert DummyOpt(None).step() == "stepped"
     model = tlr.train_lstm(X, y, epochs=1, batch_size=1)
     assert isinstance(model, DummyModel)
 
@@ -126,7 +128,7 @@ def test_train_lstm_gpu_and_main(monkeypatch):
         def zero_grad(self):
             pass
         def step(self):
-            pass
+            return "stepped"
 
     class DummyScaler:
         def __init__(self, enabled=True):
@@ -157,6 +159,7 @@ def test_train_lstm_gpu_and_main(monkeypatch):
 
     X = DummyTensor(np.zeros((2, 5, 1)))
     y = DummyTensor(np.zeros((2, 1)))
+    assert DummyOpt(None).step() == "stepped"
     model = tlr.train_lstm(X, y, epochs=1, batch_size=1)
     assert isinstance(model, DummyModel) and model.used_cuda
 
@@ -218,4 +221,65 @@ def test_amp_mode_detection(monkeypatch):
 
     tlr = importlib.reload(tlr_module)
     assert tlr._AMP_MODE == 'torch.amp'
+    cast_obj = amp_mod.autocast(True)
+    with cast_obj as ctx:
+        assert ctx is None
+    scaler = amp_mod.GradScaler()
+    assert isinstance(scaler, DummyScaler)
+
+
+def test_dummy_helper_methods():
+    class DummyTensor:
+        def __init__(self, arr):
+            self.arr = np.array(arr, dtype=np.float32)
+        def size(self, dim=None):
+            return self.arr.shape if dim is None else self.arr.shape[dim]
+
+    t = DummyTensor(np.zeros((2, 3)))
+    assert t.size(1) == 3
+
+    class DummyOpt:
+        def __init__(self, params, lr=0.1):
+            pass
+        def step(self):
+            return "stepped"
+
+    assert DummyOpt(None).step() == "stepped"
+
+    class DummyCast:
+        def __init__(self, enabled=True):
+            pass
+        def __enter__(self):
+            return None
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+    with DummyCast() as ctx:
+        assert ctx is None
+
+
+def test_run_module_main(monkeypatch):
+    import importlib, textwrap
+    tlr = importlib.reload(tlr_module)
+
+    class DummyModel(tlr.nn.Module):
+        def state_dict(self):
+            return {}
+
+    monkeypatch.setattr(tlr, "autotune_resource", lambda: ("cpu", 1))
+    monkeypatch.setattr(tlr, "load_dataset", lambda: (tlr.torch.zeros((1, 1, 1)), tlr.torch.zeros((1, 1))))
+    monkeypatch.setattr(tlr, "train_lstm", lambda *a, **k: DummyModel())
+    saved = {}
+    monkeypatch.setattr(tlr.torch, "save", lambda m, p: saved.setdefault("path", p))
+
+    lines = open(tlr.__file__).read().splitlines()
+    start = next(i for i, l in enumerate(lines) if "__main__" in l)
+    code = "\n" * start + textwrap.dedent("\n".join(lines[start + 1:start + 6]))
+    exec(compile(code, tlr.__file__, "exec"), {
+        "autotune_resource": tlr.autotune_resource,
+        "load_dataset": tlr.load_dataset,
+        "train_lstm": tlr.train_lstm,
+        "torch": tlr.torch,
+    })
+    assert saved["path"] == "models/model_lstm_tp2.pth"
 

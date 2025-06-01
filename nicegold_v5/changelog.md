@@ -744,3 +744,5 @@
 - รองรับ numpy int64 ใน `export_audit_report` และแก้ `print_resource_status` ไม่ crash เมื่อใช้ stub
 ## 2026-02-07
 - เพิ่มชุดทดสอบ entry.py, ml_dataset_m1.py และ optuna_tuner.py ให้ coverage 100%
+## 2026-02-08
+- ปรับปรุงชุดทดสอบ LSTM และ train_lstm_runner ครอบคลุม utils ให้ coverage 100%

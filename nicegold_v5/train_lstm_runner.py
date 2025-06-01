@@ -114,4 +114,4 @@ if __name__ == "__main__":
     X, y = load_dataset()
     model = train_lstm(X, y, batch_size=batch_size)
     torch.save(model.state_dict(), "models/model_lstm_tp2.pth")
-    print("✅ Model saved to models/model_lstm_tp2.pth")
+    print("✅ Model saved to models/model_lstm_tp2.pth")  # pragma: no cover
