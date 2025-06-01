@@ -873,6 +873,11 @@ def run_production_wfv():
             print("[Patch QA-FIX v28.2.1] สร้างคอลัมน์ 'Open' จาก 'close' (ไม่มี open ใน ML Dataset)")
         else:
             raise ValueError("[Patch QA-FIX v28.2.1] ❌ ไม่พบ 'Open' หรือ 'open' หรือ 'close' ใน DataFrame")
+    # [Patch QA-FIX v28.2.2] Ensure index is timestamp for WFV
+    if "timestamp" in df.columns and not isinstance(df.index, pd.DatetimeIndex):
+        df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
+        df = df.set_index("timestamp")
+        print("[Patch QA-FIX v28.2.2] ตั้ง index เป็น timestamp สำหรับ WFV/ML dataset")
     trades = run_walkforward_backtest(df, features, label_col)
     equity = pd.DataFrame({"equity": trades["pnl"].cumsum() if not trades.empty else []})
     auto_qa_after_backtest(trades, equity, label="ProductionWFV")

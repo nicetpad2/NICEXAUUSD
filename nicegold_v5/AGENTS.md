@@ -784,3 +784,5 @@
 - [Patch QA-FIX] เพิ่ม fallback คอลัมน์ 'Open' ใน run_production_wfv ป้องกัน KeyError
 ### 2026-02-16
 - [Patch QA-FIX v28.2.1] ปรับปรุง fallback 'Open' ให้ตรวจสอบแบบไม่สนตัวพิมพ์และเพิ่ม log ระหว่างสร้างคอลัมน์ พร้อมทดสอบกรณีไม่มี open/close
+### 2026-02-17
+- [Patch QA-FIX v28.2.2] ตั้ง index เป็น timestamp หากยังไม่ใช่ DatetimeIndex เพื่อแก้ AttributeError ใน pass_filters

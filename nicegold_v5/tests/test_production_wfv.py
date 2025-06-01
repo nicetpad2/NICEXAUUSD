@@ -30,6 +30,7 @@ def test_run_production_wfv(monkeypatch):
     def fake_run(df_in, features, label_col):
         called['args'] = (features, label_col)
         called['cols'] = list(df_in.columns)
+        called['index_type'] = isinstance(df_in.index, pd.DatetimeIndex)
         return pd.DataFrame({'pnl': [1.0]})
     monkeypatch.setattr(main, 'run_walkforward_backtest', fake_run)
     monkeypatch.setattr(main, 'auto_qa_after_backtest', lambda t, e, label=None: called.update({'qa': True}))
@@ -39,6 +40,7 @@ def test_run_production_wfv(monkeypatch):
     assert called['args'][1] == 'tp2_hit'
     assert 'qa' in called
     assert 'Open' in called['cols']
+    assert called['index_type']
 
 
 def test_run_production_wfv_close_fallback(monkeypatch):
@@ -67,6 +69,7 @@ def test_run_production_wfv_close_fallback(monkeypatch):
     def fake_run(df_in, features, label_col):
         called['args'] = (features, label_col)
         called['cols'] = list(df_in.columns)
+        called['index_type'] = isinstance(df_in.index, pd.DatetimeIndex)
         return pd.DataFrame({'pnl': [1.0]})
     monkeypatch.setattr(main, 'run_walkforward_backtest', fake_run)
     monkeypatch.setattr(main, 'auto_qa_after_backtest', lambda t, e, label=None: called.update({'qa': True}))
@@ -76,6 +79,7 @@ def test_run_production_wfv_close_fallback(monkeypatch):
     assert called['args'][1] == 'tp2_hit'
     assert 'qa' in called
     assert 'Open' in called['cols']
+    assert called['index_type']
 
 
 def test_run_production_wfv_no_open_close(monkeypatch):
