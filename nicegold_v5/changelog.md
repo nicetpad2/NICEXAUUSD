@@ -799,3 +799,5 @@
 - [Patch v29.8.1] Ultra Override QA Mode – inject signal/exit variety ครบทุกกรณี
 ## 2026-03-04
 - [Patch v29.9.0] เพิ่มระบบเช็ก exit_reason variety และ fallback config หลายระดับใน main.py และ autopipeline
+## 2026-03-05
+- [Patch v29.9.1] ปรับฟังก์ชัน check_exit_reason_variety ให้รองรับค่า 'TP' และอักษรใหญ่
