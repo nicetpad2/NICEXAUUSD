@@ -815,3 +815,5 @@
 - [Patch v28.4.2] Inject mock TP2 trades เมื่อ trade log ยังมี TP2 ไม่ถึง 10 ไม้ (QA/DEV เท่านั้น)
 ### 2026-03-02
 - [Patch v28.4.3] แก้ FutureWarning การ concat DataFrame ว่างใน generate_ml_dataset_m1 และลดจำนวนคำเตือนระหว่างทดสอบ
+### 2026-03-03
+- [Patch v29.8.1] Ultra Override QA Mode – Inject signal/exit variety ทันทีใน ML dataset และ entry logic

@@ -57,6 +57,23 @@ SNIPER_CONFIG_ULTRA_OVERRIDE = {
     "volume_ratio": 0.0,
 }
 
+# [Patch v29.8.1] Ultra Override QA Mode – inject signal/exit variety ทุกกรณี
+SNIPER_CONFIG_ULTRA_OVERRIDE_QA = {
+    "gain_z_thresh": -9.9,
+    "ema_slope_min": -9.9,
+    "atr_thresh": 0.0,
+    "sniper_risk_score_min": -1.0,
+    "tp_rr_ratio": 0.8,
+    "tp1_rr_ratio": 0.4,
+    "volume_ratio": 0.0,
+    "disable_buy": False,
+    "disable_sell": False,
+    "force_entry": True,
+    "force_entry_ratio": 1.0,
+    "force_entry_side": "both",
+    "force_entry_session": "all",
+}
+
 # ค่าคงที่สำหรับโหมด Stable Gain
 SNIPER_CONFIG_STABLE_GAIN = {
     "gain_z_thresh": 0.0,
