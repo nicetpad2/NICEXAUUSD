@@ -790,3 +790,6 @@
 - [Patch QA-FIX v28.2.3] ปรับปรุง run_production_wfv ให้ auto-fix index/dtype/column ครบถ้วนและ export QA log เสมอ
 ### 2026-02-19
 - [Patch QA-FIX v29.2.0] เพิ่มฟังก์ชัน `ensure_buy_sell` ตรวจสอบและบังคับเปิดไม้ BUY/SELL ใน Production WFV
+### 2026-02-20
+- [Patch QA-FIX v28.2.4-6] ปรับ run_production_wfv auto-generate dataset หากไม่พบ 'tp2_hit',
+  forward ensure_buy_sell ใน main/wfv/qa และเพิ่ม QA fallback เมื่อไม่มี trade
