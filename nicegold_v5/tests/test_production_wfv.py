@@ -183,8 +183,15 @@ def test_run_production_wfv_insufficient_trades(monkeypatch):
 
     monkeypatch.setattr('nicegold_v5.ml_dataset_m1.generate_ml_dataset_m1', raise_runtime)
     called = {}
+
+    def fake_run(df_in, features, label_col, **kw):
+        called['cols'] = list(df_in.columns)
+        return pd.DataFrame({'pnl': [0.0], 'side': ['buy'], 'exit_reason': ['tp1']})
+
+    monkeypatch.setattr(main, 'run_walkforward_backtest', fake_run)
     monkeypatch.setattr(main, 'auto_qa_after_backtest', lambda *a, **k: called.setdefault('qa', True))
 
     main.run_production_wfv()
 
+    assert 'tp2_hit' in called['cols']
     assert called.get('qa')

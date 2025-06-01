@@ -824,3 +824,7 @@
 ## 2026-03-13
 - [Patch v31.2.0] เพิ่มตรรกะ ForceEntry เต็มรูปแบบใน `generate_signals_v12_0` สำหรับโหมดทดสอบ
 
+## 2026-03-14
+- [Patch v30.0.2] run_production_wfv ไม่หยุดเมื่อ ML dataset ไม่พอ trade แต่สร้างคอลัมน์
+  tp2_hit=0 แล้วดำเนิน WFV ต่อไป
+

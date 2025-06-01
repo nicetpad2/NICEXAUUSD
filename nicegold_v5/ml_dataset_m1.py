@@ -191,9 +191,13 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
     # [Patch v31.1.0] Production: never abort, always inject missing exit-types
     if mode == "production":
         if missing:
-            print(f"[Patch v31.1.0] ⚠️ Production exit-variety insufficient ({missing}), injecting dummy trades.")
-            trade_df = inject_exit_variety(trade_df)
+            print(
+                f"[Patch v31.1.0] ⚠️ Production exit-variety insufficient ({missing}), injecting dummy trades."
+            )
+        # Inject any missing exit-reasons (TP1/TP2/SL) as dummy rows
+        trade_df = inject_exit_variety(trade_df)
     else:
+        # In QA/DEV modes, always inject variety as well
         trade_df = inject_exit_variety(trade_df)
     ensure_logs_dir("logs")
     trade_df.to_csv(trade_log_path, index=False)

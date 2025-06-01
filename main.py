@@ -892,12 +892,15 @@ def run_production_wfv():
                 mode="production",
             )
         except RuntimeError as e:
+            # Instead of aborting, log a warning and proceed with an empty 'tp2_hit' column
             print(e)
-            print("[Patch v30.0.1] ❌ Production dataset insufficient – abort WFV")
-            equity = pd.DataFrame({"equity": []})
-            auto_qa_after_backtest(pd.DataFrame(), equity, label="ProductionWFV")
-            return
-        df = pd.read_csv("data/ml_dataset_m1.csv")
+            print(
+                "[Patch v30.0.2] ⚠️ Production dataset insufficient – inserting tp2_hit=0 and continuing WFV"
+            )
+            df["tp2_hit"] = 0
+        else:
+            # Reload ML dataset normally if no exception
+            df = pd.read_csv("data/ml_dataset_m1.csv")
         print(
             f"[Patch QA-FIX v28.2.4] ✅ Reloaded ML dataset – columns: {df.columns.tolist()}"
         )

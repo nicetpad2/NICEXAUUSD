@@ -841,3 +841,7 @@
 ### 2026-03-13
 - [Patch v31.2.0] เพิ่ม ForceEntry logic ใน generate_signals_v12_0 สำหรับ QA/dev
 
+### 2026-03-14
+- [Patch v30.0.2] ปรับ run_production_wfv ไม่ abort เมื่อ generate_ml_dataset_m1 ไม่พอ trade
+  แต่ใส่คอลัมน์ tp2_hit=0 แล้วรัน WFV ต่อ
+
