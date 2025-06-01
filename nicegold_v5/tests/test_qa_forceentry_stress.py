@@ -1,6 +1,6 @@
 import pandas as pd
 import importlib
-import qa
+from nicegold_v5 import qa
 
 
 def sample_df():

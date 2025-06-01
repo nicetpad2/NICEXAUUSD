@@ -852,7 +852,7 @@ if __name__ == "__main__":
         run_type = "WFV"
     elif menu.strip() == "2":
         print("[Patch v28.3.0] 🚦 QA Robustness: ForceEntry Stress Test กำลังทำงาน ...")
-        from qa import force_entry_stress_test
+        from nicegold_v5.qa import force_entry_stress_test
         from nicegold_v5.utils import load_data
         from nicegold_v5.config import SNIPER_CONFIG_Q3_TUNED
         df = load_data(M1_PATH)

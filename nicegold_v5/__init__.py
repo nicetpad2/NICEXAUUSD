@@ -46,6 +46,7 @@ from .qa import (
     export_fold_qa,
     detect_fold_drift,
     auto_qa_after_backtest,
+    force_entry_stress_test,
 )
 from .rl_agent import RLScalper
 from .meta_classifier import MetaClassifier
