@@ -840,8 +840,30 @@ def welcome():
         return
 
 def run_production_wfv():
-    """[Patch v28.2.1] Production WFV + Auto QA"""
-    trades, equity = run_walkforward_backtest()
+    """[Patch QA-FIX] Production WFV + Auto QA – Fixed argument passing"""
+    # Load data and features for WFV
+    df = load_csv_safe(M1_PATH)
+    df = convert_thai_datetime(df)
+    df["timestamp"] = parse_timestamp_safe(df["timestamp"], DATETIME_FORMAT)
+    df = sanitize_price_columns(df)
+    try:
+        validate_indicator_inputs(df, min_rows=min(500, len(df)))
+    except TypeError:
+        validate_indicator_inputs(df)
+    # WFV FEATURES
+    features = [
+        "open", "high", "low", "close", "gain_z", "ema_slope", "atr",
+        "rsi", "volume", "entry_score", "pattern_label"
+    ]
+    label_col = "tp2_hit"  # หรือ "target" ตาม dataset ที่เตรียมไว้
+    # ตรวจสอบว่ามี label_col ใน df
+    if label_col not in df.columns:
+        print(f"[Patch QA-FIX] Warning: label_col {label_col} not found in dataframe. Run generate_ml_dataset_m1 first.")
+        from nicegold_v5.ml_dataset_m1 import generate_ml_dataset_m1
+        generate_ml_dataset_m1(csv_path=M1_PATH, out_path="data/ml_dataset_m1.csv")
+        df = pd.read_csv("data/ml_dataset_m1.csv")
+    trades = run_walkforward_backtest(df, features, label_col)
+    equity = pd.DataFrame({"equity": trades["pnl"].cumsum() if not trades.empty else []})
     auto_qa_after_backtest(trades, equity, label="ProductionWFV")
 
 
