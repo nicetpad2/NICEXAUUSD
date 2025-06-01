@@ -1000,9 +1000,14 @@ def simulate_trades_with_tp(df: pd.DataFrame, sl_distance: float = 5.0):
     return trades, logs
 
 
-def generate_signals_v12_0(df: pd.DataFrame, config: dict | None = None) -> pd.DataFrame:
+def generate_signals_v12_0(
+    df: pd.DataFrame,
+    config: dict | None = None,
+    test_mode: bool = False,
+) -> pd.DataFrame:
     """
     [Patch v26.0.1] Multi-pattern signal generator - *unblock* buy/sell every signal
+    test_mode: สำหรับ Dev QA หรือ force entry เท่านั้น (default=False)
     """
     config = config or {}
     # QA Guard: always force both sides open
@@ -1014,6 +1019,10 @@ def generate_signals_v12_0(df: pd.DataFrame, config: dict | None = None) -> pd.D
     config["disable_sell"] = False
     assert not config.get("disable_buy", False), "QA BLOCK: disable_buy=True not allowed"
     assert not config.get("disable_sell", False), "QA BLOCK: disable_sell=True not allowed"
+
+    if test_mode:
+        # logic สำหรับ QA หรือ force entry
+        pass
     # เดิม...
     # [Patch v12.3.4] ✅ Entry Score Filter (TP2 Potential only)
     df = df.copy()

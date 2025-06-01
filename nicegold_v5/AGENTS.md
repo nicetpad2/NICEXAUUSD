@@ -737,3 +737,7 @@
 ### 2026-01-29
 - [Patch v28.1.0] เพิ่มระบบ QA ForceEntry สำหรับทดสอบเท่านั้น พร้อม config ป้องกันใช้งานใน production
 
+### 2026-01-30
+- ปรับ generate_signals_v12_0 เพิ่มพารามิเตอร์ `test_mode` สำหรับ Dev QA และ ForceEntry
+- ปรับ main.py ตัดการใช้ `test_mode` เมื่อรัน production
+
