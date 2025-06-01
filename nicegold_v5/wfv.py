@@ -8,6 +8,7 @@ from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 import os  # [Patch v12.3.9] Added for export
 from datetime import datetime  # [Patch v12.3.9] Added for timestamp
+import logging
 
 # ลดการซ้ำซ้อน โดยไม่เก็บโค้ดซ้ำซ้อนในโมดูลนี้
 
@@ -21,8 +22,13 @@ INITIAL_CAPITAL = 10000.0
 
 from nicegold_v5.fix_engine import autofix_fold_run, autorisk_adjust, run_self_diagnostic
 
+QA_BASE_PATH = "logs/qa"
+os.makedirs(QA_BASE_PATH, exist_ok=True)
+
 TRADE_DIR = "logs/trades"  # [Patch v12.3.9] Define log dir
 os.makedirs(TRADE_DIR, exist_ok=True)  # [Patch v12.3.9] Ensure log dir exists
+logger = logging.getLogger("nicegold_v5.wfv")
+logger.setLevel(logging.INFO)
 
 
 def auto_entry_config(fold_df: pd.DataFrame) -> dict:
@@ -302,8 +308,22 @@ def inject_exit_variety(trades_df: pd.DataFrame,
     return trades_df
 
 
-def ensure_buy_sell(trades_df: pd.DataFrame, df: pd.DataFrame, simulate_fn) -> pd.DataFrame:
-    """Guarantee both BUY and SELL trades exist using fallback and force entry."""
+def ensure_buy_sell(
+    trades_df: pd.DataFrame,
+    df: pd.DataFrame,
+    simulate_fn,
+    fold: int | None = None,
+    outdir: str | None = None,
+) -> pd.DataFrame:
+    """Guarantee both BUY and SELL trades exist using fallback and force entry.
+
+    Parameters
+    ----------
+    fold : int | None
+        Fold number for QA export.
+    outdir : str | None
+        Directory to export zero-trade marker when BUY/SELL still missing.
+    """
     sides = trades_df.get("side", trades_df.get("type", pd.Series(dtype=str))).str.lower()
     has_buy = "buy" in sides.values
     has_sell = "sell" in sides.values
@@ -339,6 +359,12 @@ def ensure_buy_sell(trades_df: pd.DataFrame, df: pd.DataFrame, simulate_fn) -> p
     has_sell3 = "sell" in sides3.values
     if not (has_buy3 and has_sell3):
         print("[Patch QA-FIX] ❌ ยังไม่ครบ BUY/SELL หลัง forceentry – QA export zero-trade")
+        if outdir:
+            os.makedirs(outdir, exist_ok=True)
+            label = f"fold_{fold}" if fold is not None else "final"
+            out_path = os.path.join(outdir, f"missing_side_{label}.csv")
+            pd.DataFrame().to_csv(out_path, index=False)
+            logger.info("[ensure_buy_sell] Exported zero-trade marker → %s", out_path)
     else:
         print("[Patch QA-FIX] ✅ BUY/SELL ครบหลัง forceentry")
 

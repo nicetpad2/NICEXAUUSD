@@ -860,3 +860,5 @@
 
 ### 2026-03-19
 - [Patch v30.0.0] Align core function signatures, fix imports, and normalize paths
+### 2026-03-20
+- [Patch v32.0.0] ปรับปรุง wfv ให้รองรับ QA_BASE_PATH และบันทึก zero-trade ต่อ fold

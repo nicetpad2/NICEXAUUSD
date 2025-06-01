@@ -246,6 +246,8 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 M1_PATH = "data/XAUUSD_M1.csv"
 M15_PATH = "data/XAUUSD_M15.csv"
+QA_BASE_PATH = "logs/qa"
+os.makedirs(QA_BASE_PATH, exist_ok=True)
 
 def ensure_logs_dir(path: str = "logs") -> None:
     """สร้างไดเรกทอรี logs หากยังไม่มี หรือลบไฟล์ที่ชื่อชนกัน"""
