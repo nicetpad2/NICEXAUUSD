@@ -832,3 +832,6 @@
 - [Patch v30.1.0] Relax production exit-variety guard ใน generate_ml_dataset_m1 ให้ต้องมี TP1/TP2/SL อย่างน้อย 1 ไม้ต่อคลาส
 ### 2026-03-10
 - ปรับ wfv.py ให้ใช้ split_by_session จาก utils เพื่อลดโค้ดซ้ำ และอัพเดต README สรุปตำแหน่งไฟล์ log
+### 2026-03-11
+- [Patch v31.0.0] ปรับ entry/exit logic, ลด RR1/RR2, เพิ่ม time_exit และ auto-inject exit variety
+

@@ -22,7 +22,8 @@ TSL_ATR_MULTIPLIER = 1.2  # [Patch v12.1.x] ใช้ ATR ในการ trail 
 MAX_HOLD_MINUTES = 360
 MIN_PROFIT_TRIGGER = 0.5
 MICRO_LOCK_THRESHOLD = 0.3
-TP2_HOLD_MIN = 15  # [Patch v12.3.0] ต้องถือ TP2 อย่างน้อย 15 นาที
+# [Patch v31.0.0] ลดเวลา Hold สำหรับ TP2 จาก 15 → 3 นาที เพื่อให้ exit เกิดได้เร็วขึ้น
+TP2_HOLD_MIN = 3
 
 
 def _rget(row, key, default=None):
@@ -123,9 +124,9 @@ def should_exit(trade, row):
         logging.info("[Patch v12.3.1] SL Blocked: MFE > 3.0")
         return False, None
 
-    # [Patch v12.3.3] ✅ Momentum Exit Guard (GainZ > 0)
-    if gain > 0 and gain_z > 0:
-        logging.info("[Patch v12.3.3] Momentum Lock: gain_z > 0")
+    # [Patch v31.0.0] ปรับ Momentum Exit Guard: บล็อกเฉพาะเมื่อ gain_z > 1.0 เท่านั้น
+    if gain_z > 1.0:
+        logging.info("[Patch v31.0.0] Momentum Lock: gain_z > 1.0")
         return False, None
 
     if gain > atr * MIN_PROFIT_TRIGGER and atr_ma < atr * 0.75:
@@ -233,6 +234,30 @@ def simulate_partial_tp_safe(df: pd.DataFrame, capital: float = 1000.0):  # prag
             duration = (row.timestamp - open_position["entry_time"]).total_seconds() / 60
             if open_position.get("entry_score", 0) > 4.5 and duration < 15:
                 continue  # ห้าม exit ก่อน 15 นาที
+
+            # [Patch v31.0.0] Time-based Exit: หากถือตำแหน่งเกิน 30 นาที → บังคับปิดที่ราคา close ปัจจุบัน
+            if duration >= 30:
+                trade_entry = open_position["entry"]
+                exit_price = row.close
+                pnl = (exit_price - trade_entry) * 10 * open_position["lot"] if direction == "buy" else (trade_entry - exit_price) * 10 * open_position["lot"]
+                trades.append({
+                    "entry_time": open_position["entry_time"],
+                    "exit_time": row.timestamp,
+                    "entry_price": trade_entry,
+                    "exit_price": exit_price,
+                    "tp1_price": open_position["tp1"],
+                    "tp2_price": open_position["tp2"],
+                    "sl_price": open_position["sl"],
+                    "lot": open_position["lot"],
+                    "exit_reason": "time_exit",
+                    "session": open_position["session"],
+                    "duration_min": duration,
+                    "mfe": open_position.get("mfe", 0.0),
+                    "pnl": round(pnl, 2),
+                })
+                logging.info(f"[Patch v31.0.0] Time Exit: {direction} @ {exit_price}")
+                open_position = None
+                continue
 
             exit_price = None
             reason = None
