@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 import importlib
+from nicegold_v5.utils import ensure_logs_dir
 
 
 def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mode="production"):
@@ -191,7 +192,7 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
             raise RuntimeError("[Inject Variety] ❌ ไม่พอ TP1/TP2/SL >=5 ใน production")
     else:
         trade_df = inject_exit_variety(trade_df)
-    os.makedirs("logs", exist_ok=True)
+    ensure_logs_dir("logs")
     trade_df.to_csv(trade_log_path, index=False)
     print("[Patch v28.2.6] ✅ Trade log saved →", trade_log_path)
 

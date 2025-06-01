@@ -209,6 +209,13 @@ M1_PATH = "/content/drive/MyDrive/NICEGOLD/XAUUSD_M1.csv"
 M15_PATH = "/content/drive/MyDrive/NICEGOLD/XAUUSD_M15.csv"
 
 
+def ensure_logs_dir(path: str = "logs") -> None:
+    """สร้างไดเรกทอรี logs หากยังไม่มี หรือลบไฟล์ที่ชื่อชนกัน"""
+    if os.path.isfile(path):
+        os.remove(path)
+    os.makedirs(path, exist_ok=True)
+
+
 def get_resource_plan() -> dict:
     """ตรวจสอบทรัพยากรแล้ววางแผนการเทรนให้เหมาะสม"""
     import time
@@ -255,7 +262,7 @@ def get_resource_plan() -> dict:
     else:
         batch_size, model_dim, n_folds, lr, opt, epochs = 32, 16, 3, 0.01, "sgd", 15
 
-    os.makedirs("logs", exist_ok=True)
+    ensure_logs_dir("logs")
     plan = {
         "device": device,
         "gpu": gpu_name,

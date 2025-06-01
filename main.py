@@ -21,6 +21,7 @@ from nicegold_v5.wfv import (
 )
 # [Patch QA-FIX v28.2.5] Forward for QA
 from nicegold_v5.wfv import ensure_buy_sell, inject_exit_variety
+from nicegold_v5.utils import ensure_logs_dir
 
 # Keep backward-compatible name
 run_walkforward_backtest = raw_run
@@ -884,9 +885,22 @@ def run_production_wfv():
             f"[Patch QA-FIX v28.2.4] ⚠️ ไม่พบ {label_col} ใน dataframe – รัน generate_ml_dataset_m1 อัตโนมัติ"
         )
         from nicegold_v5.ml_dataset_m1 import generate_ml_dataset_m1
-        generate_ml_dataset_m1(csv_path=M1_PATH, out_path="data/ml_dataset_m1.csv", mode="production")
+        try:
+            generate_ml_dataset_m1(
+                csv_path=M1_PATH,
+                out_path="data/ml_dataset_m1.csv",
+                mode="production",
+            )
+        except RuntimeError as e:
+            print(e)
+            print("[Patch v30.0.1] ❌ Production dataset insufficient – abort WFV")
+            equity = pd.DataFrame({"equity": []})
+            auto_qa_after_backtest(pd.DataFrame(), equity, label="ProductionWFV")
+            return
         df = pd.read_csv("data/ml_dataset_m1.csv")
-        print(f"[Patch QA-FIX v28.2.4] ✅ Reloaded ML dataset – columns: {df.columns.tolist()}")
+        print(
+            f"[Patch QA-FIX v28.2.4] ✅ Reloaded ML dataset – columns: {df.columns.tolist()}"
+        )
     # [Patch QA-FIX v28.2.5] Ensure ensure_buy_sell available
     from nicegold_v5.wfv import ensure_buy_sell
     # 2. Ensure 'Open' column exists
@@ -937,7 +951,7 @@ def run_production_wfv():
             print(f"[Patch v29.9.0] ✅ SUCCESS: WFV มี TP1/TP2/SL ครบ ({name})")
             ts = datetime.now().strftime("%Y%m%d_%H%M%S")
             out = f"logs/trades_v12_tp1tp2_{name}.csv"
-            os.makedirs("logs", exist_ok=True)
+            ensure_logs_dir("logs")
             trades.to_csv(out, index=False)
             print(f"[Patch v29.9.0] ✅ Trade log saved ({out})")
             equity = pd.DataFrame({"equity": trades["pnl"].cumsum()})
