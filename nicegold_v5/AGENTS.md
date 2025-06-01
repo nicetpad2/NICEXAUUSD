@@ -805,3 +805,5 @@
 - [Patch v28.3.0] ปรับ generate_ml_dataset_m1 ใช้ SNIPER_CONFIG_Q3_TUNED ใน production และ fallback ไปใช้ RELAX_CONFIG_Q3 หากไม่มี trade จริง
 ### 2026-02-26
 - [Patch v28.3.1] ขยาย fallback ML dataset เป็น SNIPER_CONFIG_DIAGNOSTIC และ SNIPER_CONFIG_PROFIT เมื่อยังไม่มี trade จริง พร้อมบันทึกจำนวนไม้จริง
+### 2026-02-27
+- [Patch v28.3.2] ปรับลด tp_rr_ratio แบบ progressive และบังคับ TP2 อย่างน้อย 10 จุดด้วย near-miss fallback ใน generate_ml_dataset_m1

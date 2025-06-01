@@ -784,3 +784,5 @@
 ## 2026-02-26
 - [Patch v28.3.1] ขยาย fallback ของ generate_ml_dataset_m1 ให้ลอง SNIPER_CONFIG_DIAGNOSTIC และ SNIPER_CONFIG_PROFIT
 - เพิ่ม log จำนวนไม้ TP1/TP2/SL และแสดงข้อมูลไม้แรกที่ชนจริง
+## 2026-02-27
+- [Patch v28.3.2] ลด tp_rr_ratio แบบ progressive และ force TP2 จาก near-miss เพื่อให้มี TP2 จริงอย่างน้อย 10 จุด
