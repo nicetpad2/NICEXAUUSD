@@ -20,7 +20,7 @@ def test_generate_ml_dataset_import_fallback(tmp_path, monkeypatch):
     monkeypatch.setattr('nicegold_v5.exit.simulate_partial_tp_safe', lambda d: pd.DataFrame({'entry_time': d['timestamp'].iloc[:1], 'exit_reason':['tp2']}))
     monkeypatch.chdir(tmp_path)
     out_csv = tmp_path / 'out.csv'
-    generate_ml_dataset_m1(None, str(out_csv))
+    generate_ml_dataset_m1(None, str(out_csv), mode="qa")
     assert out_csv.exists()
 
 
@@ -40,6 +40,6 @@ def test_generate_ml_dataset_oversample(tmp_path, monkeypatch):
     monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda d, config=None, **kw: d)
     monkeypatch.setattr('nicegold_v5.exit.simulate_partial_tp_safe', lambda d: pd.DataFrame({'entry_time': d['entry_time'].iloc[[0]], 'exit_reason':['tp2']}))
     out_csv = tmp_path / 'data' / 'ml_dataset_m1.csv'
-    generate_ml_dataset_m1(str(csv_path), str(out_csv))
+    generate_ml_dataset_m1(str(csv_path), str(out_csv), mode="qa")
     out_df = pd.read_csv(out_csv)
     assert out_df['tp2_hit'].sum() >= int(0.02 * len(out_df))

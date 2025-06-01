@@ -869,7 +869,7 @@ def run_production_wfv():
             f"[Patch QA-FIX v28.2.4] ⚠️ ไม่พบ {label_col} ใน dataframe – รัน generate_ml_dataset_m1 อัตโนมัติ"
         )
         from nicegold_v5.ml_dataset_m1 import generate_ml_dataset_m1
-        generate_ml_dataset_m1(csv_path=M1_PATH, out_path="data/ml_dataset_m1.csv")
+        generate_ml_dataset_m1(csv_path=M1_PATH, out_path="data/ml_dataset_m1.csv", mode="production")
         df = pd.read_csv("data/ml_dataset_m1.csv")
         print(f"[Patch QA-FIX v28.2.4] ✅ Reloaded ML dataset – columns: {df.columns.tolist()}")
     # [Patch QA-FIX v28.2.5] Ensure ensure_buy_sell available
@@ -926,6 +926,13 @@ def run_production_wfv():
         os.makedirs('logs', exist_ok=True)
         pd.DataFrame([]).to_csv('logs/qa_empty_trades.csv', index=False)
         return
+    # Guard: block dummy result (no TP1/TP2/SL in real trade)
+    real_trades = trades.query("exit_reason in ['tp1','tp2','sl']") if 'exit_reason' in trades.columns else pd.DataFrame()
+    if real_trades.shape[0] < 5:
+        print("❌ [Production Guard] ไม่มีไม้ TP1/TP2/SL จริง โปรดปรับ entry logic/config ก่อน deploy!")
+        os.makedirs('logs', exist_ok=True)
+        trades.to_csv('logs/qa_blocked_trades.csv', index=False)
+        raise RuntimeError("No real trades (TP1/TP2/SL) in WFV. Entry logic not realistic.")
     equity = pd.DataFrame({"equity": trades["pnl"].cumsum() if not trades.empty else []})
     auto_qa_after_backtest(trades, equity, label="ProductionWFV")
 

@@ -793,3 +793,5 @@
 ### 2026-02-20
 - [Patch QA-FIX v28.2.4-6] ปรับ run_production_wfv auto-generate dataset หากไม่พบ 'tp2_hit',
   forward ensure_buy_sell ใน main/wfv/qa และเพิ่ม QA fallback เมื่อไม่มี trade
+### 2026-02-21
+- [Patch v29.0.0] เพิ่ม Production Guard ป้องกัน oversample/force label ในโหมด production และต้องมีไม้ TP1/TP2/SL จริงอย่างน้อย 5 ไม้

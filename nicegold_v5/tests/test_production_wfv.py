@@ -31,7 +31,11 @@ def test_run_production_wfv(monkeypatch):
         called['args'] = (features, label_col)
         called['cols'] = list(df_in.columns)
         called['index_type'] = isinstance(df_in.index, pd.DatetimeIndex)
-        return pd.DataFrame({'pnl': [1.0], 'side': ['buy']})
+        return pd.DataFrame({
+            'pnl': [1.0] * 5,
+            'side': ['buy'] * 5,
+            'exit_reason': ['tp1'] * 5,
+        })
     monkeypatch.setattr(main, 'run_walkforward_backtest', fake_run)
     monkeypatch.setattr(main, 'auto_qa_after_backtest', lambda t, e, label=None: called.update({'qa': True}))
 
@@ -70,7 +74,11 @@ def test_run_production_wfv_close_fallback(monkeypatch):
         called['args'] = (features, label_col)
         called['cols'] = list(df_in.columns)
         called['index_type'] = isinstance(df_in.index, pd.DatetimeIndex)
-        return pd.DataFrame({'pnl': [1.0], 'side': ['buy']})
+        return pd.DataFrame({
+            'pnl': [1.0] * 5,
+            'side': ['buy'] * 5,
+            'exit_reason': ['tp1'] * 5,
+        })
     monkeypatch.setattr(main, 'run_walkforward_backtest', fake_run)
     monkeypatch.setattr(main, 'auto_qa_after_backtest', lambda t, e, label=None: called.update({'qa': True}))
 
@@ -104,7 +112,7 @@ def test_run_production_wfv_no_open_close(monkeypatch):
     monkeypatch.setattr(main, 'validate_indicator_inputs', lambda d, min_rows=None: None)
     called = {}
     monkeypatch.setattr(main, 'auto_qa_after_backtest', lambda t, e, label=None: called.update({'qa': True}))
-    monkeypatch.setattr(main, 'run_walkforward_backtest', lambda *a, **k: pd.DataFrame({'pnl':[0.0], 'side':['buy']}))
+    monkeypatch.setattr(main, 'run_walkforward_backtest', lambda *a, **k: pd.DataFrame({'pnl':[0.0]*5, 'side':['buy']*5, 'exit_reason':['tp2']*5}))
 
     main.run_production_wfv()
 
@@ -136,7 +144,7 @@ def test_run_production_wfv_auto_dataset(monkeypatch):
     gen_called = {}
     monkeypatch.setattr('nicegold_v5.ml_dataset_m1.generate_ml_dataset_m1', lambda *a, **k: gen_called.setdefault('called', True))
     monkeypatch.setattr(pd, 'read_csv', lambda p: df.assign(tp2_hit=[0, 1]))
-    monkeypatch.setattr(main, 'run_walkforward_backtest', lambda *a, **k: pd.DataFrame({'pnl':[0.0], 'side':['buy']}))
+    monkeypatch.setattr(main, 'run_walkforward_backtest', lambda *a, **k: pd.DataFrame({'pnl':[0.0]*5, 'side':['buy']*5, 'exit_reason':['tp1']*5}))
     monkeypatch.setattr(main, 'auto_qa_after_backtest', lambda *a, **k: None)
 
     main.run_production_wfv()
