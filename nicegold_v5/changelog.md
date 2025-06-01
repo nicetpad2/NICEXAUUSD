@@ -756,3 +756,5 @@
 - แก้คำเตือน FutureWarning ใน qa.py ระหว่าง unittest
 ## 2026-02-13
 - [Patch v28.2.1] ปรับเมนู CLI และ export_audit ให้บันทึก Audit Log อัตโนมัติ
+## 2026-02-14
+- [Patch QA-FIX] แก้ฟังก์ชัน run_production_wfv ให้โหลดข้อมูลครบถ้วนและเพิ่ม unit test coverage
