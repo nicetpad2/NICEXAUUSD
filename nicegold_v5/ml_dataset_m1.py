@@ -73,7 +73,9 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
     print("[Patch v28.2.6] ✅ Trade log saved →", trade_log_path)
 
     trades = pd.read_csv(trade_log_path)
-    trades["entry_time"] = pd.to_datetime(trades["entry_time"])
+    # [Patch v28.2.8] บาง trade อาจมี entry_time เป็น '0' จาก ensure_buy_sell – แปลงแบบปลอดภัย
+    trades["entry_time"] = pd.to_datetime(trades["entry_time"], errors="coerce")
+    trades = trades.dropna(subset=["entry_time"])
     # [Patch v24.1.1] 🛠️ Ensure 'entry_score', 'gain_z' columns exist in trades
     if "entry_score" not in trades.columns:
         trades["entry_score"] = 1.0
