@@ -763,4 +763,6 @@
 ### 2026-02-06
 - แก้ `export_audit_report` รองรับ numpy int64 และ
   ปรับ `print_resource_status` ให้ใช้ psutil/torch stub ได้ไม่พัง
+### 2026-02-07
+- เพิ่มชุดทดสอบ entry/ml_dataset/optuna_tuner ดัน coverage 100%
 
