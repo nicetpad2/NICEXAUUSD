@@ -19,3 +19,16 @@ def test_meta_classifier(tmp_path):
     mc = MetaClassifier(str(model_path))
     preds = mc.predict(df)
     assert len(preds) == len(df)
+
+
+def test_meta_classifier_missing_cols(tmp_path):
+    full_cols = ['gain_z','ema_slope','atr','rsi','entry_score']
+    df = pd.DataFrame({c:[0.0] for c in full_cols})
+    clf = RandomForestClassifier(n_estimators=1, random_state=42)
+    y = [0]
+    clf.fit(df, y)
+    model_path = tmp_path / 'meta.pkl'
+    joblib.dump(clf, model_path)
+    mc = MetaClassifier(str(model_path))
+    preds = mc.predict(pd.DataFrame({'gain_z':[0.0]}))
+    assert preds.tolist() == [0]

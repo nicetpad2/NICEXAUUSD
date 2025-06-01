@@ -63,9 +63,12 @@ def test_prepare_csv_auto_validate_error(monkeypatch):
     monkeypatch.setattr(main, 'convert_thai_datetime', lambda d: d)
     monkeypatch.setattr(main, 'parse_timestamp_safe', lambda s, fmt: pd.to_datetime(s))
     monkeypatch.setattr(main, 'sanitize_price_columns', lambda d: d)
+    calls = {'n': 0}
     def raise_error(*args, **kwargs):
-        raise TypeError('fail')
-    monkeypatch.setattr(main, 'validate_indicator_inputs', raise_error)
+        calls['n'] += 1
+        if calls['n'] == 1:
+            raise TypeError('fail')
+    monkeypatch.setattr(utils_mod, 'validate_indicator_inputs', raise_error)
     out = utils_mod.prepare_csv_auto('dummy.csv')
     assert not out.empty
 

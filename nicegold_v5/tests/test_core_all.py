@@ -561,14 +561,6 @@ def test_run_clean_backtest_thai_date(monkeypatch, tmp_path):
 
     monkeypatch.setattr(main, 'TRADE_DIR', str(tmp_path))
 
-    def fake_backtest(d):
-        assert pd.api.types.is_datetime64_any_dtype(d['timestamp'])
-        assert d['timestamp'].notna().all()
-        return (
-            pd.DataFrame({'pnl': [1]}),
-            pd.DataFrame({'timestamp': [pd.Timestamp('2023-01-01')], 'equity': [100]})
-        )
-
     monkeypatch.setattr(main, 'simulate_partial_tp_safe', lambda d: pd.DataFrame({'pnl': [1]}))
     monkeypatch.setattr(main, 'generate_signals', lambda d, config=None, **kw: d.assign(entry_signal='buy'))
     monkeypatch.setattr('nicegold_v5.utils.print_qa_summary', lambda *a, **k: {})
@@ -594,14 +586,6 @@ def test_run_clean_backtest_lowercase_date(monkeypatch, tmp_path):
     })
 
     monkeypatch.setattr(main, 'TRADE_DIR', str(tmp_path))
-
-    def fake_backtest(d):
-        assert pd.api.types.is_datetime64_any_dtype(d['timestamp'])
-        assert d['timestamp'].notna().all()
-        return (
-            pd.DataFrame({'pnl': [1]}),
-            pd.DataFrame({'timestamp': [pd.Timestamp('2023-01-01')], 'equity': [100]})
-        )
 
     monkeypatch.setattr(main, 'simulate_partial_tp_safe', lambda d: pd.DataFrame({'pnl': [1]}))
     monkeypatch.setattr(main, 'generate_signals', lambda d, config=None, **kw: d.assign(entry_signal='buy'))

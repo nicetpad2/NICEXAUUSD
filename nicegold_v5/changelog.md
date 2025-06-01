@@ -746,3 +746,5 @@
 - เพิ่มชุดทดสอบ entry.py, ml_dataset_m1.py และ optuna_tuner.py ให้ coverage 100%
 ## 2026-02-08
 - ปรับปรุงชุดทดสอบ LSTM และ train_lstm_runner ครอบคลุม utils ให้ coverage 100%
+## 2026-02-09
+- ปรับปรุง meta_classifier และทดสอบ autopipeline, core_all, coverage_boost ครอบคลุมทุกสาขา
