@@ -992,7 +992,8 @@ def run_production_wfv():
         "[run_production_wfv] สรุปเบื้องต้น: Total Entries = %d", total_entries
     )
 
-    df_trades = run_walkforward_backtest(
+    # [Patch v34.0.0] รัน WFV ทั้งฝั่ง BUY และ SELL เพื่อให้ได้ออเดอร์ครบทั้งสองด้าน
+    df_trades_buy = run_walkforward_backtest(
         df,
         features=features,
         label_col="tp2_hit",
@@ -1001,6 +1002,16 @@ def run_production_wfv():
         percentile_threshold=75,
         strategy_name="ProdA",
     )
+    df_trades_sell = run_walkforward_backtest(
+        df,
+        features=features,
+        label_col="tp2_hit",
+        side="sell",
+        n_folds=3,
+        percentile_threshold=75,
+        strategy_name="ProdA",
+    )
+    df_trades = pd.concat([df_trades_buy, df_trades_sell], ignore_index=True)
 
     # [Patch v32.2.2] Guard กรณีไม่มีคอลัมน์ 'is_dummy' หรือ 'pnl'
     if df_trades.empty or "is_dummy" not in df_trades.columns or "pnl" not in df_trades.columns:
