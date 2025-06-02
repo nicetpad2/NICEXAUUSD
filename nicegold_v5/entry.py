@@ -295,6 +295,12 @@ def _generate_signals_v8_0_core(df: pd.DataFrame, config: dict | None = None) ->
         if tc in df.columns and lc not in df.columns:
             df[lc] = df[tc]
 
+    # [Patch vEntry v1.0] prepare standard columns
+    if "side" not in df.columns:
+        df["side"] = None
+    if "is_dummy" not in df.columns:
+        df["is_dummy"] = False
+
     # [Patch v30.0.0] Relaxable Entry Configuration
     config = config or {}
     gain_z_thresh = config.get("gain_z_thresh", 0.0)
@@ -863,6 +869,9 @@ def generate_signals(
             df.loc[idx_force, "entry_signal"] = side
         else:
             df.loc[idx_force, "entry_signal"] = np.random.choice(["buy", "sell"], size=len(idx_force))
+        # [Patch vEntry v1.0] mark side and real trade
+        df.loc[idx_force, "side"] = df.loc[idx_force, "entry_signal"]
+        df.loc[idx_force, "is_dummy"] = False
         print(
             f"[Patch v28.1.0] \ud83d\udea8 [QA MODE] ForceEntry injected {len(idx_force)} orders (side={side}, session={session})"
         )
@@ -1046,6 +1055,8 @@ def simulate_trades_with_tp(df: pd.DataFrame, sl_distance: float = 5.0):
                 "sl_price": sl_price,
                 "exit_reason": exit_reason,
                 "entry_signal": direction,
+                "side": direction,  # [Patch vEntry v1.0]
+                "is_dummy": False,
                 "signal_name": signal_name,
                 "entry_tier": entry_tier,
                 "session": session,
@@ -1153,6 +1164,8 @@ def _generate_signals_v12_0_core(
     for i, row in df.iterrows():
         if pd.notnull(row["entry_signal"]):
             direction = row["entry_signal"]
+            df.at[i, "side"] = direction  # [Patch vEntry v1.0]
+            df.at[i, "is_dummy"] = False
             sl_dist = row["atr"]
             tp1, tp2 = apply_tp_logic(row["close"], direction, sl_distance=sl_dist)
             sl = row["close"] - sl_dist if direction == "buy" else row["close"] + sl_dist

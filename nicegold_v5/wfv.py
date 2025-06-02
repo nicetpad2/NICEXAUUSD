@@ -163,21 +163,13 @@ def build_trade_log(position, timestamp, price, hit_tp, hit_sl, equity, slippage
 def run_walkforward_backtest(df, features, label_col, side='buy', n_folds=3, percentile_threshold=75, strategy_name="A"):
     folds = TimeSeriesSplit(n_splits=n_folds)
     trades = []
+    equity_summary = []  # [Patch vWFV v1.0]
     for fold, (train_idx, test_idx) in enumerate(folds.split(df)):
         df_train = df.iloc[train_idx].copy()
         df_test = df.iloc[test_idx].copy()
+
         X_train = df_train[features].astype(float)
         y_train = df_train[label_col]
-
-        if y_train.nunique() < 2:
-            print(
-                f"[{strategy_name}] Fold {fold + 1}: insufficient class variety – injecting dummy"
-            )
-            dummy = df_train.iloc[[0]].copy()
-            dummy[label_col] = 1 - y_train.iloc[0]
-            df_train = pd.concat([df_train, dummy], ignore_index=True)
-            X_train = df_train[features].astype(float)
-            y_train = df_train[label_col]
 
         model = Pipeline(
             [
@@ -185,9 +177,12 @@ def run_walkforward_backtest(df, features, label_col, side='buy', n_folds=3, per
                 ("rf", RandomForestClassifier(n_estimators=100, random_state=42)),
             ]
         )
-        model.fit(X_train, y_train)
-
-        df_test['entry_prob'] = model.predict_proba(df_test[features].astype(float))[:, 1]
+        if y_train.nunique() < 2:
+            print(f"[{strategy_name}] Fold {fold + 1}: insufficient class variety – fallback to balanced random")
+            df_test["entry_prob"] = 0.5
+        else:
+            model.fit(X_train, y_train)
+            df_test['entry_prob'] = model.predict_proba(df_test[features].astype(float))[:, 1]
         prob_thresh = np.percentile(df_test['entry_prob'], percentile_threshold)
 
         equity = INITIAL_CAPITAL
@@ -251,18 +246,34 @@ def run_walkforward_backtest(df, features, label_col, side='buy', n_folds=3, per
     if not trades_df.empty:
         unique_reasons = set(trades_df.get("exit_reason", pd.Series(dtype=str)).str.lower().unique())
         expected = {"tp1", "tp2", "sl"}
-        # [Patch v32.1.3] เรียก inject_exit_variety ทุกครั้งก่อน return
         if not expected.issubset(unique_reasons):
             trades_df = inject_exit_variety(
                 trades_df,
                 require=("tp1", "tp2", "sl"),
                 fold_col="fold",
                 strategy_name=strategy_name,
-                fold=fold + 1,
+                fold=None,
                 outdir=QA_BASE_PATH,
             )
-        # QA: บังคับให้มี BUY/SELL ครบ หากยังขาด
-        trades_df = ensure_buy_sell(trades_df, df, lambda d: trades_df, fold=fold + 1, outdir=QA_BASE_PATH)
+        trades_df = ensure_buy_sell(trades_df, df, lambda d: trades_df, fold=None, outdir=QA_BASE_PATH)
+
+        # [Patch vWFV v1.0] summarize per fold
+        for name, g in trades_df.groupby("fold"):
+            total_pnl = g["pnl"].sum()
+            equity_summary.append({
+                "fold": name,
+                "n_trades": len(g),
+                "total_pnl": total_pnl,
+                "avg_pnl_per_trade": total_pnl / len(g) if len(g) > 0 else 0,
+                "tp2_hits": (g["exit_reason"] == "tp2").sum(),
+            })
+
+    summary_df = pd.DataFrame(equity_summary)
+    if not summary_df.empty:
+        out_dir = "logs/wfv_summary"
+        os.makedirs(out_dir, exist_ok=True)
+        summary_df.to_csv(os.path.join(out_dir, f"{strategy_name}_equity_summary.csv"), index=False)
+        logger.info("[run_walkforward_backtest] Saved equity summary to %s", out_dir)
     return trades_df
 
 

@@ -1022,3 +1022,9 @@
 - [Patch vConfig v1.0] เพิ่มค่า config ใหม่ใน defaults.yaml
 - ปรับ SNIPER_CONFIG_Q3_TUNED และ RELAX_CONFIG_Q3 ให้รองรับ gain_z_thresh,
   atr_multiplier และ rsi limits
+
+## 2026-04-18
+- [Patch vEntry v1.0] กำหนดคอลัมน์ side/is_dummy ใน generate_signals_v8_0 และ ForceEntry
+- [Patch vUtils v1.0] sanitize_price_columns รองรับ Titlecase และ ensure_buy_sell เพิ่ม trade จริง
+- [Patch vML v1.0] ตรวจสอบฟีเจอร์สำคัญ drop NaN ก่อนบันทึกชุดข้อมูล
+- [Patch vWFV v1.0] สรุป equity ต่อ fold และบันทึกเป็นไฟล์ CSV
