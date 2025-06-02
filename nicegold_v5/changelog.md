@@ -861,3 +861,5 @@
 - [Patch v32.0.5] generate_ml_dataset_m1 renames price columns to Title-case and warns when 'tp2_hit' missing
 ## 2026-03-27
 - Updated train_lstm_runner to gracefully skip training when PyTorch is missing using TORCH_AVAILABLE flag; adjusted unit tests
+## 2026-03-28
+- optuna_tuner now imports split_by_session from wfv and logs an error when ML dataset lacks pattern_label or entry_score

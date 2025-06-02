@@ -151,4 +151,4 @@ def test_optuna_objective_trades_empty(monkeypatch):
         'tp_rr_ratio': 4.5,
         'volume_ratio': 1.0,
     })
-    assert objective(trial) == -999
+    assert objective(trial) == float("inf")

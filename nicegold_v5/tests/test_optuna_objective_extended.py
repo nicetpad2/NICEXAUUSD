@@ -44,3 +44,24 @@ def test_objective_score(monkeypatch):
     })
     score = tuner.objective(trial)
     assert score > 0
+
+
+def test_objective_missing_columns(monkeypatch):
+    df = pd.DataFrame({
+        "timestamp": pd.date_range("2025-01-01", periods=2, freq="h"),
+        "close": [1.0, 1.1],
+        "high": [1.0, 1.1],
+        "low": [0.9, 1.0],
+        "volume": [1.0, 1.0],
+    })
+    tuner.session_folds = {"London": df}
+    trial = optuna.trial.FixedTrial({
+        "gain_z_thresh": 0.1,
+        "ema_slope_min": 0.1,
+        "atr_thresh": 0.5,
+        "sniper_risk_score_min": 5.5,
+        "tp_rr_ratio": 4.5,
+        "volume_ratio": 1.0,
+    })
+    result = tuner.objective(trial)
+    assert result == float("inf")
