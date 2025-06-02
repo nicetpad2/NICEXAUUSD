@@ -939,8 +939,28 @@
 - อัพเดต calc_lot ให้รับ dict และป้องกัน sl_pips ผิดค่า
 - เพิ่มพารามิเตอร์ qa_mode ใน run_backtest และลดค่า drawdown ใน kill_switch
 
+
 ## 2026-04-04
 - [Patch v32.0.1] Updated wfv.py to import QA_BASE_PATH and pass outdir to `ensure_buy_sell`.
 - `split_by_session` now sorts by timestamp.
 - `inject_exit_variety` exports logs to QA directory.
+=======
+
+
+## 2026-04-04
+- ปรับปรุง `meta_classifier` เพิ่ม logging และ fallback เมื่อโหลดโมเดลไม่ได้
+- เพิ่มเมธอด `train_and_save` สำหรับฝึกและบันทึกโมเดล
+=======
+## 2026-04-04
+
+- ปรับปรุง LSTMClassifier รองรับ dropout และเพิ่มคำอธิบายฟังก์ชัน
+=======
+- [Patch v32.0.9] entry.generate_signals logs force_entry via module logger
+- [Patch v32.0.9] generate_signals_v12_0 now wraps generate_signals for new main.py
+=======
+## 2026-04-04
+- ปรับปรุง `qa.py` เพิ่ม logger และปรับฟังก์ชันตรวจ bias/drift
+
+
+
 

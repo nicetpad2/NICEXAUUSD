@@ -3,25 +3,39 @@ import json
 from datetime import datetime
 import pandas as pd
 import numpy as np
+import logging
 from nicegold_v5.utils import export_audit_report
 from nicegold_v5.entry import validate_indicator_inputs, simulate_partial_tp_safe
 from nicegold_v5.wfv import ensure_buy_sell  # [Patch QA-FIX v28.2.5] Forward for QA
+
+# module logger
+logger = logging.getLogger("nicegold_v5.qa")
+logger.setLevel(logging.INFO)
+logger.addHandler(logging.StreamHandler())
 
 # --- QA Guard Functions ---
 
 def detect_overfit_bias(trades: pd.DataFrame) -> dict:
     """Return simple statistics to gauge overfitting."""
-    winrate = (trades['pnl'] > 0).mean() if not trades.empty else 0.0
-    pnl_std = trades['pnl'].std() if not trades.empty else 0.0
-    avg_pnl = trades['pnl'].mean() if not trades.empty else 0.0
+    if trades.empty:
+        return {
+            "winrate": 0.0,
+            "avg_pnl": 0.0,
+            "pnl_std": 0.0,
+            "pnl_zscore": 0.0,
+            "overfit_score": 0.0,
+        }
+    winrate = trades["exit_reason"].value_counts().get("tp2", 0) / max(len(trades), 1)
+    pnl_std = trades["pnl"].std(ddof=0)
+    avg_pnl = trades["pnl"].mean()
     pnl_zscore = avg_pnl / (pnl_std + 1e-9)
     score = round((pnl_zscore * winrate) * 100, 2)
     return {
-        'winrate': round(winrate * 100, 2),
-        'avg_pnl': round(avg_pnl, 2),
-        'pnl_std': round(pnl_std, 2),
-        'pnl_zscore': round(pnl_zscore, 2),
-        'overfit_score': score,
+        "winrate": round(winrate * 100, 2),
+        "avg_pnl": round(avg_pnl, 2),
+        "pnl_std": round(pnl_std, 2),
+        "pnl_zscore": round(pnl_zscore, 2),
+        "overfit_score": score,
     }
 
 
@@ -68,19 +82,21 @@ def run_qa_guard(trades: pd.DataFrame, df_features: pd.DataFrame) -> None:
 
 def summarize_fold(trades: pd.DataFrame, fold_name: str = "Fold") -> dict:
     """Return statistics summary for a fold."""
-    wins = trades[trades['pnl'] > 0]
-    losses = trades[trades['pnl'] < 0]
+    if "exit_reason" not in trades.columns:
+        logger.warning("[summarize_fold] Missing exit_reason")
+        trades["exit_reason"] = ""
+    wins = trades[trades["pnl"] > 0]
     return {
-        'fold': fold_name,
-        'trades': len(trades),
-        'winrate': round(len(wins) / len(trades) * 100, 2) if len(trades) > 0 else 0,
-        'avg_pnl': round(trades['pnl'].mean(), 2) if not trades.empty else 0,
-        'max_loss': round(trades['pnl'].min(), 2) if not trades.empty else 0,
-        'sl_count': trades.get('exit_reason', pd.Series(dtype=str)).fillna('').str.contains('sl').sum(),
-        'be_count': trades.get('exit_reason', pd.Series(dtype=str)).fillna('').str.contains('be').sum(),
-        'tsl_count': trades.get('exit_reason', pd.Series(dtype=str)).fillna('').str.contains('tsl').sum(),
-        'tp1_count': (trades.get('exit_reason', pd.Series(dtype=str)).fillna('') == 'tp1').sum(),
-        'tp2_count': (trades.get('exit_reason', pd.Series(dtype=str)).fillna('') == 'tp2').sum(),
+        "fold": fold_name,
+        "trades": len(trades),
+        "winrate": round(len(wins) / len(trades) * 100, 2) if len(trades) > 0 else 0,
+        "avg_pnl": round(trades["pnl"].mean(), 2) if not trades.empty else 0,
+        "max_loss": round(trades["pnl"].min(), 2) if not trades.empty else 0,
+        "sl_count": trades.get("exit_reason", pd.Series(dtype=str)).fillna("").str.contains("sl").sum(),
+        "be_count": trades.get("exit_reason", pd.Series(dtype=str)).fillna("").str.contains("be").sum(),
+        "tsl_count": trades.get("exit_reason", pd.Series(dtype=str)).fillna("").str.contains("tsl").sum(),
+        "tp1_count": (trades.get("exit_reason", pd.Series(dtype=str)).fillna("") == "tp1").sum(),
+        "tp2_count": (trades.get("exit_reason", pd.Series(dtype=str)).fillna("") == "tp2").sum(),
     }
 
 
@@ -124,19 +140,18 @@ def export_fold_qa(fold_name: str, stats: dict, bias_score: float, drawdown: dic
     print(f"📁 Exported QA summary → {outpath}")
 
 
-def detect_fold_drift(fold_stats: list[dict]) -> pd.DataFrame:
-    """Detect metric variations across folds."""
-    df = pd.DataFrame(fold_stats)
-    if len(df) < 2:
-        return pd.DataFrame()
-    metrics = ["winrate", "avg_pnl", "sl_count"]
-    drifts = []
-    for m in metrics:
-        std = df[m].std()
-        mean = df[m].mean()
-        pct_std = round((std / abs(mean)) * 100, 2) if mean != 0 else 0.0
-        drifts.append({"metric": m, "std_dev": round(std, 2), "%_variation": pct_std})
-    return pd.DataFrame(drifts)
+def detect_fold_drift(trades: pd.DataFrame) -> dict:
+    """Detect drift in a single fold of trades."""
+    if "pnl" not in trades.columns:
+        return {"pnl_mean": 0.0, "pnl_std": 0.0, "pct_std": 0.0}
+    pnl = trades["pnl"]
+    mean = pnl.mean() if not pnl.empty else 0
+    std = pnl.std(ddof=0) if not pnl.empty else 0
+    if mean == 0:
+        pct_std = 0.0
+    else:
+        pct_std = std / abs(mean)
+    return {"pnl_mean": mean, "pnl_std": std, "pct_std": pct_std}
 
 
 QA_BASE_PATH = "logs/qa"
