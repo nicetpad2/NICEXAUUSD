@@ -1009,3 +1009,7 @@
   - backtester และ wfv ใช้ `PATHS['trade_logs']` และบันทึก config ต่อ fold
   - เพิ่ม export audit report อัตโนมัติหลัง backtest
   - optuna_tuner บันทึกไฟล์ `optuna_best_config.json` ใน `PATHS['models']` และสร้าง `data/` หากขาด
+
+### 2026-04-15
+- [Patch v32.2.1] แก้ default `PATHS['m1_csv']` ชี้ไปที่โฟลเดอร์ `nicegold_v5`
+  - ป้องกัน RuntimeError ไม่พบไฟล์ `XAUUSD_M1.csv`
