@@ -902,12 +902,13 @@
 ## 2026-04-02
 - Updated train_lstm_runner to validate required columns and store epoch predictions during training
 
-
-
 ## 2026-04-02
 - [Patch v32.0.0] Added structured logger in main.py
 - [Patch v32.0.0] utils.load_data now raises FileNotFoundError and RuntimeError
 - [Patch v32.0.0] kill_switch logs warning when equity curve is empty
+
+## 2026-04-03
+- [Patch v32.0.8] config.py now loads defaults.yaml with error handling and merges overrides from the selected environment
 
 
 
