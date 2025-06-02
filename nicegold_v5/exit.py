@@ -368,6 +368,33 @@ def simulate_partial_tp_safe(df: pd.DataFrame, percentile_threshold: float = 75)
                 })
                 open_position = None
 
+    # --- [Patch v32.4.0] End-of-Fold Exit ---
+    # หากสิ้นสุด DataFrame แล้วยังมีสถานะเปิดอยู่ ให้บังคับปิดที่ราคา Close สุดท้าย
+    if open_position is not None:
+        last_row = df.iloc[-1]
+        last_price = getattr(last_row, "close", None) or getattr(last_row, "Close", None)
+        direction = open_position["type"]
+        entry_price = open_position["entry"]
+        pnl_points = (last_price - entry_price) if direction == "buy" else (entry_price - last_price)
+        pnl = pnl_points * 10 * open_position["lot"]
+        trades.append({
+            "entry_time": open_position["entry_time"],
+            "exit_time": last_row.timestamp,
+            "entry_price": entry_price,
+            "exit_price": last_price,
+            "tp1_price": open_position["tp1"],
+            "tp2_price": open_position["tp2"],
+            "sl_price": open_position["sl"],
+            "lot": open_position["lot"],
+            "exit_reason": "eod_exit",
+            "session": open_position.get("session", "Unknown"),
+            "duration_min": (last_row.timestamp - open_position["entry_time"]).total_seconds() / 60,
+            "mfe": open_position.get("mfe", 0.0),
+            "pnl": round(pnl, 2),
+        })
+        logging.info(f"[Patch v32.4.0] EOD Exit: {direction} @ {last_price:.2f}, PnL = {round(pnl,2)}")
+        open_position = None
+
     trades_df = pd.DataFrame(trades)
 
     if "tp2_price" not in trades_df.columns:
