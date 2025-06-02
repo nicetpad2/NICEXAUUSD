@@ -290,6 +290,11 @@ def _generate_signals_v8_0_core(df: pd.DataFrame, config: dict | None = None) ->
     """ใช้ logic sniper + TP1/TSL แบบล่าสุด (Patch v8.0)."""
     df = df.copy()
 
+    # [Patch v32.2.1] Support Titlecase price columns: alias to lowercase if needed
+    for tc, lc in [("Open", "open"), ("High", "high"), ("Low", "low"), ("Close", "close")]:
+        if tc in df.columns and lc not in df.columns:
+            df[lc] = df[tc]
+
     # [Patch v30.0.0] Relaxable Entry Configuration
     config = config or {}
     gain_z_thresh = config.get("gain_z_thresh", 0.0)
