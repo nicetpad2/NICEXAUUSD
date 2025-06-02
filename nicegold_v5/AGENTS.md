@@ -940,3 +940,7 @@
 - ปรับ parse_timestamp_safe ใช้ logger.warning เมื่อรูปแบบผิดและปรับ split_folds จัดการเศษข้อมูล
 - เพิ่มฟังก์ชัน merge_equity_curves รวมผล equity จากหลาย fold
 
+### 2026-04-04
+- [Patch v32.0.9] generate_signals logs force_entry via module logger
+- [Patch v32.0.9] generate_signals_v12_0 aliases generate_signals for new main
+
