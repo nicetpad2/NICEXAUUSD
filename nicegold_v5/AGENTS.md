@@ -873,3 +873,5 @@
 
 ### 2026-03-24
 - [Patch v32.0.3] ปรับลด threshold ใน generate_signals และ scalper_v11 ให้เทรดง่ายขึ้น
+### 2026-03-25
+- [Patch v32.0.4] simulate_partial_tp_safe รองรับ percentile_threshold และบังคับ TP2 ใน QA

@@ -855,3 +855,5 @@
 
 ## 2026-03-24
 - [Patch v32.0.3] Relaxed confirm_zone thresholds and ATR handling in entry.generate_signals and scalper_v11
+## 2026-03-25
+- [Patch v32.0.4] simulate_partial_tp_safe now accepts percentile_threshold and injects TP2 trades in QA
