@@ -881,3 +881,6 @@
 - ปรับ train_lstm_runner ตรวจสอบการติดตั้ง PyTorch ด้วยตัวแปร TORCH_AVAILABLE และออกจากการเทรนเมื่อไม่มีไลบรารี
 ### 2026-03-28
 - ปรับ optuna_tuner นำเข้า split_by_session จาก wfv และใช้ logger แจ้งเมื่อ ML dataset ไม่มีคอลัมน์ pattern_label หรือ entry_score
+### 2026-03-29
+- [Patch v32.0.6] ปรับ RLScalper ให้รองรับ state-space จาก indicators และสร้าง generate_all_states
+

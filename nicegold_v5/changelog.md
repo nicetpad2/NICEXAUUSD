@@ -863,3 +863,6 @@
 - Updated train_lstm_runner to gracefully skip training when PyTorch is missing using TORCH_AVAILABLE flag; adjusted unit tests
 ## 2026-03-28
 - optuna_tuner now imports split_by_session from wfv and logs an error when ML dataset lacks pattern_label or entry_score
+## 2026-03-29
+- [Patch v32.0.6] RLScalper now supports indicator-based state space generation and epsilon-greedy updates
+
