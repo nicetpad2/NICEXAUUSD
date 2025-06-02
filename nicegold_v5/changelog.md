@@ -1001,3 +1001,11 @@
 ## 2026-04-13
 - [Patch v32.1.7] main.py เพิ่ม `_ensure_datetime_columns` และ `run_clean_backtest_with_lstm`
 - ปรับ `run_wfv_with_progress` ให้ใช้ `run_autofix_wfv`
+
+## 2026-04-14
+- [Patch v32.2.0] เพิ่ม PATHS default ใน config และใช้ทุกโมดูล
+- main.py ใช้ PATHS สำหรับโหลด CSV และตรวจ dtype ก่อน merge ใน fusion_ai_pipeline
+- entry.py เพิ่ม `convert_thai_datetime_col` และปรับ log timestamp
+- utils ปรับ `QA_BASE_PATH` รับจาก env, `inject_exit_variety` แปลง timestamp
+- backtester/wfv เปลี่ยน TRADE_DIR เป็น PATHS และ export audit report
+- optuna_tuner บันทึก `optuna_best_config.json` ใน PATHS['models'] และเตรียมโฟลเดอร์ data

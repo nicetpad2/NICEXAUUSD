@@ -32,8 +32,15 @@ from nicegold_v5.wfv import run_autofix_wfv
 from nicegold_v5.utils import ensure_buy_sell
 from nicegold_v5.wfv import inject_exit_variety
 from nicegold_v5.utils import ensure_logs_dir
-from nicegold_v5.utils import M1_PATH, TRADE_DIR
+from nicegold_v5.config import PATHS, ensure_order_side_enabled
+from nicegold_v5 import generate_signals, simulate_partial_tp_safe
+TRADE_DIR = PATHS["trade_logs"]
 os.makedirs(TRADE_DIR, exist_ok=True)
+
+# [Patch v32.2.0] Load CSV via config PATHS
+M1_PATH = PATHS["m1_csv"]
+if not os.path.exists(M1_PATH):
+    raise RuntimeError(f"[Patch v32.2.0] ❌ M1 CSV not found at {M1_PATH}. Please check PATHS['m1_csv']")
 
 # Keep backward-compatible name
 run_walkforward_backtest = raw_run
@@ -42,12 +49,10 @@ from multiprocessing import cpu_count, get_context
 import numpy as np
 from nicegold_v5.utils import run_auto_wfv, split_by_session
 from nicegold_v5.entry import (
-    generate_signals_v12_0 as generate_signals,  # [Patch v12.3.9] ensure import
     sanitize_price_columns,
     validate_indicator_inputs,
     rsi,
 )
-from nicegold_v5.exit import simulate_partial_tp_safe  # [Patch v12.2.x]
 from nicegold_v5.config import (
     SNIPER_CONFIG_PROFIT,
     SNIPER_CONFIG_Q3_TUNED,

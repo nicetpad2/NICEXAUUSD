@@ -242,7 +242,7 @@ def print_qa_summary(trades: pd.DataFrame, equity: pd.DataFrame) -> dict:
 
 # ✅ Fixed Paths for Colab
 TRADE_DIR = "logs/trades"
-QA_BASE_PATH = "logs/qa"
+QA_BASE_PATH = os.getenv("QA_BASE_PATH", os.path.join(os.path.dirname(__file__), "..", "logs", "qa"))
 os.makedirs(TRADE_DIR, exist_ok=True)
 os.makedirs(QA_BASE_PATH, exist_ok=True)
 

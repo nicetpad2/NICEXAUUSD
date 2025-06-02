@@ -6,7 +6,8 @@ import inspect  # [Patch QA-FIX v28.2.7] dynamic fallback param check
 from typing import Dict
 from tqdm import tqdm
 from .config import SESSION_CONFIG, HEDGEFUND_ENTRY_CONFIG, THRESHOLD_MODEL_PATH
-from .utils import setup_logger, QA_BASE_PATH
+from .utils import setup_logger, QA_BASE_PATH, export_audit_report
+from .config import PATHS
 
 logger = setup_logger("nicegold_v5.entry", os.path.join(QA_BASE_PATH, "entry.log"))
 
@@ -61,7 +62,7 @@ def generate_entry_signal(row: dict, log_list: list) -> str | None:
     if ENABLE_SIGNAL_LOG:
         log_list.append(
             {
-                "time": row.get("timestamp"),
+                "time": pd.to_datetime(row.get("timestamp")),
                 "entry_price": row.get("close"),
                 "signal": signal,
                 "session": row.get("session"),
@@ -169,12 +170,21 @@ def sanitize_price_columns(df: pd.DataFrame) -> pd.DataFrame:
         print(f"   ▸ {col}: {count} NaN")
     return df
 
+# [Patch v32.2.0] ✨ เพิ่มฟังก์ชัน convert_thai_datetime เพื่อแก้ปัญหา dtype
+def convert_thai_datetime_col(df: pd.DataFrame, date_col: str, time_col: str):
+    """แปลงปฏิทินไทย (พ.ศ.) → ค.ศ. และแปลงเป็น datetime64[ns]."""
+    df["year"] = df[date_col].astype(str).str[:4].astype(int) - 543
+    df["month"] = df[date_col].astype(str).str[4:6]
+    df["day"] = df[date_col].astype(str).str[6:8]
+    df["datetime_str"] = df["year"].astype(str) + "-" + df["month"] + "-" + df["day"] + " " + df[time_col]
+    df["timestamp"] = pd.to_datetime(df["datetime_str"])
+
 def filter_entry_signals(df: pd.DataFrame, config: dict, session: str | None = None) -> pd.DataFrame:
     """Filter entry rows based on config thresholds."""
     df = df.copy()
     session_conf = SESSION_CONFIG.get(session, {}) if config.get("session_adaptive") and session else {}
     g_thresh = session_conf.get("gain_z_thresh", config.get("gain_z_thresh", -0.05))
-    tp1_rr = session_conf.get("tp1_rr_ratio", config.get("tp1_rr_ratio", 1.15))
+    tp1_rr = session_conf.get("tp1_rr_ratio", config.get("tp1_rr_ratio", DEFAULT_RR1))
     tp2_rr = session_conf.get("tp2_rr_ratio", config.get("tp_rr_ratio", 2.0))
 
     rows = []

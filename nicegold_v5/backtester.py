@@ -108,9 +108,11 @@ from nicegold_v5.exit import should_exit, TP2_HOLD_MIN
 from tqdm import tqdm
 import time
 import os
+from nicegold_v5.config import PATHS
 
-TRADE_DIR = "/content/drive/MyDrive/NICEGOLD/logs"
-M1_PATH = "/content/drive/MyDrive/NICEGOLD/XAUUSD_M1.csv"
+# [Patch v32.2.0] เปลี่ยน TRADE_DIR ให้ใช้จาก config
+TRADE_DIR = PATHS["trade_logs"]
+M1_PATH = PATHS["m1_csv"]
 os.makedirs(TRADE_DIR, exist_ok=True)
 
 
@@ -384,7 +386,12 @@ def run_backtest(df: pd.DataFrame, config: dict | None = None):  # pragma: no co
     print(
         f"⏱️ Backtest Duration: {end - start:.2f}s | Trades: {len(trades)} | Avg per row: {(end - start)/len(df):.6f}s"
     )
-    return pd.DataFrame(trades), pd.DataFrame(equity)
+    df_trades = pd.DataFrame(trades)
+    df_equity = pd.DataFrame(equity)
+    if not df_trades.empty:
+        from nicegold_v5.qa import auto_qa_after_backtest
+        auto_qa_after_backtest(df_trades, df_equity, label="Backtest")
+    return df_trades, df_equity
 
 
 def strip_leakage_columns(df: pd.DataFrame) -> pd.DataFrame:

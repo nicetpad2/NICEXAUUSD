@@ -24,6 +24,10 @@ try:
 except Exception as e:
     raise RuntimeError(f"Failed to load config: {e}")
 
+# [Patch v32.2.0] Check default config path exists
+if not os.path.exists(DEFAULT_CONFIG_PATH):
+    raise RuntimeError(f"[Patch v32.2.0] ❌ defaults.yaml not found at {DEFAULT_CONFIG_PATH}")
+
 ENV = os.getenv("NICEGOLD_ENV", "defaults")
 env_path = os.path.join(CONFIG_DIR, f"{ENV}.yaml")
 if os.path.exists(env_path):
@@ -55,6 +59,13 @@ def ensure_order_side_enabled(cfg: dict) -> dict:
     if "disable_sell" in cfg:
         cfg["disable_sell"] = False
     return cfg
+
+# [Patch v32.2.0] Default Paths Section
+PATHS = {
+    "m1_csv": os.getenv("M1_CSV_PATH", os.path.join(os.path.dirname(__file__), "..", "XAUUSD_M1.csv")),
+    "trade_logs": os.getenv("TRADE_LOG_DIR", os.path.join(os.path.dirname(__file__), "..", "logs")),
+    "models": os.getenv("MODEL_DIR", os.path.join(os.path.dirname(__file__), "..", "models")),
+}
 
 # [Patch v8.1.5] Default Sniper Config สำหรับใช้ใน main.py menu 4
 SNIPER_CONFIG_DEFAULT = {
