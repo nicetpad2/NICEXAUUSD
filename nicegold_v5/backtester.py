@@ -189,6 +189,7 @@ def run_backtest(df: pd.DataFrame, config: dict | None = None):  # pragma: no co
     tp_rr_arr = tp_rr_arr.fillna(4.8).values
 
     bar_count = len(df)
+    # [Patch v32.1.0] เผื่อเปลี่ยนชื่อคอลัมน์ 'Open' → 'open'
     if "entry_tier" in df.columns:
         # [Patch v24.3.4] ⚡️ Fix Categorical fillna: convert to string first, then fillna
         dtype = df["entry_tier"].dtype
