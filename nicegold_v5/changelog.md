@@ -1047,9 +1047,14 @@
 ## 2026-04-22
 - [Patch v32.2.1] Fix pass_filters timestamp handling
 - Updated unit tests for wfv
-- QA: pytest -q passed (264 tests)
+ - QA: pytest -q passed (265 tests)
 
 ## 2026-04-23
 - [Patch v32.3.2] Ensure `is_dummy` column exists when no trades
 - Prevent KeyError in `run_production_wfv`
+- QA: pytest -q passed (264 tests)
+
+## 2026-04-24
+- [Patch v32.2.3] Refine dummy-trade injection schema
+- Added pnl calculation based on ATR for missing BUY/SELL
 - QA: pytest -q passed (264 tests)
