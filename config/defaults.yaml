@@ -1,0 +1,39 @@
+session_config:
+  Asia:
+    start: "01:00"
+    end: "08:59"
+  London:
+    start: "09:00"
+    end: "16:59"
+  NY:
+    start: "17:00"
+    end: "23:59"
+
+sniper_config_q3_tuned:
+  disable_buy: false
+  disable_sell: false
+  force_entry: false
+  tp1_pct: 0.7
+  tp2_pct: 0.3
+
+relax_config_q3:
+  disable_buy: false
+  disable_sell: false
+  force_entry: false
+  tp1_pct: 0.6
+  tp2_pct: 0.4
+
+ultra_override_qa:
+  disable_buy: false
+  disable_sell: false
+  force_entry: true
+  tp1_pct: 0.5
+  tp2_pct: 0.5
+
+default_rr1: 1.2
+default_rr2: 2.0
+gain_z_thresh: -0.1
+ema_slope_min: 0.005
+atr_thresh: 0.10
+kill_switch_dd: 0.2
+recovery_sl_trigger: 0.05

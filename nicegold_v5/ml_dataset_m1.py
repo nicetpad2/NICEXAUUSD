@@ -2,7 +2,8 @@ import pandas as pd
 import numpy as np
 import os
 import importlib
-from nicegold_v5.utils import ensure_logs_dir, sanitize_price_columns, logger
+from nicegold_v5.utils import ensure_logs_dir, logger
+from nicegold_v5.entry import sanitize_price_columns
 
 
 def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mode="production"):

@@ -1,4 +1,5 @@
 import logging
+import os
 from datetime import timedelta
 from collections import deque
 from typing import Dict
@@ -7,8 +8,9 @@ import pandas as pd
 import numpy as np
 
 # [Patch v32.0.0] Import QA_BASE_PATH เพื่อใช้ log ฟังก์ชัน QA Guard (lazy)
-logger = logging.getLogger("nicegold_v5.exit")
-logger.setLevel(logging.INFO)
+from .utils import setup_logger, QA_BASE_PATH
+
+logger = setup_logger("nicegold_v5.exit", os.path.join(QA_BASE_PATH, "exit.log"))
 
 # [Patch v12.2.x] Auto session detection by timestamp (no config required)
 def detect_session_auto(timestamp):

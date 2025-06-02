@@ -1,5 +1,7 @@
 # config.py – Fold-Based Entry Config
 from datetime import time
+import yaml
+import os
 
 ENTRY_CONFIG_PER_FOLD = {
     1: {"gain_z_thresh": -0.05, "ema_slope_min": 0.0001},
@@ -11,6 +13,36 @@ ENTRY_CONFIG_PER_FOLD = {
 
 # [Patch vA.1.0] path ของโมเดลทำนาย threshold
 THRESHOLD_MODEL_PATH = "model/threshold_predictor.pt"
+
+CONFIG_DIR = os.path.join(os.path.dirname(__file__), "..", "config")
+DEFAULT_CONFIG_PATH = os.path.join(CONFIG_DIR, "defaults.yaml")
+
+with open(DEFAULT_CONFIG_PATH, "r") as f:
+    _cfg = yaml.safe_load(f)
+
+ENV = os.getenv("NICEGOLD_ENV")
+if ENV:
+    override_path = os.path.join(CONFIG_DIR, f"{ENV}.yaml")
+    if os.path.exists(override_path):
+        with open(override_path, "r") as f:
+            override = yaml.safe_load(f)
+        for k, v in override.items():
+            if isinstance(v, dict) and k in _cfg:
+                _cfg[k].update(v)
+            else:
+                _cfg[k] = v
+
+SESSION_CONFIG = _cfg["session_config"]
+SNIPER_CONFIG_Q3_TUNED = _cfg["sniper_config_q3_tuned"]
+RELAX_CONFIG_Q3 = _cfg["relax_config_q3"]
+ULTRA_OVERRIDE_QA = _cfg["ultra_override_qa"]
+DEFAULT_RR1 = _cfg["default_rr1"]
+DEFAULT_RR2 = _cfg["default_rr2"]
+GAIN_Z_THRESH = _cfg["gain_z_thresh"]
+EMA_SLOPE_MIN = _cfg["ema_slope_min"]
+ATR_THRESH = _cfg["atr_thresh"]
+KILL_SWITCH_DD = _cfg["kill_switch_dd"]
+RECOVERY_SL_TRIGGER = _cfg["recovery_sl_trigger"]
 
 # --- PATCH v26.0.1: Ensure BUY/SELL always enabled ---
 def ensure_order_side_enabled(cfg: dict) -> dict:
@@ -101,37 +133,41 @@ SNIPER_CONFIG_AUTO_GAIN = {
 }
 
 # [Patch v9.0] Config ใหม่จากการ Re-Optimize หลัง Q3 เพื่อเพิ่มความทนทาน
-SNIPER_CONFIG_Q3_TUNED = {
-    "gain_z_thresh": -0.1,           # [Patch v9.0] ปรับเกณฑ์ Momentum ให้ยืดหยุ่นขึ้น
-    "ema_slope_min": 0.04,           # [Patch v9.0] กรองสภาวะ Sideways เข้มขึ้น
-    "atr_thresh": 0.3,               # [Patch v9.0] กรอง Spike และ Volatility ต่ำ
-    "sniper_risk_score_min": 3.5,    # [Patch v9.0] เลือกเฉพาะเทรดคุณภาพสูงขึ้น
-    "tp_rr_ratio": 5.5,              # [Patch v9.0] ลด TP ลงเล็กน้อย เพิ่ม Win Rate
-    "tp1_rr_ratio": 1.5,             # [Patch v9.0] กำหนด TP1 ชัดเจน (ถ้าใช้)
-    # [Patch v31.0.0] ลด RR1/RR2 เพื่อให้ TP1/TP2 เกิดง่ายขึ้นบนแท่ง M1
-    "rr1": 0.8,
-    "rr2": 1.2,
-    "volume_ratio": 0.3,             # [Patch v16.2.1] ลดเงื่อนไข volume guard
-    "disable_buy": False,             # [Patch v16.0.2] ปิดฝั่ง Buy -> Force Enabled
-    "min_volume": 0.05,              # [Patch v16.1.9] Volume filter
-    "enable_be": True,               # [Patch v16.1.9] เปิด Breakeven
-    "enable_trailing": True,         # [Patch v16.1.9] ใช้ Trailing SL
-    # [Patch v31.0.0] ปิด session_filter ชั่วคราว
-    "session_filter": False,
-}
+# SNIPER_CONFIG_Q3_TUNED moved to defaults.yaml
+# SNIPER_CONFIG_Q3_TUNED_OLD = {
+#    "gain_z_thresh": -0.1,           # [Patch v9.0] ปรับเกณฑ์ Momentum ให้ยืดหยุ่นขึ้น
+#    "ema_slope_min": 0.04,           # [Patch v9.0] กรองสภาวะ Sideways เข้มขึ้น
+#    "atr_thresh": 0.3,               # [Patch v9.0] กรอง Spike และ Volatility ต่ำ
+#    "sniper_risk_score_min": 3.5,    # [Patch v9.0] เลือกเฉพาะเทรดคุณภาพสูงขึ้น
+#    "tp_rr_ratio": 5.5,              # [Patch v9.0] ลด TP ลงเล็กน้อย เพิ่ม Win Rate
+#    "tp1_rr_ratio": 1.5,             # [Patch v9.0] กำหนด TP1 ชัดเจน (ถ้าใช้)
+#    # [Patch v31.0.0] ลด RR1/RR2 เพื่อให้ TP1/TP2 เกิดง่ายขึ้นบนแท่ง M1
+#    "rr1": 0.8,
+#    "rr2": 1.2,
+#    "volume_ratio": 0.3,             # [Patch v16.2.1] ลดเงื่อนไข volume guard
+#    "disable_buy": False,             # [Patch v16.0.2] ปิดฝั่ง Buy -> Force Enabled
+#    "min_volume": 0.05,              # [Patch v16.1.9] Volume filter
+#    "enable_be": True,               # [Patch v16.1.9] เปิด Breakeven
+#    "enable_trailing": True,         # [Patch v16.1.9] ใช้ Trailing SL
+#    # [Patch v31.0.0] ปิด session_filter ชั่วคราว
+#    "session_filter": False,
+# }
+# end old config
 
 # [Patch v11.8] Relaxed fallback config หลัง Q3 ปรับลดเงื่อนไขให้ค้นหาสัญญาณได้กว้างขึ้น
-RELAX_CONFIG_Q3 = {
-    "gain_z_thresh": -0.3,
-    "ema_slope_min": -0.02,
-    "atr_thresh": 0.2,
-    "sniper_risk_score_min": 2.0,
-    "tp_rr_ratio": 4.5,
-    "tp1_rr_ratio": 1.2,
-    "rr1": 0.6,
-    "rr2": 1.0,
-    "volume_ratio": 0.4,
-}
+# RELAX_CONFIG_Q3 moved to defaults.yaml
+# RELAX_CONFIG_Q3_OLD = {
+#    "gain_z_thresh": -0.3,
+#    "ema_slope_min": -0.02,
+#    "atr_thresh": 0.2,
+#    "sniper_risk_score_min": 2.0,
+#    "tp_rr_ratio": 4.5,
+#    "tp1_rr_ratio": 1.2,
+#    "rr1": 0.6,
+#    "rr2": 1.0,
+#    "volume_ratio": 0.4,
+# }
+# end old config
 
 # [Patch QA-P11] Config สำหรับวินิจฉัย - ผ่อนปรนสูงสุดเพื่อแก้ปัญหา Signal Blocked 100%
 SNIPER_CONFIG_DIAGNOSTIC = {
@@ -220,35 +256,7 @@ AUTOFIX_WFV_CONFIG = {
     "trailing_rr_trigger": 0.9,
 }
 # [Patch v26.0.0] Adaptive Session Config
-SESSION_CONFIG = {
-    "Asia": {
-        "gain_z_thresh": -0.08,
-        "tp1_rr_ratio": 1.10,
-        "tp2_rr_ratio": 2.0,
-        "disable_buy": False,
-        "disable_sell": False,
-        "start": time(1, 0),
-        "end": time(8, 59),
-    },
-    "London": {
-        "gain_z_thresh": 0.00,
-        "tp1_rr_ratio": 1.15,
-        "tp2_rr_ratio": 2.15,
-        "disable_buy": False,
-        "disable_sell": False,
-        "start": time(9, 0),
-        "end": time(16, 59),
-    },
-    "NY": {
-        "gain_z_thresh": 0.03,
-        "tp1_rr_ratio": 1.18,
-        "tp2_rr_ratio": 2.30,
-        "disable_buy": False,
-        "disable_sell": False,
-        "start": time(17, 0),
-        "end": time(23, 59),
-    },
-}
+# SESSION_CONFIG moved to defaults.yaml
 
 # [Patch v28.1.0] QA ForceEntry Config (for QA/backtest only)
 QA_FORCE_ENTRY_CONFIG = {
@@ -263,8 +271,9 @@ QA_FORCE_ENTRY_CONFIG = {
 
 # [Patch HEDGEFUND-NEXT] Compound/OMS parameters
 COMPOUND_MILESTONES = [200, 500, 1000, 2000, 5000]
-KILL_SWITCH_DD = 35
-RECOVERY_SL_TRIGGER = 3
+# values moved to YAML defaults
+# KILL_SWITCH_DD = 35
+# RECOVERY_SL_TRIGGER = 3
 RECOVERY_LOT_MULT = 1.5
 
 # --- PATCH v26.0.1: Apply safety check to all configs ---

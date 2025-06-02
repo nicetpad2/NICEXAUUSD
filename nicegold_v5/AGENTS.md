@@ -887,3 +887,6 @@
 
 ### 2026-03-30
 - เพิ่ม integration test สำหรับ WFV และ ML/RL pipeline
+### 2026-03-31
+- [Patch v33.0.0] ปรับปรุงระบบ Logging แบบ unified และโหลด config จาก YAML พร้อม
+  ไฟล์ override
