@@ -150,10 +150,15 @@ def build_trade_log(position, timestamp, price, hit_tp, hit_sl, equity, slippage
     r_multiple = pnl_usd / planned_risk if planned_risk > 0 else 0
     pnl_pct = pnl_usd / equity * 100 if equity > 0 else 0
 
-    try:
-        window = df_test.loc[entry_time:timestamp]
-    except Exception:
+    # [Patch v34.3.0] Robust slice even if index lacks timestamps
+    if pd.isna(entry_time) or pd.isna(timestamp):
         window = df_test.iloc[0:0]
+    else:
+        start, end = sorted([entry_time, timestamp])
+        try:
+            window = df_test.loc[start:end]
+        except Exception:
+            window = df_test.iloc[0:0]
     price_col = "Close" if "Close" in df_test.columns else "Open"
     direction = 1 if position["side"] == "buy" else -1
     interim = (window[price_col] - position["entry"]) * direction
