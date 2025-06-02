@@ -879,3 +879,5 @@
 - [Patch v32.0.5] generate_ml_dataset_m1 เปลี่ยนชื่อคอลัมน์ราคาเป็นตัวพิมพ์ใหญ่และเตือนเมื่อไม่มี tp2_hit
 ### 2026-03-27
 - ปรับ train_lstm_runner ตรวจสอบการติดตั้ง PyTorch ด้วยตัวแปร TORCH_AVAILABLE และออกจากการเทรนเมื่อไม่มีไลบรารี
+### 2026-03-28
+- ปรับ optuna_tuner นำเข้า split_by_session จาก wfv และใช้ logger แจ้งเมื่อ ML dataset ไม่มีคอลัมน์ pattern_label หรือ entry_score

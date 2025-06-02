@@ -2,7 +2,8 @@ import pandas as pd
 import optuna
 from nicegold_v5.entry import generate_signals
 from nicegold_v5.backtester import run_backtest
-from nicegold_v5.utils import print_qa_summary, split_by_session
+from nicegold_v5.wfv import split_by_session
+from nicegold_v5.utils import print_qa_summary, logger
 
 session_folds: dict[str, pd.DataFrame] = {}
 
@@ -25,6 +26,11 @@ def objective(trial) -> float:
         df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
     if df.empty:
         return -999
+    if "pattern_label" not in df.columns or "entry_score" not in df.columns:
+        logger.error(
+            "Missing columns pattern_label or entry_score in ML dataset → ให้รัน generate_ml_dataset_m1 ก่อน"
+        )
+        return float("inf")
     df = generate_signals(df, config=config)
     trades, equity = run_backtest(df)
 
