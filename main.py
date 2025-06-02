@@ -951,7 +951,11 @@ def run_production_wfv():
         df = df.set_index("timestamp")
         print("[Patch QA-FIX v28.2.3] ตั้ง index เป็น timestamp (DatetimeIndex)")
     from nicegold_v5.entry import generate_signals_v8_0
-    from nicegold_v5.config import SNIPER_CONFIG_Q3_TUNED, RELAX_CONFIG_Q3
+    from nicegold_v5.config import (
+        SNIPER_CONFIG_Q3_TUNED,
+        RELAX_CONFIG_Q3,
+        ULTRA_RELAX_CONFIG,
+    )
 
     df_signals = generate_signals_v8_0(df.reset_index(), config=SNIPER_CONFIG_Q3_TUNED)
     n_entry_tuned = df_signals["entry_signal"].notnull().sum()
@@ -961,7 +965,7 @@ def run_production_wfv():
     )
     if n_entry_tuned == 0:
         logger.warning(
-            "[run_production_wfv] ไม่มี entry จาก Q3_TUNED → Fallback ไปใช้ RELAX_CONFIG_Q3"
+            "[run_production_wfv] ไม่มี entry จาก Q3_TUNED → ใช้ RELAX_CONFIG_Q3"
         )
         df_signals = generate_signals_v8_0(df.reset_index(), config=RELAX_CONFIG_Q3)
         n_entry_relax = df_signals["entry_signal"].notnull().sum()
@@ -969,6 +973,16 @@ def run_production_wfv():
             "[run_production_wfv] Entries with RELAX_CONFIG_Q3: %d",
             n_entry_relax,
         )
+        if n_entry_relax == 0:
+            logger.warning(
+                "[run_production_wfv] ไม่มี entry จาก RELAX_CONFIG_Q3 → ใช้ ULTRA_RELAX_CONFIG"
+            )
+            df_signals = generate_signals_v8_0(df.reset_index(), config=ULTRA_RELAX_CONFIG)
+            n_entry_ultra = df_signals["entry_signal"].notnull().sum()
+            logger.info(
+                "[run_production_wfv] Entries with ULTRA_RELAX_CONFIG: %d",
+                n_entry_ultra,
+            )
         df = df_signals
     else:
         df = df_signals

@@ -1036,3 +1036,9 @@
 ### 2026-04-20
 - [Patch vConfig v1.1] เติม pattern_whitelist และค่า volume_ratio/tp_rr_ratio ใน
   SNIPER_CONFIG_Q3_TUNED เพื่อให้สอดคล้องกับ RELAX_CONFIG_Q3
+
+### 2026-04-21
+- [Patch v32.3.0] ปรับ Production WFV
+  - เพิ่ม ULTRA_RELAX_CONFIG และ fallback สามขั้นใน main.py
+  - ปรับ backtester เริ่มทุน 10,000 และอ่านคอลัมน์ Close แบบยืดหยุ่น
+  - บันทึกสรุป equity ต่อ fold และสร้างไฟล์ logs/wfv_summary

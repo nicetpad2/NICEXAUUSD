@@ -1036,3 +1036,10 @@
 ## 2026-04-20
 - [Patch vConfig v1.1] ปรับ sniper_config_q3_tuned เพิ่ม pattern_whitelist และ
   พารามิเตอร์ volume_ratio/tp_rr_ratio เพื่อใช้ fallback อย่างผ่อนปรน
+
+## 2026-04-21
+- [Patch v32.3.0] ปรับปรุง Production WFV
+  - เพิ่ม ULTRA_RELAX_CONFIG ใน config.py
+  - main.py รองรับ fallback จนครบสามขั้น
+  - backtester เริ่มต้นทุน 10,000 และอ่าน close แบบยืดหยุ่น
+  - บันทึก equity_summary ต่อ fold ใน wfv.py

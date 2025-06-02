@@ -18,7 +18,7 @@ def simulate_trades_with_tp(df: pd.DataFrame, sl_distance: float = 5.0):
     df = df.copy()
     df["timestamp"] = pd.to_datetime(df["timestamp"])
 
-    capital = 100.0  # ปรับให้สอดคล้องกับ Production WFV
+    capital = 10000.0  # ปรับให้สอดคล้องกับ Production WFV
     peak = capital
     position = None
     win_streak = 0
@@ -32,7 +32,7 @@ def simulate_trades_with_tp(df: pd.DataFrame, sl_distance: float = 5.0):
         if ENABLE_SESSION_FILTER and row.get("session") not in ["Asia", "London", "NY"]:
             continue
 
-        price = row.get("close")
+        price = float(row.get("close", row.get("Close", 0.0)))
         side = row.get("side", "buy")
         tp_price = price + sl_distance * 2 if side == "buy" else price - sl_distance * 2
         pnl = (tp_price - price) if side == "buy" else (price - tp_price)
