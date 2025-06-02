@@ -6,6 +6,7 @@ from nicegold_v5.backtester import (
     adaptive_tp_multiplier,
     get_sl_tp_recovery,
     calculate_mfe,
+    calc_lot,
 )
 
 
@@ -47,3 +48,9 @@ def test_calculate_mfe_empty():
     start = pd.Timestamp("2025-01-02 00:00:00")
     end = pd.Timestamp("2025-01-02 00:05:00")
     assert calculate_mfe(start, end, df, 1.5, "buy") == 0.0
+
+
+def test_calc_lot_account_guard():
+    account = {"equity": 1000, "risk_pct": 0.01, "init_lot": 0.05}
+    lot = calc_lot(account, sl_pips=0)
+    assert lot >= 0.05

@@ -4,17 +4,30 @@ import random
 import logging
 # Structured logging
 import numpy as np
+from typing import Union
 
 logger = logging.getLogger("nicegold_v5.backtester")
 # Risk management utilities
 MAX_LOT_CAP = 1.0  # [Patch v6.7]
 
 
-def calc_lot(capital: float, risk_pct: float = 1.5, sl_pips: float = 100) -> float:
-    risk_amount = capital * (risk_pct / 100)
-    pip_value = 10  # For gold 0.1/point × 100 = $10/lot
+def calc_lot(account: Union[dict, float], sl_pips: float = 100, pip_value: float = 1.0, risk_pct: float = 1.5) -> float:
+    """คำนวณขนาดล็อต สามารถรับพารามิเตอร์เป็น dict หรือมูลค่าเงินต้น"""
+    if isinstance(account, dict):
+        account_equity = account.get("equity", 0.0)
+        risk_pct_val = account.get("risk_pct", 0.01)
+        init_lot = account.get("init_lot", 0.01)
+    else:
+        account_equity = float(account)
+        # แบบเดิม risk_pct ส่งเป็นเปอร์เซ็นต์
+        risk_pct_val = risk_pct / 100
+        init_lot = 0.01
+
+    if sl_pips <= 0:
+        sl_pips = 1.0
+    risk_amount = account_equity * risk_pct_val
     lot = risk_amount / (sl_pips * pip_value)
-    return min(MAX_LOT_CAP, max(0.01, round(lot, 2)))  # [Patch v6.7]
+    return max(round(lot, 2), init_lot)
 
 
 # --- Patch C: Advanced Risk Management ---
@@ -22,18 +35,13 @@ KILL_SWITCH_DD = 25  # % drawdown limit
 MIN_TRADES_BEFORE_KILL = 100  # ต้องมีเทรดมากกว่า 100 ไม้ก่อนจึงเริ่มตรวจ DD
 
 
-def kill_switch(equity_curve: list[float]) -> bool:
-    """Return True if drawdown exceeds threshold (หลังจากเทรดครบ MIN_TRADES_BEFORE_KILL)"""
-    # [Patch v32.0.0] guard empty list
-    if not equity_curve:
-        logger.warning("kill_switch: equity_curve is empty → no kill")
-        return False
+def kill_switch(equity_curve: list[float], dd_limit: float = KILL_SWITCH_DD) -> bool:
+    """ตรวจสอบ Drawdown เมื่อมีข้อมูลครบตามขั้นต่ำ"""
     if len(equity_curve) < MIN_TRADES_BEFORE_KILL:
-        return False  # ยังไม่ตรวจ drawdown
-    last_equity = equity_curve[-1]
-    max_equity = max(equity_curve[:-1] or [last_equity])
-    drawdown = (max_equity - last_equity) / max_equity * 100
-    if drawdown >= KILL_SWITCH_DD:
+        return False
+    peak = max(equity_curve)
+    drawdown = (peak - equity_curve[-1]) / peak * 100 if peak > 0 else 0
+    if drawdown >= dd_limit:
         print("[KILL SWITCH] Drawdown limit reached. Backtest halted.")
         return True
     return False
@@ -139,12 +147,14 @@ def calculate_planned_risk(
 
 # [Patch C.2] Enable full RAM mode
 MAX_RAM_MODE = True
-PNL_MULTIPLIER = 100  # [Patch QA-P12] Boost PnL for QA scenarios
+PNL_MULTIPLIER_BASE = 100  # [Patch QA-P12] ค่าเริ่มต้นเมื่อโหมด QA
 QA_PROFIT_BONUS = 2.0  # [Patch QA-P13] เพิ่มกำไรพิเศษสำหรับไม้ที่บวก
 
 
-def run_backtest(df: pd.DataFrame):  # pragma: no cover - heavy simulation
+def run_backtest(df: pd.DataFrame, config: dict | None = None):  # pragma: no cover - heavy simulation
     """Backtest พร้อม Recovery Mode และ Logging เต็มรูปแบบ"""
+    config = config or {}
+    df = df.sort_values("timestamp")  # [Patch] ensure timestamp sorted
     logging.info(f"[TIME] run_backtest() start: {time.strftime('%H:%M:%S')}")
     capital = 100.0
     COMMISSION_PER_001_LOT = 0.07  # [Patch v6.0] ค่าคอมจริง: 0.07 USD ต่อ 0.01 lot
@@ -155,6 +165,11 @@ def run_backtest(df: pd.DataFrame):  # pragma: no cover - heavy simulation
     equity_curve: list[float] = []
     recovery_mode = False  # เริ่มแบบปกติ
     start = time.time()
+    pnl_multiplier = (
+        config.get("qa_pnl_multiplier", PNL_MULTIPLIER_BASE)
+        if config.get("qa_mode", False)
+        else 1.0
+    )
 
     if df["entry_signal"].isnull().mean() == 1.0:
         print("⚠️ All signals blocked. Skipping backtest.")
@@ -227,7 +242,7 @@ def run_backtest(df: pd.DataFrame):  # pragma: no cover - heavy simulation
 
             if not open_trade.get("tp1_hit") and gain >= tp1:
                 partial_lot = open_trade["lot"] * 0.5
-                partial_pnl = tp1 * open_trade["lot"] * PNL_MULTIPLIER * 0.5
+                partial_pnl = tp1 * open_trade["lot"] * pnl_multiplier * 0.5
                 if partial_pnl > 0:
                     partial_pnl += QA_PROFIT_BONUS
                 commission = partial_lot / 0.01 * COMMISSION_PER_001_LOT  # [Patch v6.0]
@@ -264,7 +279,7 @@ def run_backtest(df: pd.DataFrame):  # pragma: no cover - heavy simulation
                     continue  # [Patch v12.3.0] Delay exit until TP2 hold time reached
                 exit_now, reason = should_exit(open_trade, row_data)
                 if exit_now or (direction == "buy" and gain >= tp2) or (direction == "sell" and gain >= tp2):
-                    pnl = (price - open_trade["entry"] if direction == "buy" else open_trade["entry"] - price) * open_trade["lot"] * PNL_MULTIPLIER
+                    pnl = (price - open_trade["entry"] if direction == "buy" else open_trade["entry"] - price) * open_trade["lot"] * pnl_multiplier
                     if pnl > 0:
                         pnl += QA_PROFIT_BONUS
                     commission = open_trade["lot"] / 0.01 * COMMISSION_PER_001_LOT  # [Patch v6.0]
@@ -304,7 +319,7 @@ def run_backtest(df: pd.DataFrame):  # pragma: no cover - heavy simulation
                 # pragma: no cover start
                 exit_now, reason = should_exit(open_trade, row_data)
                 if exit_now:
-                    pnl = (price - open_trade["entry"] if direction == "buy" else open_trade["entry"] - price) * open_trade["lot"] * PNL_MULTIPLIER
+                    pnl = (price - open_trade["entry"] if direction == "buy" else open_trade["entry"] - price) * open_trade["lot"] * pnl_multiplier
                     if pnl > 0:
                         pnl += QA_PROFIT_BONUS
                     commission = open_trade["lot"] / 0.01 * COMMISSION_PER_001_LOT  # [Patch v6.0]

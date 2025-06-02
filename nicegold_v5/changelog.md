@@ -920,3 +920,6 @@
 - [Patch v32.0.8] Updated `generate_ml_dataset_m1` to use utils.sanitize_price_columns, loop price column renaming, and log dataset save path.
 
 
+## 2026-04-02
+- อัพเดต calc_lot ให้รับ dict และป้องกัน sl_pips ผิดค่า
+- เพิ่มพารามิเตอร์ qa_mode ใน run_backtest และลดค่า drawdown ใน kill_switch
