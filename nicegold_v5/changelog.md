@@ -910,3 +910,5 @@
 - [Patch v32.0.0] kill_switch logs warning when equity curve is empty
 
 
+## 2026-04-03
+- Updated optuna_tuner to use a module-specific logger and guard missing pattern_label/entry_score columns
