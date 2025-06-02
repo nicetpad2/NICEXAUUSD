@@ -887,3 +887,7 @@
   - เพิ่ม Logging, Config via YAML, และ Unit/Integration Tests ครบถ้วน
   - ปรับระดับ Log Level, ลด log ยิบย่อย
   - รองรับ path สัมพัทธ์ (data/, logs/)
+\n## 2026-04-02
+- อัพเดต calc_lot ให้รับ dict และป้องกัน sl_pips ผิดค่า
+- เพิ่มพารามิเตอร์ qa_mode ใน run_backtest ปรับ PnL multiplier
+- แก้ kill_switch ให้ใช้ค่า drawdown ล่าสุด

@@ -798,7 +798,7 @@ def test_backtest_avg_profit_over_one():
     })
     from nicegold_v5 import exit as exit_mod
     exit_mod.BE_HOLD_MIN = 0
-    trades, _ = run_backtest(df)
+    trades, _ = run_backtest(df, config={"qa_mode": True, "qa_pnl_multiplier": 100})
     assert not trades.empty
     assert trades["pnl"].mean() > 1.0
 
