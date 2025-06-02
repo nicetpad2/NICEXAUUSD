@@ -940,3 +940,6 @@
 - ปรับ parse_timestamp_safe ใช้ logger.warning เมื่อรูปแบบผิดและปรับ split_folds จัดการเศษข้อมูล
 - เพิ่มฟังก์ชัน merge_equity_curves รวมผล equity จากหลาย fold
 
+### 2026-04-04
+- ปรับปรุง `meta_classifier` เพิ่มระบบ logging, fallback โมเดลไม่พร้อม และเมธอด `train_and_save`
+

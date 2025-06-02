@@ -939,3 +939,8 @@
 - อัพเดต calc_lot ให้รับ dict และป้องกัน sl_pips ผิดค่า
 - เพิ่มพารามิเตอร์ qa_mode ใน run_backtest และลดค่า drawdown ใน kill_switch
 
+
+
+## 2026-04-04
+- ปรับปรุง `meta_classifier` เพิ่ม logging และ fallback เมื่อโหลดโมเดลไม่ได้
+- เพิ่มเมธอด `train_and_save` สำหรับฝึกและบันทึกโมเดล
