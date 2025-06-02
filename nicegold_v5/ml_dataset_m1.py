@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 import importlib
-from nicegold_v5.utils import ensure_logs_dir
+from nicegold_v5.utils import ensure_logs_dir, sanitize_price_columns, logger
 
 
 def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mode="production"):
@@ -22,7 +22,6 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
     from nicegold_v5.utils import (
         convert_thai_datetime,
         parse_timestamp_safe,
-        sanitize_price_columns,
     )
     print("[Patch v28.2.6] 🛠️ Loading and sanitizing CSV from:", csv_path)
     df = pd.read_csv(csv_path)
@@ -32,24 +31,33 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
         raise KeyError("[Patch v22.4.1] ❌ ไม่มีคอลัมน์ timestamp หลังแปลง – หยุดการทำงาน")
     df["timestamp"] = parse_timestamp_safe(df["timestamp"])
     df = sanitize_price_columns(df)
-    df = df.dropna(subset=["timestamp", "high", "low", "close", "volume"])
+    # [Patch v32.0.0] Rename lower-case columns → Title-case uniform
+    if "open" in df.columns and "Open" not in df.columns:
+        df.rename(columns={"open": "Open"}, inplace=True)
+    if "high" in df.columns and "High" not in df.columns:
+        df.rename(columns={"high": "High"}, inplace=True)
+    if "low" in df.columns and "Low" not in df.columns:
+        df.rename(columns={"low": "Low"}, inplace=True)
+    if "close" in df.columns and "Close" not in df.columns:
+        df.rename(columns={"close": "Close"}, inplace=True)
+    df = df.dropna(subset=["timestamp", "High", "Low", "Close", "volume"])
     df = df.sort_values("timestamp").reset_index(drop=True)
     print(f"[Patch v28.2.6] ✅ Sanitize timestamp success – {len(df)} rows")
 
     # Basic Indicators
-    df["gain"] = df["close"].diff()
+    df["gain"] = df["Close"].diff()
     df["gain_z"] = (df["gain"] - df["gain"].rolling(20).mean()) / (df["gain"].rolling(20).std() + 1e-9)
-    df["atr"] = (df["high"] - df["low"]).rolling(14).mean()
-    df["ema_fast"] = df["close"].ewm(span=15).mean()
-    df["ema_slow"] = df["close"].ewm(span=50).mean()
+    df["atr"] = (df["High"] - df["Low"]).rolling(14).mean()
+    df["ema_fast"] = df["Close"].ewm(span=15).mean()
+    df["ema_slow"] = df["Close"].ewm(span=50).mean()
     df["ema_slope"] = df["ema_fast"].diff()
     df["rsi"] = 100 - (100 / (1 + (
-        df["close"].diff().clip(lower=0).rolling(14).mean() /
-        (-df["close"].diff().clip(upper=0).rolling(14).mean() + 1e-9)
+        df["Close"].diff().clip(lower=0).rolling(14).mean() /
+        (-df["Close"].diff().clip(upper=0).rolling(14).mean() + 1e-9)
     )))
     df["entry_score"] = df["gain_z"] * df["atr"] / (df["atr"].rolling(50).mean() + 1e-9)
     df["pattern_label"] = (
-        (df["high"] > df["high"].shift(1)) & (df["low"] < df["low"].shift(1))
+        (df["High"] > df["High"].shift(1)) & (df["Low"] < df["Low"].shift(1))
     ).astype(int)
 
     # Load trade log
@@ -204,6 +212,11 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
     print("[Patch v28.2.6] ✅ Trade log saved →", trade_log_path)
 
     trades = pd.read_csv(trade_log_path)
+    if "tp2_hit" not in trades.columns:
+        logger.warning(
+            "[Patch QA-FIX v28.2.4] ไม่พบ tp2_hit ใน trade log → สร้าง tp2_hit ใหม่ (False)"
+        )
+        trades["tp2_hit"] = False
     # [Patch v28.2.8] บาง trade อาจมี entry_time เป็น '0' จาก ensure_buy_sell – แปลงแบบปลอดภัย
     trades["entry_time"] = pd.to_datetime(
         trades["entry_time"], format="%Y-%m-%d %H:%M:%S", errors="coerce"
