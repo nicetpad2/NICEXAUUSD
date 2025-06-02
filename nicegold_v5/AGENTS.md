@@ -940,3 +940,5 @@
 - ปรับ parse_timestamp_safe ใช้ logger.warning เมื่อรูปแบบผิดและปรับ split_folds จัดการเศษข้อมูล
 - เพิ่มฟังก์ชัน merge_equity_curves รวมผล equity จากหลาย fold
 
+### 2026-04-04
+- ปรับปรุง deep_model_m1.LSTMClassifier เพิ่ม dropout และ type hints

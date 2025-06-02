@@ -939,3 +939,7 @@
 - อัพเดต calc_lot ให้รับ dict และป้องกัน sl_pips ผิดค่า
 - เพิ่มพารามิเตอร์ qa_mode ใน run_backtest และลดค่า drawdown ใน kill_switch
 
+
+## 2026-04-04
+- ปรับปรุง LSTMClassifier รองรับ dropout และเพิ่มคำอธิบายฟังก์ชัน
+
