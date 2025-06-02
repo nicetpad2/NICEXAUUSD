@@ -964,6 +964,9 @@
 ### 2026-04-05
 - แก้คำเตือน scikit-learn ใน `MetaClassifier.predict` โดยส่ง DataFrame เข้า `predict_proba`
 
+### 2026-04-06
+- [Patch v32.1.0] เพิ่มฟังก์ชัน `ensure_order_side_enabled` ใน `config.py` เพื่อปิด `disable_buy` และ `disable_sell` อัตโนมัติ
+
 
 
 
