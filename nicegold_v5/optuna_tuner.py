@@ -5,6 +5,9 @@ from nicegold_v5.entry import generate_signals
 from nicegold_v5.backtester import run_backtest
 from nicegold_v5.wfv import split_by_session
 from nicegold_v5.utils import print_qa_summary, logger
+from nicegold_v5.config import PATHS
+import os
+import json
 
 # module specific logger
 logger = logging.getLogger("nicegold_v5.optuna_tuner")
@@ -59,4 +62,13 @@ def start_optimization(df: pd.DataFrame, n_trials: int = 50):
     study.optimize(objective, n_trials=n_trials)
     print("✅ Best trial:")
     print(study.best_trial)
+    # [Patch v32.2.0] Save best config to config folder
+    os.makedirs(PATHS["models"], exist_ok=True)
+    with open(os.path.join(PATHS["models"], "optuna_best_config.json"), "w") as f:
+        json.dump(study.best_trial.params, f, indent=2)
     return study
+
+# [Patch v32.2.0] เพิ่มคำสั่ง check ล่วงหน้า ถ้าไม่มี data folder ให้สร้าง
+if not os.path.exists("data"):
+    print("[Patch v32.2.0] ⚠️ no 'data/' folder detected. Creating...")
+    os.makedirs("data", exist_ok=True)

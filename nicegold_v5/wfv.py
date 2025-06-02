@@ -8,6 +8,7 @@ from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 import os  # [Patch v12.3.9] Added for export
 from datetime import datetime  # [Patch v12.3.9] Added for timestamp
+from nicegold_v5.config import PATHS
 import logging
 
 # ลดการซ้ำซ้อน โดยไม่เก็บโค้ดซ้ำซ้อนในโมดูลนี้
@@ -36,7 +37,7 @@ from nicegold_v5.config import ensure_order_side_enabled
 from nicegold_v5.qa import run_qa_guard
 
 
-TRADE_DIR = "logs/trades"  # [Patch v12.3.9] Define log dir
+TRADE_DIR = PATHS["trade_logs"]  # [Patch v12.3.9] Define log dir
 os.makedirs(TRADE_DIR, exist_ok=True)  # [Patch v12.3.9] Ensure log dir exists
 logger = setup_logger("nicegold_v5.wfv", os.path.join(QA_BASE_PATH, "wfv.log"))
 
@@ -315,6 +316,9 @@ def inject_exit_variety(
 ) -> pd.DataFrame:
     """Ensure exit_reason variety exists per fold by injecting dummy rows."""
     trades_df = trades_df.copy()
+    trades_df["exit_reason"] = trades_df.get("exit_reason", pd.Series(dtype=str)).fillna("sl")
+    if "timestamp" in trades_df.columns:
+        trades_df["timestamp"] = pd.to_datetime(trades_df["timestamp"])
     trades_df["is_dummy"] = trades_df.get("is_dummy", False)
 
     if fold_col and fold_col in trades_df.columns:
@@ -389,6 +393,12 @@ def run_autofix_wfv(df: pd.DataFrame, simulate_fn, config: dict) -> pd.DataFrame
         # ปรับความเสี่ยงต่อเนื่อง
         prev_config = autorisk_adjust(updated_config, summary)
         trades_df["fold"] = name
+        outdir = os.path.join("logs", "wfv", name.lower())
+        os.makedirs(outdir, exist_ok=True)
+        trades_df.to_csv(os.path.join(outdir, f"trades_{name}.csv"), index=False)
+        with open(os.path.join(outdir, "config_adj.json"), "w") as f:
+            import json
+            json.dump(prev_config, f, indent=2)
         all_trades.append(trades_df)
 
     if not all_trades:

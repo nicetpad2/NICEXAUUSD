@@ -999,3 +999,13 @@
   - เพิ่มฟังก์ชัน `_ensure_datetime_columns` ตรวจสอบและแปลง dtype `timestamp`
   - ใช้ `run_autofix_wfv` ใน `run_wfv_with_progress`
   - เพิ่ม `run_clean_backtest_with_lstm` สำหรับรวมฟีเจอร์ LSTM
+
+### 2026-04-14
+- [Patch v32.2.0] ปรับ PATHS ใน config และโมดูลต่างๆ
+  - เพิ่มตัวแปร `PATHS` กำหนดค่าเริ่มต้นของไฟล์และโฟลเดอร์
+  - main.py โหลด CSV ผ่าน `PATHS['m1_csv']` และบังคับ `ensure_order_side_enabled`
+  - entry.py log timestamp แบบ datetime และเพิ่มฟังก์ชัน `convert_thai_datetime_col`
+  - utils กำหนด `QA_BASE_PATH` ผ่านตัวแปร env และ `inject_exit_variety` แปลง timestamp
+  - backtester และ wfv ใช้ `PATHS['trade_logs']` และบันทึก config ต่อ fold
+  - เพิ่ม export audit report อัตโนมัติหลัง backtest
+  - optuna_tuner บันทึกไฟล์ `optuna_best_config.json` ใน `PATHS['models']` และสร้าง `data/` หากขาด
