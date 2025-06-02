@@ -271,6 +271,12 @@ def sanitize_price_columns(df: pd.DataFrame) -> pd.DataFrame:
     for col in ["open", "high", "low", "close", "volume"]:
         if col in df.columns:
 
+            df[col] = pd.to_numeric(
+                df[col].astype(str).str.replace(",", ""),
+                errors="coerce",
+            ).fillna(0.0)
+
+
             df[col] = (
                 pd.to_numeric(
                     df[col].astype(str).str.replace(",", ""), errors="coerce"
@@ -281,6 +287,7 @@ def sanitize_price_columns(df: pd.DataFrame) -> pd.DataFrame:
             df[col] = pd.to_numeric(
                 df[col].astype(str).str.replace(",", ""), errors="coerce"
             ).fillna(0.0)
+
 
     return df
 
