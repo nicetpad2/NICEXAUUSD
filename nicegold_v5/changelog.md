@@ -859,3 +859,5 @@
 - [Patch v32.0.4] simulate_partial_tp_safe now accepts percentile_threshold and injects TP2 trades in QA
 ## 2026-03-26
 - [Patch v32.0.5] generate_ml_dataset_m1 renames price columns to Title-case and warns when 'tp2_hit' missing
+## 2026-03-27
+- Updated train_lstm_runner to gracefully skip training when PyTorch is missing using TORCH_AVAILABLE flag; adjusted unit tests

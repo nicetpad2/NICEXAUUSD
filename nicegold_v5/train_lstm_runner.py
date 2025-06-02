@@ -1,18 +1,39 @@
 import pandas as pd
 import numpy as np
-import torch
-import torch.nn as nn
-from torch import optim
-from torch.utils.data import DataLoader, TensorDataset
-from .utils import autotune_resource, print_resource_status, dynamic_batch_scaler
 try:
-    from torch.amp import autocast, GradScaler
-    _AMP_MODE = "torch.amp"
-except Exception:  # pragma: no cover - fallback for older PyTorch
-    from torch.cuda.amp import autocast, GradScaler
-    _AMP_MODE = "torch.cuda.amp"
+    import torch
+    import torch.nn as nn
+    import torch.optim as optim
+    from torch.utils.data import DataLoader, TensorDataset
+    try:
+        from torch.amp import autocast, GradScaler
+        _AMP_MODE = "torch.amp"
+    except Exception:  # pragma: no cover - fallback for older PyTorch
+        from torch.cuda.amp import autocast, GradScaler
+        _AMP_MODE = "torch.cuda.amp"
+    TORCH_AVAILABLE = True
+except ImportError:  # pragma: no cover - optional dependency
+    TORCH_AVAILABLE = False
+    print("[Warning] PyTorch ไม่ถูกติดตั้ง – ข้ามการเทรน LSTM")
+    import types
+    torch = types.SimpleNamespace(
+        cuda=types.SimpleNamespace(is_available=lambda: False),
+        tensor=lambda *a, **k: None,
+        zeros=lambda shape, dtype=None: np.zeros(shape, dtype=dtype),
+        float32=float,
+        device=lambda x=None: 'cpu',
+        save=lambda *a, **k: None,
+    )
+    nn = types.SimpleNamespace(Module=object)
+    optim = types.SimpleNamespace(SGD=lambda *a, **k: None, Adam=lambda *a, **k: None)
+    DataLoader = lambda *a, **k: []
+    TensorDataset = lambda *a, **k: None
+    GradScaler = lambda enabled=True: None
+    autocast = lambda enabled=True: types.SimpleNamespace(__enter__=lambda self: None, __exit__=lambda self, exc_type, exc, tb: False)
+    _AMP_MODE = None
+LSTMClassifier = None  # patched in tests or loaded lazily
+from .utils import autotune_resource, print_resource_status, dynamic_batch_scaler
 import time
-from .deep_model_m1 import LSTMClassifier
 
 
 def load_dataset(path="data/ml_dataset_m1.csv", seq_len=10):
@@ -26,8 +47,13 @@ def load_dataset(path="data/ml_dataset_m1.csv", seq_len=10):
         X_seq.append(data[i:i + seq_len])
         y_seq.append(labels[i + seq_len])
 
-    X = torch.tensor(np.array(X_seq), dtype=torch.float32)
-    y = torch.tensor(np.array(y_seq), dtype=torch.float32).unsqueeze(1)
+    X_arr = np.array(X_seq)
+    y_arr = np.array(y_seq)
+    if TORCH_AVAILABLE:
+        X = torch.tensor(X_arr, dtype=torch.float32)
+        y = torch.tensor(y_arr, dtype=torch.float32).unsqueeze(1)
+    else:
+        X, y = X_arr, y_arr.reshape(-1, 1)
     return X, y
 
 
@@ -41,6 +67,11 @@ def train_lstm(
     optimizer_name="adam",
 ):
     """Train LSTM classifier with selectable optimizer."""
+    if not TORCH_AVAILABLE or not getattr(torch, "nn", None) or not hasattr(torch.nn, "LSTM"):
+        print("[train_lstm_runner] PyTorch ไม่ถูกติดตั้ง – exit อัตโนมัติ")
+        return None
+    from .deep_model_m1 import LSTMClassifier
+
     model = LSTMClassifier(X.shape[2], hidden_dim)
     use_amp = torch.cuda.is_available()
     if use_amp:
@@ -113,5 +144,6 @@ if __name__ == "__main__":
     device, batch_size = autotune_resource()
     X, y = load_dataset()
     model = train_lstm(X, y, batch_size=batch_size)
-    torch.save(model.state_dict(), "models/model_lstm_tp2.pth")
-    print("✅ Model saved to models/model_lstm_tp2.pth")  # pragma: no cover
+    if model is not None:
+        torch.save(model.state_dict(), "models/model_lstm_tp2.pth")
+        print("✅ Model saved to models/model_lstm_tp2.pth")  # pragma: no cover
