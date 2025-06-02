@@ -452,6 +452,28 @@ def test_run_walkforward_backtest_single_class():
     assert not trades.empty
 
 
+def test_run_walkforward_backtest_empty_result():
+    df = pd.DataFrame({
+        'timestamp': pd.date_range('2024-01-01', periods=6, freq='h'),
+        'Open': [1]*6,
+        'feat1': [0]*6,
+        'feat2': [0]*6,
+        'label': [0]*6,
+        'EMA_50_slope': -1.0,
+        'ATR_14': [1.0]*6,
+        'ATR_14_MA50': [1.0]*6,
+    }).set_index('timestamp')
+    trades = wfv.run_walkforward_backtest(df, ['feat1', 'feat2'], 'label', n_folds=2)
+    assert trades.empty
+    required = [
+        "entry_time", "exit_time", "side", "entry_price", "exit_price",
+        "sl_price", "tp1_price", "tp2_price", "lot", "pnl", "planned_risk",
+        "r_multiple", "pnl_pct", "commission", "slippage", "duration_min",
+        "break_even_min", "mfe", "exit_reason", "session", "fold", "is_dummy",
+    ]
+    assert all(c in trades.columns for c in required)
+
+
 def test_session_performance():
     df = sample_wfv_df()
     trades = wfv.run_walkforward_backtest(df, ['feat1', 'feat2'], 'label', n_folds=2)
