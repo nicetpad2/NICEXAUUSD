@@ -2,7 +2,10 @@ import pandas as pd
 from datetime import datetime
 import random
 import logging
+# Structured logging
 import numpy as np
+
+logger = logging.getLogger("nicegold_v5.backtester")
 # Risk management utilities
 MAX_LOT_CAP = 1.0  # [Patch v6.7]
 
@@ -21,15 +24,18 @@ MIN_TRADES_BEFORE_KILL = 100  # ต้องมีเทรดมากกว่
 
 def kill_switch(equity_curve: list[float]) -> bool:
     """Return True if drawdown exceeds threshold (หลังจากเทรดครบ MIN_TRADES_BEFORE_KILL)"""
-    if not equity_curve or len(equity_curve) < MIN_TRADES_BEFORE_KILL:
+    # [Patch v32.0.0] guard empty list
+    if not equity_curve:
+        logger.warning("kill_switch: equity_curve is empty → no kill")
+        return False
+    if len(equity_curve) < MIN_TRADES_BEFORE_KILL:
         return False  # ยังไม่ตรวจ drawdown
-    peak = equity_curve[0]
-    for eq in equity_curve:
-        drawdown = (peak - eq) / peak * 100
-        if drawdown >= KILL_SWITCH_DD:
-            print("[KILL SWITCH] Drawdown limit reached. Backtest halted.")
-            return True
-        peak = max(peak, eq)
+    last_equity = equity_curve[-1]
+    max_equity = max(equity_curve[:-1] or [last_equity])
+    drawdown = (max_equity - last_equity) / max_equity * 100
+    if drawdown >= KILL_SWITCH_DD:
+        print("[KILL SWITCH] Drawdown limit reached. Backtest halted.")
+        return True
     return False
 
 

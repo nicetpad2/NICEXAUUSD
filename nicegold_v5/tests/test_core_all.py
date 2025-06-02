@@ -236,6 +236,10 @@ def test_kill_switch_waits_min_trades():
     assert not kill_switch(curve)
 
 
+def test_kill_switch_empty_curve():
+    assert not kill_switch([])
+
+
 def test_update_compound_lot():
     lot, milestone = update_compound_lot(300, 100)
     assert lot == 0.02
