@@ -37,8 +37,8 @@ class RLScalper:
             state_space = [0, 1]
 
         self.action_space = action_space
+        # Initialize Q-table for all states
         self.state_space = state_space
-        # Initialize Q-table for every state/action pair
         self.q_table: dict[tuple, list[float]] = {
             state: [0.0 for _ in action_space] for state in state_space
         }
@@ -52,8 +52,14 @@ class RLScalper:
 
     @staticmethod
     def generate_all_states(indicators: dict) -> list:
-        """Return all possible state tuples given indicator options."""
-        keys = list(indicators.keys())
+        """Return all possible state tuples given indicator options.
+
+        Parameters
+        ----------
+        indicators : dict
+            Mapping of feature name to possible values.
+        """
+        keys = sorted(indicators.keys())
         values = [indicators[k] for k in keys]
         combinations = list(itertools.product(*values))
         return [tuple(comb) for comb in combinations]
@@ -92,8 +98,10 @@ class RLScalper:
             self.q_table = {
                 state: [0.0 for _ in self.action_space] for state in self.state_space
             }
+            keys = sorted(indicators.keys())
             for _, row in df.iterrows():
-                state = tuple(row[k] for k in indicators.keys())
+                # build state tuple in same order as indicators.keys()
+                state = tuple(row[k] for k in keys)
                 action = self.choose_action(state)
                 reward = self._get_reward(row, action)
                 next_state = state
@@ -109,3 +117,28 @@ class RLScalper:
                 reward = price_diff if action == 0 else -price_diff
                 self.update_q(state, action, reward, next_state)
         return self.q_table
+
+    def save_q_table(self, filepath: str) -> None:
+        """Save Q-table to JSON file."""
+        import json
+
+        with open(filepath, "w") as f:
+            json.dump({str(k): v for k, v in self.q_table.items()}, f)
+
+    @classmethod
+    def load_q_table(
+        cls,
+        filepath: str,
+        action_space: list,
+        alpha: float = 0.1,
+        gamma: float = 0.9,
+        epsilon: float = 0.1,
+    ) -> "RLScalper":
+        """Load Q-table from JSON and return initialized agent."""
+        import json
+
+        with open(filepath, "r") as f:
+            qd = json.load(f)
+        agent = cls([tuple(eval(k)) for k in qd.keys()], action_space, alpha, gamma, epsilon)
+        agent.q_table = {tuple(eval(k)): v for k, v in qd.items()}
+        return agent

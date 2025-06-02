@@ -916,6 +916,9 @@
 
 ### 2026-04-03
 
+- [Patch v32.0.8] ปรับ RLScalper ให้กำหนด state-space ตาม indicators แบบ sorted และเพิ่มฟังก์ชัน save/load Q-table
+
+
 - [Patch v32.0.8] ปรับ config.py ให้โหลด defaults.yaml พร้อมตรวจข้อผิดพลาด และผสานค่าจากไฟล์ ENV แบบ nested
 
 - [Patch v32.0.8] ปรับ generate_ml_dataset_m1 ให้เรียก `sanitize_price_columns` จาก utils

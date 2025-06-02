@@ -908,10 +908,15 @@
 - [Patch v32.0.0] kill_switch logs warning when equity curve is empty
 
 ## 2026-04-03
+
+- [Patch v32.0.8] RLScalper can save/load Q-table and sorts indicator keys when generating states.
+
+
 - [Patch v32.0.8] config.py now loads defaults.yaml with error handling and merges overrides from the selected environment
 
 
 
 ## 2026-04-03
 - [Patch v32.0.8] Updated `generate_ml_dataset_m1` to use utils.sanitize_price_columns, loop price column renaming, and log dataset save path.
+
 
