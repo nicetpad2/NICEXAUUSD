@@ -2,8 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 import importlib
-from nicegold_v5.utils import ensure_logs_dir, logger
-from nicegold_v5.entry import sanitize_price_columns
+from nicegold_v5.utils import ensure_logs_dir, logger, sanitize_price_columns
 
 
 def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mode="production"):
@@ -32,15 +31,10 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
         raise KeyError("[Patch v22.4.1] ❌ ไม่มีคอลัมน์ timestamp หลังแปลง – หยุดการทำงาน")
     df["timestamp"] = parse_timestamp_safe(df["timestamp"])
     df = sanitize_price_columns(df)
-    # [Patch v32.0.0] Rename lower-case columns → Title-case uniform
-    if "open" in df.columns and "Open" not in df.columns:
-        df.rename(columns={"open": "Open"}, inplace=True)
-    if "high" in df.columns and "High" not in df.columns:
-        df.rename(columns={"high": "High"}, inplace=True)
-    if "low" in df.columns and "Low" not in df.columns:
-        df.rename(columns={"low": "Low"}, inplace=True)
-    if "close" in df.columns and "Close" not in df.columns:
-        df.rename(columns={"close": "Close"}, inplace=True)
+    # [Patch v32.0.5] rename lowercase→Titlecase safely
+    for lc, tc in [("open", "Open"), ("high", "High"), ("low", "Low"), ("close", "Close")]:
+        if lc in df.columns and tc not in df.columns:
+            df.rename(columns={lc: tc}, inplace=True)
     df = df.dropna(subset=["timestamp", "High", "Low", "Close", "volume"])
     df = df.sort_values("timestamp").reset_index(drop=True)
     print(f"[Patch v28.2.6] ✅ Sanitize timestamp success – {len(df)} rows")
@@ -215,7 +209,7 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
     trades = pd.read_csv(trade_log_path)
     if "tp2_hit" not in trades.columns:
         logger.warning(
-            "[Patch QA-FIX v28.2.4] ไม่พบ tp2_hit ใน trade log → สร้าง tp2_hit ใหม่ (False)"
+            "[generate_ml_dataset_m1] Missing tp2_hit → set all False"
         )
         trades["tp2_hit"] = False
     # [Patch v28.2.8] บาง trade อาจมี entry_time เป็น '0' จาก ensure_buy_sell – แปลงแบบปลอดภัย
@@ -268,4 +262,4 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
     if out_dir:
         os.makedirs(out_dir, exist_ok=True)
     df.to_csv(out_path, index=False)
-    print(f"[Patch v28.2.6] ✅ Saved ML dataset to {out_path}")
+    logger.info(f"[generate_ml_dataset_m1] Saved ML dataset → {out_path}")
