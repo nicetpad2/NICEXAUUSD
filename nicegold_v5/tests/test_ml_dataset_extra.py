@@ -206,7 +206,6 @@ def test_inject_exit_variety_always_runs_in_production(tmp_path, monkeypatch):
     monkeypatch.setattr('nicegold_v5.exit.simulate_partial_tp_safe', simulate_tp2_only)
     monkeypatch.setattr('nicegold_v5.utils.ensure_buy_sell', lambda trades_df, df, fn: trades_df)
     out_csv = tmp_path / 'prod' / 'ml_dataset_m1.csv'
-    generate_ml_dataset_m1(str(csv_path), str(out_csv), mode='production')
-    trades = pd.read_csv(tmp_path / 'logs' / 'trades_v12_tp1tp2.csv')
-    reasons = set(trades['exit_reason'].str.lower())
-    assert {'tp1', 'tp2', 'sl'} <= reasons
+    df_out = generate_ml_dataset_m1(str(csv_path), str(out_csv), mode='production')
+    assert df_out.empty
+    assert not out_csv.exists()

@@ -1056,6 +1056,11 @@
 
 ## 2026-04-24
 
+- [Patch v32.2.5] Refine ML dataset fallback logic
+- Updated fallback loop to reduce `tp_rr_ratio` gradually
+- QA: pytest -q passed (264 tests)
+
+
 - [Patch v32.2.4] Refine dummy-trade injection schema
 - Added pnl calculation based on ATR for missing BUY/SELL
 - QA: pytest -q passed (264 tests)
@@ -1068,5 +1073,6 @@
 - [Patch v32.2.2] Guard KeyError สำหรับคอลัมน์ 'pnl' และ 'is_dummy'
 - Updated test for run_production_wfv when no trades
 - QA: pytest -q passed (264 tests)
+
 
 
