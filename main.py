@@ -1002,8 +1002,14 @@ def run_production_wfv():
         strategy_name="ProdA",
     )
 
-    n_real = len(df_trades[df_trades["is_dummy"] == False])
-    total_pnl = df_trades.loc[df_trades["is_dummy"] == False, "pnl"].sum()
+    # [Patch v32.2.2] Guard กรณีไม่มีคอลัมน์ 'is_dummy' หรือ 'pnl'
+    if df_trades.empty or "is_dummy" not in df_trades.columns or "pnl" not in df_trades.columns:
+        n_real = 0
+        total_pnl = 0.0
+    else:
+        n_real = len(df_trades[df_trades["is_dummy"] == False])
+        total_pnl = df_trades.loc[df_trades["is_dummy"] == False, "pnl"].sum()
+
     logger.info(
         "[run_production_wfv] สรุปหลัง WFV: Real Trades = %d, Total PnL = %.2f USD",
         n_real,

@@ -1053,3 +1053,8 @@
 - [Patch v32.3.2] Ensure `is_dummy` column exists when no trades
 - Prevent KeyError in `run_production_wfv`
 - QA: pytest -q passed (264 tests)
+
+## 2026-04-24
+- [Patch v32.2.2] Guard KeyError สำหรับคอลัมน์ 'pnl' และ 'is_dummy'
+- Updated test for run_production_wfv when no trades
+- QA: pytest -q passed (264 tests)
