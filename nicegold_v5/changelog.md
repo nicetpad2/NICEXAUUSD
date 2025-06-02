@@ -887,3 +887,7 @@
   - เพิ่ม Logging, Config via YAML, และ Unit/Integration Tests ครบถ้วน
   - ปรับระดับ Log Level, ลด log ยิบย่อย
   - รองรับ path สัมพัทธ์ (data/, logs/)
+## 2026-04-02
+- ปรับ `auto_fix_logic` ให้ใช้ `get` ในการตรวจ `exit_variety_insufficient`
+- เพิ่ม metric `exit_variety_insufficient` ใน `run_self_diagnostic`
+- อัปเดต unit tests ใน `test_fix_engine.py`

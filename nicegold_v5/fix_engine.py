@@ -4,6 +4,18 @@ import pandas as pd
 import numpy as np
 import logging
 
+logger = logging.getLogger(__name__)
+
+
+def _exit_variety_insufficient(trades_df: pd.DataFrame,
+                               require=("tp1", "tp2", "sl")) -> bool:
+    """Check if exit_reason variety is insufficient."""
+    reasons = trades_df.get("exit_reason", pd.Series(dtype=str)).astype(str).str.lower()
+    found = set(reasons)
+    if "tp" in found:
+        found.update({"tp1", "tp2"})
+    return not set(require).issubset(found)
+
 # [Patch v12.3.7+] – รวม Unified Patch + AutoFix WFV + AutoRiskAdjust
 # ----------------------------------------------------------------------
 # ✅ รวม Patch v12.3.5–v12.3.7
@@ -27,6 +39,7 @@ def run_self_diagnostic(trades_df: pd.DataFrame, df: pd.DataFrame) -> dict:
     }
     summary["tp_rate"] = (summary["tp1_count"] + summary["tp2_count"]) / (summary["total_trades"] + 1e-9)
     summary["sl_rate"] = summary["sl_count"] / (summary["total_trades"] + 1e-9)
+    summary["exit_variety_insufficient"] = _exit_variety_insufficient(trades_df)
 
     print("\n📊 [Self-Diagnostic Report] Summary:")
     for k, v in summary.items():
@@ -38,6 +51,10 @@ def run_self_diagnostic(trades_df: pd.DataFrame, df: pd.DataFrame) -> dict:
 def auto_fix_logic(summary: dict, config: dict, session: str = None) -> dict:
     """แก้ไข config อัตโนมัติ หากเจอ TP = 0 หรือ SL เยอะ"""
     new_config = config.copy()
+
+    if summary.get("exit_variety_insufficient", False):
+        new_config["tp1_rr_ratio"] = 1.2
+        logger.info("[auto_fix_logic] Adjusted tp1_rr_ratio → 1.2")
 
     if summary["tp1_count"] == 0 and summary["tp2_count"] == 0:
         print("\n[Patch Fix] ❗ TP1/TP2 = 0 → ลด TP1 RR จาก 1.5 → 1.2, TP2 delay เหลือ 10 นาที")

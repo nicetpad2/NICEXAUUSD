@@ -903,3 +903,6 @@
   - เพิ่ม Logging, Config via YAML, และ Unit/Integration Tests ครบถ้วน
   - ปรับระดับ Log Level, ลด log ยิบย่อย
   - รองรับ path สัมพัทธ์ (data/, logs/)
+### 2026-04-02
+- [Patch] ปรับ `auto_fix_logic` ใช้ `get` ตรวจ `exit_variety_insufficient` ป้องกัน KeyError
+- เพิ่ม metric `exit_variety_insufficient` ใน `run_self_diagnostic` และอัปเดต unit test
