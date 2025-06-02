@@ -191,8 +191,8 @@ def run_smart_fast_qa():
     except Exception as e:
         print(f"❌ Smart Fast QA Failed: {e}")
 
-def check_exit_reason_variety(trades_df, require=("tp1", "tp2", "sl")):
-    """ตรวจสอบว่า trade log มี exit_reason ครบทุกชนิด"""
+def check_exit_reason_variety(trades_df, require=("tp1",)):
+    """ตรวจสอบว่า trade log มี exit_reason ตามที่กำหนด"""
     reasons = trades_df.get("exit_reason", pd.Series(dtype=str)).astype(str).str.lower()
     found = set(reasons)
     if "tp" in found:

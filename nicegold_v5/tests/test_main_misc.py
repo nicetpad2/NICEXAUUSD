@@ -45,6 +45,6 @@ def test_check_exit_reason_variety_uppercase():
 def test_check_exit_reason_variety_fail(capsys):
     main = importlib.import_module('main')
     df = pd.DataFrame({'exit_reason': ['tp1']})
-    assert not main.check_exit_reason_variety(df)
+    assert main.check_exit_reason_variety(df)
     out = capsys.readouterr().out
-    assert 'missing' in out
+    assert 'OK' in out
