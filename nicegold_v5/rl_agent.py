@@ -1,40 +1,111 @@
+import itertools
 import numpy as np
 import pandas as pd
 
 class RLScalper:
     """Simple Q-learning agent for scalping."""
 
-    def __init__(self, lr: float = 0.1, gamma: float = 0.95, eps: float = 0.1):
-        self.lr = lr
+    def __init__(
+        self,
+        state_space: list | None = None,
+        action_space: list | None = None,
+        alpha: float = 0.1,
+        gamma: float = 0.9,
+        epsilon: float = 0.1,
+    ) -> None:
+        """Initialize the RL agent.
+
+        Parameters
+        ----------
+        state_space : list | None
+            Iterable of possible states. Defaults to ``[0, 1]`` for backward
+            compatibility.
+        action_space : list | None
+            Iterable of possible actions. Defaults to ``[0, 1]`` which maps to
+            ``buy`` and ``sell``.
+        alpha : float
+            Learning rate.
+        gamma : float
+            Discount factor.
+        epsilon : float
+            Probability of choosing a random action.
+        """
+
+        if action_space is None:
+            action_space = [0, 1]
+        if state_space is None:
+            state_space = [0, 1]
+
+        self.action_space = action_space
+        self.state_space = state_space
+        # Initialize Q-table for every state/action pair
+        self.q_table: dict[tuple, list[float]] = {
+            state: [0.0 for _ in action_space] for state in state_space
+        }
+        self.alpha = alpha
         self.gamma = gamma
-        self.eps = eps
-        self.q_table: dict[int, np.ndarray] = {}
+        self.epsilon = epsilon
 
     def _state(self, row: pd.Series) -> int:
         # 0 = price down, 1 = price up
         return int(row.get("close", 0) > row.get("open", 0))
 
-    def act(self, state: int) -> int:
-        if np.random.rand() < self.eps or state not in self.q_table:
-            return np.random.choice([0, 1])  # 0 buy, 1 sell
-        return int(np.argmax(self.q_table[state]))
+    @staticmethod
+    def generate_all_states(indicators: dict) -> list:
+        """Return all possible state tuples given indicator options."""
+        keys = list(indicators.keys())
+        values = [indicators[k] for k in keys]
+        combinations = list(itertools.product(*values))
+        return [tuple(comb) for comb in combinations]
 
-    def update(self, state: int, action: int, reward: float, next_state: int) -> None:
-        self.q_table.setdefault(state, np.zeros(2))
-        self.q_table.setdefault(next_state, np.zeros(2))
-        best_next = np.max(self.q_table[next_state])
-        old = self.q_table[state][action]
-        self.q_table[state][action] = old + self.lr * (reward + self.gamma * best_next - old)
+    def choose_action(self, state) -> int:
+        """Choose action using epsilon-greedy policy."""
+        if np.random.rand() < self.epsilon:
+            return np.random.choice(self.action_space)
+        return self.action_space[int(np.argmax(self.q_table[state]))]
 
-    def train(self, df: pd.DataFrame) -> dict:
+    def update_q(self, state, action, reward: float, next_state) -> None:
+        """Update Q-table using the Q-learning update rule."""
+        a_idx = self.action_space.index(action)
+        next_max = max(self.q_table[next_state])
+        current = self.q_table[state][a_idx]
+        self.q_table[state][a_idx] = current + self.alpha * (
+            reward + self.gamma * next_max - current
+        )
+
+    def _get_reward(self, row: pd.Series, action) -> float:
+        """Simple reward function based on next price movement."""
+        price_diff = row.get("close", 0) - row.get("open", 0)
+        return price_diff if action == 0 else -price_diff
+
+    def act(self, state):  # backward compatibility
+        return self.choose_action(state)
+
+    def update(self, state, action, reward, next_state):  # backward compatibility
+        self.update_q(state, action, reward, next_state)
+
+    def train(self, df: pd.DataFrame, indicators: dict | None = None) -> dict:
+        """Train Q-table using provided dataframe."""
         df = df.reset_index(drop=True)
-        for i in range(len(df) - 1):
-            row = df.iloc[i]
-            next_row = df.iloc[i + 1]
-            state = self._state(row)
-            next_state = self._state(next_row)
-            action = self.act(state)
-            price_diff = next_row.get("close", 0) - row.get("close", 0)
-            reward = price_diff if action == 0 else -price_diff
-            self.update(state, action, reward, next_state)
+        if indicators:
+            self.state_space = self.generate_all_states(indicators)
+            self.q_table = {
+                state: [0.0 for _ in self.action_space] for state in self.state_space
+            }
+            for _, row in df.iterrows():
+                state = tuple(row[k] for k in indicators.keys())
+                action = self.choose_action(state)
+                reward = self._get_reward(row, action)
+                next_state = state
+                self.update_q(state, action, reward, next_state)
+        else:
+            for i in range(len(df) - 1):
+                row = df.iloc[i]
+                next_row = df.iloc[i + 1]
+                state = self._state(row)
+                next_state = self._state(next_row)
+                action = self.choose_action(state)
+                price_diff = next_row.get("close", 0) - row.get("close", 0)
+                reward = price_diff if action == 0 else -price_diff
+                self.update_q(state, action, reward, next_state)
         return self.q_table
