@@ -961,6 +961,10 @@
 - เพิ่มคำเตือนใน `summarize_fold` เมื่อขาดคอลัมน์ `exit_reason`
 - ปรับ `detect_fold_drift` ให้รับ DataFrame และคำนวณสัดส่วน std ต่อ mean
 
+### 2026-04-05
+- แก้คำเตือน scikit-learn ใน `MetaClassifier.predict` โดยส่ง DataFrame เข้า `predict_proba`
+
+
 
 
 
