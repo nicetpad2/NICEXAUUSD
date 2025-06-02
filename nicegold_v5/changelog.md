@@ -1055,6 +1055,12 @@
 - QA: pytest -q passed (264 tests)
 
 ## 2026-04-24
-- [Patch v32.2.2] Improve pass_filters & DataFrame schema when no trades
+
+- [Patch v32.2.3] Improve pass_filters & DataFrame schema when no trades
 - Added tests for pass_filters and run_walkforward_backtest empty case
 - QA: pytest -q passed (266 tests)
+=======
+- [Patch v32.2.2] Guard KeyError สำหรับคอลัมน์ 'pnl' และ 'is_dummy'
+- Updated test for run_production_wfv when no trades
+- QA: pytest -q passed (264 tests)
+
