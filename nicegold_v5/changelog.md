@@ -1043,3 +1043,8 @@
   - main.py รองรับ fallback จนครบสามขั้น
   - backtester เริ่มต้นทุน 10,000 และอ่าน close แบบยืดหยุ่น
   - บันทึก equity_summary ต่อ fold ใน wfv.py
+
+## 2026-04-22
+- [Patch v32.2.1] Fix pass_filters timestamp handling
+- Updated unit tests for wfv
+- QA: pytest -q passed (264 tests)

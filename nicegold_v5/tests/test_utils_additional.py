@@ -75,10 +75,10 @@ def test_load_data_missing(tmp_path):
 
 def test_pass_filters():
     ts = pd.Timestamp('2024-01-01 09:00')
-    row = pd.Series({'EMA_50_slope': 1.0, 'ATR_14': 1, 'ATR_14_MA50': 1.0}, name=ts)
+    row = pd.Series({'timestamp': ts, 'EMA_50_slope': 1.0, 'ATR_14': 1, 'ATR_14_MA50': 1.0})
     assert wfv.pass_filters(row)
 
-    row_bad = pd.Series({'EMA_50_slope': -1.0, 'ATR_14': 10, 'ATR_14_MA50': 1.0}, name=ts)
+    row_bad = pd.Series({'timestamp': ts, 'EMA_50_slope': -1.0, 'ATR_14': 10, 'ATR_14_MA50': 1.0})
     assert not wfv.pass_filters(row_bad)
 
 
