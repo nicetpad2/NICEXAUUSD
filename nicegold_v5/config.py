@@ -62,9 +62,17 @@ def ensure_order_side_enabled(cfg: dict) -> dict:
 
 # [Patch v32.2.0] Default Paths Section
 PATHS = {
-    "m1_csv": os.getenv("M1_CSV_PATH", os.path.join(os.path.dirname(__file__), "..", "XAUUSD_M1.csv")),
-    "trade_logs": os.getenv("TRADE_LOG_DIR", os.path.join(os.path.dirname(__file__), "..", "logs")),
-    "models": os.getenv("MODEL_DIR", os.path.join(os.path.dirname(__file__), "..", "models")),
+    # [Patch v32.2.1] เปลี่ยนค่าเริ่มต้นให้ชี้ไปที่โฟลเดอร์ nicegold_v5
+    "m1_csv": os.getenv(
+        "M1_CSV_PATH",
+        os.path.join(os.path.dirname(__file__), "XAUUSD_M1.csv"),
+    ),
+    "trade_logs": os.getenv(
+        "TRADE_LOG_DIR", os.path.join(os.path.dirname(__file__), "..", "logs")
+    ),
+    "models": os.getenv(
+        "MODEL_DIR", os.path.join(os.path.dirname(__file__), "..", "models")
+    ),
 }
 
 # [Patch v8.1.5] Default Sniper Config สำหรับใช้ใน main.py menu 4

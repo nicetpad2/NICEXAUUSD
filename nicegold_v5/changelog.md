@@ -1009,3 +1009,7 @@
 - utils ปรับ `QA_BASE_PATH` รับจาก env, `inject_exit_variety` แปลง timestamp
 - backtester/wfv เปลี่ยน TRADE_DIR เป็น PATHS และ export audit report
 - optuna_tuner บันทึก `optuna_best_config.json` ใน PATHS['models'] และเตรียมโฟลเดอร์ data
+
+## 2026-04-15
+- [Patch v32.2.1] แก้ default `PATHS['m1_csv']` ชี้ไปที่ `nicegold_v5/XAUUSD_M1.csv`
+- ป้องกัน RuntimeError ไม่พบไฟล์ CSV เมื่อติดตั้งผ่านโฟลเดอร์
