@@ -1118,3 +1118,10 @@
   - slice window with sorted dates and fallback if index missing
   - added unit test `test_build_trade_log_missing_index`
   - QA: pytest -q passed (272 tests)
+
+### 2026-05-06
+- [Patch v34.4.0] GPU backtest wrapper
+  - added `gpu_strategy.py` implementing simplified order logic from gold ai gpu
+  - exported `run_gpu_backtest` in `__init__.py`
+  - added unit test `test_gpu_strategy_stub`
+  - QA: pytest -q passed (273 tests)

@@ -220,3 +220,6 @@
 
 ---
 
+
+### 2026-05-06
+- **CHANGELOG:** Added v34.4.0 GPU backtest wrapper.
