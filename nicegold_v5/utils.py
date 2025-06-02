@@ -268,10 +268,23 @@ M15_PATH = "data/XAUUSD_M15.csv"
 
 
 def sanitize_price_columns(df: pd.DataFrame) -> pd.DataFrame:
-    """แปลงคอลัมน์ราคาให้เป็น float และเติมค่า 0 เมื่อแปลงไม่ได้"""
-    for col in ["open", "high", "low", "close", "volume"]:
+    """แปลงคอลัมน์ราคาทั้งหมดเป็น float และ log รายงาน"""
+    for col in ["close", "high", "low", "open", "volume"]:
         if col in df.columns:
-            df[col] = pd.to_numeric(df[col].astype(str).str.replace(",", ""), errors="coerce").fillna(0.0)
+            series = df[col].astype(str).str.replace(",", "", regex=False).str.strip()
+            df[col] = pd.to_numeric(series, errors="coerce")
+
+    # [Patch v25.0.0] Auto-fix volume NaN/0 → 1.0 ทุกกรณี
+    if "volume" in df.columns:
+        if df["volume"].isnull().mean() > 0.95 or (df["volume"] == 0).mean() > 0.95:
+            print("[Patch v25.0.0] ⚠️ volume เป็น NaN/0 เกือบหมด – เติมเป็น 1.0 อัตโนมัติ")
+            df["volume"] = 1.0
+
+    cols_to_check = [c for c in ["close", "high", "low", "volume"] if c in df.columns]
+    missing = df[cols_to_check].isnull().sum()
+    print("[Patch v11.9.16] 🧼 Sanitize Columns:")
+    for col, count in missing.items():
+        print(f"   ▸ {col}: {count} NaN")
     return df
 
 
@@ -674,49 +687,32 @@ def merge_equity_curves(equity_lists: list[pd.DataFrame], n_folds: int) -> pd.Da
     return df_merged
 
 
-def convert_thai_datetime(df: pd.DataFrame) -> pd.DataFrame:
-    """Convert Thai Date+Timestamp columns in Buddhist Era to ``timestamp``.
-
-    รองรับคอลัมน์ทั้งตัวพิมพ์ใหญ่และพิมพ์เล็ก (Patch v11.9.23).
-    """
-
-    cols_upper = {"Date", "Timestamp"}
-    cols_lower = {"date", "timestamp"}
-
-    if cols_upper.issubset(df.columns):
-        print("[Patch v11.9.18] 📅 ตรวจพบ Date + Timestamp แบบ พ.ศ. – กำลังแปลง...")
-        date_col = "Date"
-        ts_col = "Timestamp"
-    elif cols_lower.issubset(df.columns):
-        print(
-            "[Patch v11.9.23] 📅 ตรวจพบ date/timestamp แบบ พ.ศ. (lowercase) – กำลังแปลง..."
-        )
-        date_col = "date"
-        ts_col = "timestamp"
+def convert_thai_datetime(df_or_series, format: str = "%Y-%m-%d %H:%M:%S"):
+    """แปลง Date พ.ศ. และ Timestamp แบบไทย ให้เป็น ``datetime64[ns]``"""
+    if isinstance(df_or_series, pd.Series):
+        try:
+            return pd.to_datetime(df_or_series, format=format, errors="coerce")
+        except Exception:
+            return pd.to_datetime(df_or_series, errors="coerce")
     else:
+        df = df_or_series.copy()
+        cols_upper = {"Date", "Timestamp"}
+        cols_lower = {"date", "timestamp"}
+        if cols_upper.issubset(df.columns):
+            df["year"] = df["Date"].astype(str).str[:4].astype(int) - 543
+            df["month"] = df["Date"].astype(str).str[4:6]
+            df["day"] = df["Date"].astype(str).str[6:8]
+            df["datetime_str"] = df["year"].astype(str) + "-" + df["month"] + "-" + df["day"] + " " + df["Timestamp"].astype(str)
+            df["timestamp"] = pd.to_datetime(df["datetime_str"], format=format, errors="coerce")
+            return df
+        if cols_lower.issubset(df.columns):
+            df["year"] = df["date"].astype(str).str[:4].astype(int) - 543
+            df["month"] = df["date"].astype(str).str[4:6]
+            df["day"] = df["date"].astype(str).str[6:8]
+            df["datetime_str"] = df["year"].astype(str) + "-" + df["month"] + "-" + df["day"] + " " + df["timestamp"].astype(str)
+            df["timestamp"] = pd.to_datetime(df["datetime_str"], format=format, errors="coerce")
+            return df
         return df
-
-    try:
-        df["year"] = df[date_col].astype(str).str[:4].astype(int) - 543
-        df["month"] = df[date_col].astype(str).str[4:6]
-        df["day"] = df[date_col].astype(str).str[6:8]
-        df["datetime_str"] = (
-            df["year"].astype(str)
-            + "-"
-            + df["month"]
-            + "-"
-            + df["day"]
-            + " "
-            + df[ts_col].astype(str)
-        )
-        df["timestamp"] = pd.to_datetime(
-            df["datetime_str"], format="%Y-%m-%d %H:%M:%S", errors="coerce"
-        )
-        print("[Patch v11.9.18] ✅ แปลง Date พ.ศ. → timestamp สำเร็จ")
-    except Exception as e:
-        print(f"[Patch v11.9.18] ❌ แปลง timestamp ล้มเหลว: {e}")
-
-    return df
 
 
 def parse_timestamp_safe(ts_series: pd.Series, fmt: str = "%Y-%m-%d %H:%M:%S", **kwargs) -> pd.Series:

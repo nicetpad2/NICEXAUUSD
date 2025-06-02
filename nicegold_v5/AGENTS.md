@@ -982,3 +982,8 @@
 - [Patch v32.1.3] ปรับ `wfv.py` ให้เรียก `inject_exit_variety` และ `ensure_buy_sell` ทุก Fold
   เพิ่มฟังก์ชัน `run_autofix_wfv` แบบ session-based และเรียก `run_qa_guard`
 
+### 2026-04-10
+- [Patch v32.1.4] ปรับปรุง `sanitize_price_columns` และ `convert_thai_datetime`
+  - รองรับการแปลงคอลัมน์ราคาพร้อม log รายละเอียด
+  - เพิ่มการแปลง Date พ.ศ. เป็นค.ศ. รองรับ Series และคอลัมน์ตัวพิมพ์เล็ก
+

@@ -1279,7 +1279,7 @@ def test_prepare_csv_auto(monkeypatch):
         'volume': ['1', '1'],
     })
     monkeypatch.setattr(main, 'load_csv_safe', lambda p: df)
-    monkeypatch.setattr(main, 'convert_thai_datetime', lambda d: d)
+    monkeypatch.setattr('nicegold_v5.utils.convert_thai_datetime', lambda d: d)
     monkeypatch.setattr(main, 'parse_timestamp_safe', lambda s, fmt: pd.to_datetime(s))
     monkeypatch.setattr(main, 'sanitize_price_columns', lambda d: d)
     monkeypatch.setattr(main, 'validate_indicator_inputs', lambda df, required_cols=None, min_rows=500: None)
