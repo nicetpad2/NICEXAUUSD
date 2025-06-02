@@ -915,5 +915,13 @@
 - ปรับ simulate_partial_tp_safe ให้ใช้ logger.warning แทน print และบังคับ QA Inject TP2 ทุกกรณีเมื่อ MFE ถึงครึ่งทาง
 
 ### 2026-04-03
+
 - [Patch v32.0.8] ปรับ RLScalper ให้กำหนด state-space ตาม indicators แบบ sorted และเพิ่มฟังก์ชัน save/load Q-table
+
+
+- [Patch v32.0.8] ปรับ config.py ให้โหลด defaults.yaml พร้อมตรวจข้อผิดพลาด และผสานค่าจากไฟล์ ENV แบบ nested
+
+- [Patch v32.0.8] ปรับ generate_ml_dataset_m1 ให้เรียก `sanitize_price_columns` จาก utils
+  ใช้ลูปเปลี่ยนชื่อคอลัมน์ราคาเป็นตัวพิมพ์ใหญ่ และบันทึกไฟล์ด้วย `logger.info`
+
 

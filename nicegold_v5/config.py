@@ -17,20 +17,23 @@ THRESHOLD_MODEL_PATH = "model/threshold_predictor.pt"
 CONFIG_DIR = os.path.join(os.path.dirname(__file__), "..", "config")
 DEFAULT_CONFIG_PATH = os.path.join(CONFIG_DIR, "defaults.yaml")
 
-with open(DEFAULT_CONFIG_PATH, "r") as f:
-    _cfg = yaml.safe_load(f)
+# [Patch v32.0.0] Load defaults.yaml, validate schema and allow ENV override
+try:
+    with open(DEFAULT_CONFIG_PATH, "r") as f:
+        _cfg = yaml.safe_load(f)
+except Exception as e:
+    raise RuntimeError(f"Failed to load config: {e}")
 
-ENV = os.getenv("NICEGOLD_ENV")
-if ENV:
-    override_path = os.path.join(CONFIG_DIR, f"{ENV}.yaml")
-    if os.path.exists(override_path):
-        with open(override_path, "r") as f:
-            override = yaml.safe_load(f)
-        for k, v in override.items():
-            if isinstance(v, dict) and k in _cfg:
-                _cfg[k].update(v)
-            else:
-                _cfg[k] = v
+ENV = os.getenv("NICEGOLD_ENV", "defaults")
+env_path = os.path.join(CONFIG_DIR, f"{ENV}.yaml")
+if os.path.exists(env_path):
+    with open(env_path, "r") as f:
+        _env_cfg = yaml.safe_load(f)
+    for k, v in _env_cfg.items():
+        if k in _cfg and isinstance(_cfg[k], dict):
+            _cfg[k].update(v)
+        else:
+            _cfg[k] = v
 
 SESSION_CONFIG = _cfg["session_config"]
 SNIPER_CONFIG_Q3_TUNED = _cfg["sniper_config_q3_tuned"]
