@@ -921,3 +921,5 @@
 - [Patch v32.0.0] ปรับ backtester.kill_switch แจ้งเตือนเมื่อ equity_curve ว่าง
 
 
+### 2026-04-02
+- ปรับ calc_lot รองรับ dict และป้องกัน sl_pips <=0 เพิ่ม qa_pnl_multiplier ใน run_backtest และลด kill_switch

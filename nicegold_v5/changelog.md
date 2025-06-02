@@ -905,3 +905,6 @@
 - [Patch v32.0.0] kill_switch logs warning when equity curve is empty
 
 
+## 2026-04-02
+- อัพเดต calc_lot ให้รับ dict และป้องกัน sl_pips ผิดค่า
+- เพิ่มพารามิเตอร์ qa_mode ใน run_backtest และลดค่า drawdown ใน kill_switch
