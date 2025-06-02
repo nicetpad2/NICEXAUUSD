@@ -978,3 +978,7 @@
 - [Patch v32.1.2] ปรับปรุง `fix_engine` นำ `ensure_order_side_enabled` เข้า `auto_fix_logic`
   และปรับ `autorisk_adjust` ให้ใช้ `deepcopy` พร้อมลดเงื่อนไขเหลือเฉพาะ TP rate
 
+### 2026-04-09
+- [Patch v32.1.3] ปรับ `wfv.py` ให้เรียก `inject_exit_variety` และ `ensure_buy_sell` ทุก Fold
+  เพิ่มฟังก์ชัน `run_autofix_wfv` แบบ session-based และเรียก `run_qa_guard`
+

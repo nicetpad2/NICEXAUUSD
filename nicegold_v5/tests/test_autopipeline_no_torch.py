@@ -21,7 +21,7 @@ def test_autopipeline_no_torch(monkeypatch, tmp_path, capsys):
     monkeypatch.setattr(main, 'sanitize_price_columns', lambda d: d)
     monkeypatch.setattr(main, 'validate_indicator_inputs', lambda *a, **k: None)
     monkeypatch.setattr(main, 'generate_signals', lambda df, config=None, **kw: df.assign(entry_signal=['long']*len(df)))
-    monkeypatch.setattr('nicegold_v5.utils.run_autofix_wfv', lambda df, sim, cfg, n_folds=5: pd.DataFrame({'pnl':[0.0], 'exit_reason':['tp1']}))
+    monkeypatch.setattr('nicegold_v5.utils.run_autofix_wfv', lambda df, sim, cfg: pd.DataFrame({'pnl':[0.0], 'exit_reason':['tp1']}))
     monkeypatch.setattr(main, 'check_exit_reason_variety', lambda df: True)
     plan = {
         'device': 'cpu',
