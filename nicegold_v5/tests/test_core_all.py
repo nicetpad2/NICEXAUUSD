@@ -391,8 +391,8 @@ def test_autorisk_adjust():
     summary = {"tp_rate": 0.1, "sl_rate": 0.5, "net_pnl": -1.0}
     new_cfg = autorisk_adjust(cfg, summary)
     assert new_cfg["tp1_rr_ratio"] == 1.2
-    assert new_cfg["atr_multiplier"] == 1.6
-    assert new_cfg["enable_be"] and new_cfg["enable_trailing"] and new_cfg["use_dynamic_tsl"]
+    assert new_cfg["atr_multiplier"] == 1.0
+    assert "enable_be" not in new_cfg
 
 
 def test_run_autofix_wfv(tmp_path):

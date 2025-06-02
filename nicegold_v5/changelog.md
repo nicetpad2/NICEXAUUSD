@@ -977,3 +977,7 @@
 ## 2026-04-07
 - [Patch v32.1.1] ปรับ fallback force_entry และตรวจพารามิเตอร์ใน predict_thresholds ด้วย inspect
 
+## 2026-04-08
+- [Patch v32.1.2] ปรับปรุง fix_engine ให้เรียกใช้ ensure_order_side_enabled ใน auto_fix_logic
+  และลดเงื่อนไขใน autorisk_adjust ใช้ deepcopy
+

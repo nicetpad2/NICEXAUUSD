@@ -974,3 +974,7 @@
 ### 2026-04-07
 - [Patch v32.1.1] ปรับ fallback force_entry กลับก่อนคำนวณเงื่อนไขและตรวจ param ด้วย inspect
 
+### 2026-04-08
+- [Patch v32.1.2] ปรับปรุง `fix_engine` นำ `ensure_order_side_enabled` เข้า `auto_fix_logic`
+  และปรับ `autorisk_adjust` ให้ใช้ `deepcopy` พร้อมลดเงื่อนไขเหลือเฉพาะ TP rate
+
