@@ -884,3 +884,6 @@
 ### 2026-03-29
 - [Patch v32.0.6] ปรับ RLScalper ให้รองรับ state-space จาก indicators และสร้าง generate_all_states
 
+
+### 2026-03-30
+- เพิ่ม integration test สำหรับ WFV และ ML/RL pipeline

@@ -866,3 +866,6 @@
 ## 2026-03-29
 - [Patch v32.0.6] RLScalper now supports indicator-based state space generation and epsilon-greedy updates
 
+
+## 2026-03-30
+- Added integration tests for WFV and ML/RL pipelines
