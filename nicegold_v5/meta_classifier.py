@@ -29,7 +29,7 @@ class MetaClassifier:
                 logger.warning(f"[MetaClassifier] Missing feature {feat} → fill 0")
                 df[feat] = 0
 
-        X = df[self.FEATURES].values
+        X = df[self.FEATURES]
         if self.model is None:
             return np.zeros(len(df))
         proba = self.model.predict_proba(X)

@@ -964,6 +964,10 @@
 ## 2026-04-04
 - ย้าย `apply_order_costs` และ `ensure_buy_sell` ไปที่ utils และเพิ่ม wrapper ใน wfv
 
+## 2026-04-05
+- แก้คำเตือน scikit-learn ใน `MetaClassifier.predict` ให้ไม่แสดง Warning
+
+
 
 
 
