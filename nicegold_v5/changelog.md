@@ -1053,3 +1053,8 @@
 - [Patch v32.3.2] Ensure `is_dummy` column exists when no trades
 - Prevent KeyError in `run_production_wfv`
 - QA: pytest -q passed (264 tests)
+
+## 2026-04-24
+- [Patch v32.2.2] Improve pass_filters & DataFrame schema when no trades
+- Added tests for pass_filters and run_walkforward_backtest empty case
+- QA: pytest -q passed (266 tests)

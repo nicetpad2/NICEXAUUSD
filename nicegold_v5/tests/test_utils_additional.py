@@ -82,6 +82,17 @@ def test_pass_filters():
     assert not wfv.pass_filters(row_bad)
 
 
+def test_pass_filters_nat_and_int_index():
+    ts = pd.NaT
+    row = pd.Series({'timestamp': ts, 'EMA_50_slope': 1.0, 'ATR_14': 1, 'ATR_14_MA50': 1.0})
+    assert not wfv.pass_filters(row)
+
+    ts2 = pd.Timestamp('2024-01-01 10:00')
+    row2 = pd.Series({'timestamp': ts2, 'EMA_50_slope': 1.0, 'ATR_14': 1, 'ATR_14_MA50': 1.0})
+    row2.name = 5
+    assert wfv.pass_filters(row2)
+
+
 def test_plot_equity(monkeypatch):
     df = pd.DataFrame({'equity_total': [10000, 10050]}, index=pd.date_range('2024-01-01', periods=2, freq='h'))
     called = {'show': False}
