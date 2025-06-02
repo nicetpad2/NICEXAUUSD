@@ -971,3 +971,6 @@
 
 
 
+### 2026-04-07
+- [Patch v32.1.1] ปรับ fallback force_entry กลับก่อนคำนวณเงื่อนไขและตรวจ param ด้วย inspect
+
