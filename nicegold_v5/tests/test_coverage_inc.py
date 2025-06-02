@@ -75,8 +75,8 @@ def test_analyze_drawdown_no_equity():
 
 
 def test_detect_fold_drift_insufficient():
-    df = detect_fold_drift([{'winrate':50, 'avg_pnl':1, 'sl_count':1}])
-    assert df.empty
+    result = detect_fold_drift(pd.DataFrame())
+    assert result['pnl_std'] == 0
 
 
 def test_auto_qa_after_backtest_empty(monkeypatch, capsys, tmp_path):

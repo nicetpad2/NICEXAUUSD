@@ -943,3 +943,8 @@
 ## 2026-04-04
 - [Patch v32.0.9] entry.generate_signals logs force_entry via module logger
 - [Patch v32.0.9] generate_signals_v12_0 now wraps generate_signals for new main.py
+=======
+## 2026-04-04
+- ปรับปรุง `qa.py` เพิ่ม logger และปรับฟังก์ชันตรวจ bias/drift
+
+

@@ -21,7 +21,7 @@ def sample_trades():
         'pnl': [1.0, -0.5, 0.2],
         'mfe': [1.0, 0.5, 5.0],
         'duration_min': [1, 3, 10],
-        'exit_reason': ['sl', 'sl', 'tp'],
+        'exit_reason': ['sl', 'sl', 'tp2'],
         '_id': [1, 2, 3],
         'entry_time': pd.date_range('2025-01-01', periods=3, freq='min'),
     })
@@ -77,10 +77,9 @@ def test_export_fold_qa(tmp_path):
 
 
 def test_detect_fold_drift():
-    stats1 = summarize_fold(sample_trades(), 'A')
-    stats2 = summarize_fold(sample_trades(), 'B')
-    df = detect_fold_drift([stats1, stats2])
-    assert not df.empty
+    trades = sample_trades()
+    result = detect_fold_drift(trades)
+    assert 'pct_std' in result
 
 
 def test_auto_qa_after_backtest(tmp_path, monkeypatch):
