@@ -9,6 +9,14 @@ if ROOT_DIR not in sys.path:
 import pandas as pd
 import gc
 import logging
+
+# [Patch v32.0.0] Setup structured logger
+logger = logging.getLogger("nicegold_v5.main")
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter("[%(asctime)s] %(levelname)s: %(message)s")
+handler = logging.StreamHandler()
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 import json  # [Patch v12.4.0] Added for JSON export
 from datetime import datetime
 from tqdm import tqdm, trange
