@@ -903,13 +903,21 @@
   - เพิ่ม Logging, Config via YAML, และ Unit/Integration Tests ครบถ้วน
   - ปรับระดับ Log Level, ลด log ยิบย่อย
 
+  - รองรับ path สัมพัทธ์ (data/, logs/)
+
+### 2026-04-02
+- [Patch v32.0.7] ปรับปรุง detect_session_auto ให้รับ dict หรือ timestamp และปรับช่วงเวลาเป็น 0-7 Asia, 8-14 London, 15-23 NY
+- ปรับ simulate_partial_tp_safe ให้ใช้ logger.warning แทน print และบังคับ QA Inject TP2 ทุกกรณีเมื่อ MFE ถึงครึ่งทาง
+=======
+
 ### 2026-04-02
 - ปรับ train_lstm_runner ตรวจสอบคอลัมน์ tp2_hit และบันทึกค่าพยากรณ์แต่ละ epoch
 
-=======
+
 
 ### 2026-04-02
 - [Patch v32.0.0] เพิ่ม structured logger ใน main.py
 - [Patch v32.0.0] ปรับ utils.load_data ให้โยน FileNotFoundError และ RuntimeError แทนการออกโปรแกรม
 - [Patch v32.0.0] ปรับ backtester.kill_switch แจ้งเตือนเมื่อ equity_curve ว่าง
+
 

@@ -1293,7 +1293,9 @@ def test_detect_session_auto():
     assert detect_session_auto(pd.Timestamp('2025-01-01 04:00')) == 'Asia'
     assert detect_session_auto(pd.Timestamp('2025-01-01 10:00')) == 'London'
     assert detect_session_auto(pd.Timestamp('2025-01-01 16:00')) == 'NY'
-    assert detect_session_auto(pd.Timestamp('2025-01-01 02:00')) == 'Unknown'
+    assert detect_session_auto(pd.Timestamp('2025-01-01 02:00')) == 'Asia'
+    # รองรับ dict input
+    assert detect_session_auto({'timestamp': pd.Timestamp('2025-01-01 20:00')}) == 'NY'
 
 
 def test_simulate_partial_tp_safe_session(monkeypatch):
@@ -1311,7 +1313,7 @@ def test_simulate_partial_tp_safe_session(monkeypatch):
     assert not trades.empty
     assert 'session' in trades.columns
     assert trades['session'].iloc[0] == 'London'
-    assert trades['exit_reason'].iloc[0] in {'tp1', 'sl'}
+    assert trades['exit_reason'].iloc[0] in {'tp1', 'tp2', 'sl'}
 
 
 def test_entry_simulate_partial_tp_safe_basic():
