@@ -917,6 +917,10 @@
 - [Patch v32.0.8] RLScalper can save/load Q-table and sorts indicator keys when generating states.
 
 
+
+## 2026-04-03
+- Updated optuna_tuner to use a module-specific logger and guard missing pattern_label/entry_score columns
+=======
 - [Patch v32.0.8] config.py now loads defaults.yaml with error handling and merges overrides from the selected environment
 
 
@@ -929,3 +933,4 @@
 ## 2026-04-02
 - อัพเดต calc_lot ให้รับ dict และป้องกัน sl_pips ผิดค่า
 - เพิ่มพารามิเตอร์ qa_mode ใน run_backtest และลดค่า drawdown ใน kill_switch
+
