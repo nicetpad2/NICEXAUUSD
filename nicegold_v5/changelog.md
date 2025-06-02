@@ -910,3 +910,7 @@
 - [Patch v32.0.0] kill_switch logs warning when equity curve is empty
 
 
+
+## 2026-04-03
+- [Patch v32.0.8] Updated `generate_ml_dataset_m1` to use utils.sanitize_price_columns, loop price column renaming, and log dataset save path.
+
