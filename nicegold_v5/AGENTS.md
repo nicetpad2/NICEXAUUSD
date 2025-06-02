@@ -916,3 +916,22 @@
 ### 2026-04-03
 - อัพเดต optuna_tuner ใช้ logger เฉพาะโมดูลและตรวจคอลัมน์ pattern_label/entry_score ก่อนรัน trial
 
+### 2026-04-03
+
+- ปรับปรุง `load_wfv_training_data` ข้ามไฟล์ว่างและแจ้ง error เมื่อไม่มี fold
+- เพิ่ม try/except ใน `predict_thresholds` ตรวจสอบการโหลดโมเดลและ state_dict
+
+=======
+
+- [Patch v32.0.8] ปรับ RLScalper ให้กำหนด state-space ตาม indicators แบบ sorted และเพิ่มฟังก์ชัน save/load Q-table
+
+
+- [Patch v32.0.8] ปรับ config.py ให้โหลด defaults.yaml พร้อมตรวจข้อผิดพลาด และผสานค่าจากไฟล์ ENV แบบ nested
+
+- [Patch v32.0.8] ปรับ generate_ml_dataset_m1 ให้เรียก `sanitize_price_columns` จาก utils
+  ใช้ลูปเปลี่ยนชื่อคอลัมน์ราคาเป็นตัวพิมพ์ใหญ่ และบันทึกไฟล์ด้วย `logger.info`
+
+
+### 2026-04-02
+- ปรับ calc_lot รองรับ dict และป้องกัน sl_pips <=0 เพิ่ม qa_pnl_multiplier ใน run_backtest และลด kill_switch
+
