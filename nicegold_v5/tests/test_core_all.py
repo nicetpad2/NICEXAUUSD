@@ -37,6 +37,7 @@ def sample_df():
 def sample_wfv_df():
     ts = pd.date_range('2024-01-01', periods=40, freq='h')
     df = pd.DataFrame(index=ts)
+    df['timestamp'] = ts
     df['Open'] = range(100, 140)
     df['feat1'] = [i * 0.1 for i in range(40)]
     df['feat2'] = [i * -0.1 for i in range(40)]

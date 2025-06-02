@@ -38,6 +38,7 @@ def test_integration_wfv_small():
         "close": "Close",
     })
     df.set_index("Timestamp", inplace=True)
+    df["timestamp"] = df.index
     df["EMA_50_slope"] = df["ema_slope"]
     df["ATR_14"] = df["atr"]
     df["ATR_14_MA50"] = df["atr_ma"]

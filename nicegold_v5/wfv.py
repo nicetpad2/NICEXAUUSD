@@ -92,7 +92,14 @@ def exceeded_order_duration(entry_time, current_time):
 
 def pass_filters(row):
     slope_ok = row.get("EMA_50_slope", 0) > 0
-    session_ok = row.name.hour in range(8, 23)
+    # [Patch v32.2.1] แก้ไขให้ใช้คอลัมน์ 'timestamp' แทน row.name ซึ่งเป็น int
+    ts = row.get("timestamp", pd.NaT)
+    if pd.isna(ts):
+        hour = -1
+    else:
+        ts = pd.to_datetime(ts)
+        hour = ts.hour
+    session_ok = hour in range(8, 23)
     no_spike = row.get("ATR_14", 1) < 5 * row.get("ATR_14_MA50", 1)
     return slope_ok and session_ok and no_spike
 
