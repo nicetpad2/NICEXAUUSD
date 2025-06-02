@@ -87,11 +87,23 @@ def calculate_position_size(equity, sl_points, risk_pct=DEFAULT_RISK_PER_TRADE):
 
 
 def exceeded_order_duration(entry_time, current_time):
+    """ตรวจสอบระยะเวลาเปิดสถานะ เกิน LIMIT หรือไม่"""
+    if not isinstance(entry_time, pd.Timestamp):
+        entry_time = pd.to_datetime(entry_time, errors="coerce")
+    if not isinstance(current_time, pd.Timestamp):
+        current_time = pd.to_datetime(current_time, errors="coerce")
+    if pd.isna(entry_time) or pd.isna(current_time):
+        return False
     return (current_time - entry_time).total_seconds() / 60 > ORDER_DURATION_MIN
 
 
 def pass_filters(row):
-    slope_ok = row.get("EMA_50_slope", 0) > 0
+    """ตรวจสอบเงื่อนไขเบื้องต้นก่อนเปิดสถานะ"""
+    slope_val = row.get("EMA_50_slope")
+    if slope_val is None:
+        slope_val = row.get("ema_slope", 0)
+    slope_ok = slope_val > 0
+
     # [Patch v32.2.2] ใช้ timestamp แทน row.name และตรวจค่าว่างก่อนแปลง
     ts = row.get("timestamp", pd.NaT)
     if pd.isna(ts):
@@ -100,7 +112,15 @@ def pass_filters(row):
         ts = pd.to_datetime(ts)
         hour = ts.hour
     session_ok = hour in range(8, 23)
-    no_spike = row.get("ATR_14", 1) < 5 * row.get("ATR_14_MA50", 1)
+
+    atr_val = row.get("ATR_14")
+    if atr_val is None:
+        atr_val = row.get("atr", 1)
+    atr_ma_val = row.get("ATR_14_MA50")
+    if atr_ma_val is None:
+        atr_ma_val = row.get("atr_ma", 1)
+    no_spike = atr_val < 5 * atr_ma_val
+
     return slope_ok and session_ok and no_spike
 
 
@@ -111,7 +131,14 @@ def entry_decision(prob, threshold):
 def build_trade_log(position, timestamp, price, hit_tp, hit_sl, equity, slippage, df_test):
     """Generate detailed trade metrics for logging."""
     entry_time = position["entry_time"]
-    duration_min = (timestamp - entry_time).total_seconds() / 60
+    if not isinstance(entry_time, pd.Timestamp):
+        entry_time = pd.to_datetime(entry_time, errors="coerce")
+    if not isinstance(timestamp, pd.Timestamp):
+        timestamp = pd.to_datetime(timestamp, errors="coerce")
+    if pd.isna(entry_time) or pd.isna(timestamp):
+        duration_min = 0.0
+    else:
+        duration_min = (timestamp - entry_time).total_seconds() / 60
 
     sl_dist = abs(position["entry"] - position["sl"])
     planned_risk = sl_dist * POINT_VALUE * (position["lot"] / 0.01)
@@ -123,7 +150,10 @@ def build_trade_log(position, timestamp, price, hit_tp, hit_sl, equity, slippage
     r_multiple = pnl_usd / planned_risk if planned_risk > 0 else 0
     pnl_pct = pnl_usd / equity * 100 if equity > 0 else 0
 
-    window = df_test.loc[entry_time:timestamp]
+    try:
+        window = df_test.loc[entry_time:timestamp]
+    except Exception:
+        window = df_test.iloc[0:0]
     price_col = "Close" if "Close" in df_test.columns else "Open"
     direction = 1 if position["side"] == "buy" else -1
     interim = (window[price_col] - position["entry"]) * direction
@@ -137,10 +167,14 @@ def build_trade_log(position, timestamp, price, hit_tp, hit_sl, equity, slippage
         break_even_time = None
         mfe = 0.0
 
-    break_even_min = (
-        (break_even_time - entry_time).total_seconds() / 60 if break_even_time else None
-    )
-    hour = entry_time.hour
+    if break_even_time is not None and isinstance(entry_time, pd.Timestamp):
+        break_even_min = (break_even_time - entry_time).total_seconds() / 60
+    else:
+        break_even_min = None
+    if isinstance(entry_time, pd.Timestamp):
+        hour = entry_time.hour
+    else:
+        hour = -1
     session = "Asia" if hour < 8 else "London" if hour < 15 else "NY"  # [Patch v7.4]
 
     return {

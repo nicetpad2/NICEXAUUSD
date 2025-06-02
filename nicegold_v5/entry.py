@@ -152,6 +152,11 @@ def validate_indicator_inputs(df: pd.DataFrame, required_cols: list[str] | None 
 
 def sanitize_price_columns(df: pd.DataFrame) -> pd.DataFrame:
     """แปลงคอลัมน์ราคาทั้งหมดให้เป็น float และ log รายงาน"""
+    # [Patch] รองรับคอลัมน์ตัวใหญ่เช่น Volume → volume
+    for tc, lc in [("Open", "open"), ("High", "high"), ("Low", "low"), ("Close", "close"), ("Volume", "volume")]:
+        if tc in df.columns and lc not in df.columns:
+            df[lc] = df[tc]
+
     for col in ["close", "high", "low", "open", "volume"]:
         if col in df.columns:
             series = df[col].astype(str).str.replace(",", "", regex=False).str.strip()
@@ -291,7 +296,13 @@ def _generate_signals_v8_0_core(df: pd.DataFrame, config: dict | None = None) ->
     df = df.copy()
 
     # [Patch v32.2.1] Support Titlecase price columns: alias to lowercase if needed
-    for tc, lc in [("Open", "open"), ("High", "high"), ("Low", "low"), ("Close", "close")]:
+    for tc, lc in [
+        ("Open", "open"),
+        ("High", "high"),
+        ("Low", "low"),
+        ("Close", "close"),
+        ("Volume", "volume"),  # [Patch] ensure volume column exists
+    ]:
         if tc in df.columns and lc not in df.columns:
             df[lc] = df[tc]
 

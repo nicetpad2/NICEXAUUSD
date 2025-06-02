@@ -516,7 +516,7 @@ def autopipeline(mode="default", train_epochs=1):
                 "gain_z",
                 "ema_slope",
                 "atr",
-                "rsi",
+                "rsi_14",
                 "volume",
                 "entry_score",
                 "pattern_label",
@@ -534,7 +534,7 @@ def autopipeline(mode="default", train_epochs=1):
                 "gain_z",
                 "ema_slope",
                 "atr",
-                "rsi",
+                "rsi_14",
                 "volume",
                 "entry_score",
                 "pattern_label",
@@ -547,7 +547,7 @@ def autopipeline(mode="default", train_epochs=1):
             trades_meta = pd.read_csv("logs/trades_v12_tp1tp2.csv")
             trades_meta = trades_meta.dropna(subset=["exit_reason", "entry_score"])
             trades_meta["target"] = trades_meta["exit_reason"].eq("tp2").astype(int)
-            features = ["gain_z", "ema_slope", "atr", "rsi", "entry_score"]
+            features = ["gain_z", "ema_slope", "atr", "rsi_14", "entry_score"]
             clf = RandomForestClassifier(n_estimators=100, random_state=42)
             clf.fit(trades_meta[features], trades_meta["target"])
             os.makedirs("models", exist_ok=True)
@@ -688,7 +688,7 @@ def autopipeline(mode="default", train_epochs=1):
         explainer = shap.DeepExplainer(model, X[:100])
         shap_vals = explainer.shap_values(X[:100])[0]
         shap_mean = np.abs(shap_vals).mean(axis=0)
-        all_features = ["gain_z", "ema_slope", "atr", "rsi", "volume", "entry_score", "pattern_label"]
+        all_features = ["gain_z", "ema_slope", "atr", "rsi_14", "volume", "entry_score", "pattern_label"]
         top_k_idx = np.argsort(shap_mean)[::-1][:5]
         top_features = [all_features[i] for i in top_k_idx]
         print("📊 [SHAP] Top Features:", top_features)
@@ -780,7 +780,7 @@ def autopipeline(mode="default", train_epochs=1):
             "gain_z",
             "ema_slope",
             "atr",
-            "rsi",
+            "rsi_14",
             "volume",
             "entry_score",
             "pattern_label",
@@ -899,7 +899,7 @@ def run_production_wfv():
         "gain_z",
         "ema_slope",
         "atr",
-        "rsi",
+        "rsi_14",
         "entry_score",
         "pattern_label",
         "tp2_hit",
