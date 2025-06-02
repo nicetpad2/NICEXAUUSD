@@ -2,6 +2,9 @@ import os
 from typing import List
 import numpy as np
 import pandas as pd
+import logging
+
+logger = logging.getLogger(__name__)
 
 try:  # pragma: no cover - optional torch
     import torch
@@ -133,6 +136,9 @@ def load_wfv_training_data(logs_dir: str, seq_len: int = 60, lookback_step: int 
         if not fname.startswith("wfv_results_fold") or not fname.endswith(".csv"):
             continue
         df = pd.read_csv(os.path.join(logs_dir, fname), parse_dates=["timestamp"])
+        if df.empty:
+            logger.warning(f"[load_wfv_training_data] {fname} is empty → skip")
+            continue
         df = df.sort_values("timestamp").reset_index(drop=True)
         req = {"optimal_gain_z_thresh", "optimal_ema_slope_thresh", "optimal_atr_thresh"}
         if not req.issubset(df.columns):
@@ -153,6 +159,10 @@ def load_wfv_training_data(logs_dir: str, seq_len: int = 60, lookback_step: int 
             seq_list.append(seq)
             fb_list.append(feedback)
             target_list.append(target)
+    if not seq_list:
+        logger.error("[load_wfv_training_data] No wfv folds found")
+        empty = np.zeros((0, seq_len, 3), dtype=np.float32)
+        return ThresholdDataset(empty, np.zeros((0, 3), dtype=np.float32), np.zeros((0, 3), dtype=np.float32))
     seq_arr = np.stack(seq_list, axis=0)
     fb_arr = np.stack(fb_list, axis=0)
     tgt_arr = np.stack(target_list, axis=0)
@@ -185,11 +195,30 @@ def train_threshold_predictor(logs_dir: str, model_save_path: str = "model/thres
     print(f"[AdaptiveThreshold-DL] Saved model → {model_save_path}")
 
 
-def predict_thresholds(seq_recent: np.ndarray, feedback_scalar: List[float], model_path: str = "model/threshold_predictor.pt", device: str = "cuda" if hasattr(torch, "cuda") and callable(getattr(torch.cuda, "is_available", lambda: False)) and torch.cuda.is_available() else "cpu") -> dict:
-    model = ThresholdPredictor(num_indicators=3, seq_len=seq_recent.shape[1], feedback_dim=3).to(device)
-    state = torch.load(model_path, map_location=device)
-    if hasattr(model, "load_state_dict"):
-        model.load_state_dict(state)
+def predict_thresholds(
+    seq_recent: np.ndarray,
+    feedback_scalar: List[float],
+    model_path: str = "model/threshold_predictor.pt",
+    device: str = "cuda"
+    if hasattr(torch, "cuda")
+    and callable(getattr(torch.cuda, "is_available", lambda: False))
+    and torch.cuda.is_available()
+    else "cpu",
+) -> dict:
+    model = ThresholdPredictor(
+        num_indicators=3, seq_len=seq_recent.shape[1], feedback_dim=3
+    ).to(device)
+    try:
+        state = torch.load(model_path, map_location=device)
+    except Exception as e:  # pragma: no cover - file missing/corrupt
+        logger.error(f"[predict_thresholds] Failed load: {e}")
+        return {"gain_z_thresh": 0.0, "ema_slope_min": 0.0, "atr_thresh": 0.0}
+    try:
+        if hasattr(model, "load_state_dict"):
+            model.load_state_dict(state)
+    except Exception as e:  # pragma: no cover - mismatch
+        logger.error(f"[predict_thresholds] state_dict mismatch: {e}")
+        return {"gain_z_thresh": 0.0, "ema_slope_min": 0.0, "atr_thresh": 0.0}
     model.eval()
     seq_tensor = torch.from_numpy(seq_recent.astype(np.float32))
     fb_tensor = torch.from_numpy(np.array(feedback_scalar, dtype=np.float32)).unsqueeze(0)

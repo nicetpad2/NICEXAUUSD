@@ -909,10 +909,16 @@
 
 ## 2026-04-03
 
+- ปรับปรุง `load_wfv_training_data` ให้ข้ามไฟล์ว่างและคืน Dataset ว่างเมื่อไม่มีข้อมูล
+- เพิ่มการตรวจสอบ error ใน `predict_thresholds` สำหรับ model path และ state_dict
+
+
+
 - [Patch v32.0.8] RLScalper can save/load Q-table and sorts indicator keys when generating states.
 
 
 - [Patch v32.0.8] config.py now loads defaults.yaml with error handling and merges overrides from the selected environment
+
 
 
 

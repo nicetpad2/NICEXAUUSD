@@ -146,6 +146,13 @@ def test_threshold_dataset(tmp_path, monkeypatch):
     assert item['target'].shape == (3,)
 
 
+def test_threshold_dataset_empty(tmp_path, monkeypatch):
+    make_stub(monkeypatch)
+    adaptive = importlib.reload(importlib.import_module('nicegold_v5.adaptive_threshold_dl'))
+    dataset = adaptive.load_wfv_training_data(str(tmp_path), seq_len=60)
+    assert len(dataset) == 0
+
+
 def test_threshold_predictor_forward(monkeypatch):
     make_stub(monkeypatch)
     adaptive = importlib.reload(importlib.import_module('nicegold_v5.adaptive_threshold_dl'))
