@@ -1017,3 +1017,8 @@
 ### 2026-04-16
 - [Patch v32.2.1] รองรับคอลัมน์ราคา Titlecase ใน generate_signals_v8_0
   - คัดลอกคอลัมน์ Open/High/Low/Close เป็นตัวพิมพ์เล็กหากยังไม่มี
+
+### 2026-04-17
+- [Patch vConfig v1.0] เพิ่มค่า config ใหม่ใน defaults.yaml
+  - อัพเดต SNIPER_CONFIG_Q3_TUNED และ RELAX_CONFIG_Q3 พร้อมตัวแปร gain_z_thresh,
+    atr_multiplier และ rsi limits
