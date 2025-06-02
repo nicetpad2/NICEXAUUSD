@@ -886,9 +886,14 @@
   - แก้ RL Pipeline (initialize full state-space, avoid KeyError)
   - เพิ่ม Logging, Config via YAML, และ Unit/Integration Tests ครบถ้วน
   - ปรับระดับ Log Level, ลด log ยิบย่อย
-  - รองรับ path สัมพัทธ์ (data/, logs/)
+  - รองรับ path สัมพัทธ์ (data/, logs/
+## 2026-04-02
+- Updated train_lstm_runner to validate required columns and store epoch predictions during training
+
+
 
 ## 2026-04-02
 - [Patch v32.0.0] Added structured logger in main.py
 - [Patch v32.0.0] utils.load_data now raises FileNotFoundError and RuntimeError
 - [Patch v32.0.0] kill_switch logs warning when equity curve is empty
+
