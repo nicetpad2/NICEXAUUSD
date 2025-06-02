@@ -944,3 +944,17 @@
 ## 2026-04-04
 - ปรับปรุง `meta_classifier` เพิ่ม logging และ fallback เมื่อโหลดโมเดลไม่ได้
 - เพิ่มเมธอด `train_and_save` สำหรับฝึกและบันทึกโมเดล
+=======
+## 2026-04-04
+
+- ปรับปรุง LSTMClassifier รองรับ dropout และเพิ่มคำอธิบายฟังก์ชัน
+=======
+- [Patch v32.0.9] entry.generate_signals logs force_entry via module logger
+- [Patch v32.0.9] generate_signals_v12_0 now wraps generate_signals for new main.py
+=======
+## 2026-04-04
+- ปรับปรุง `qa.py` เพิ่ม logger และปรับฟังก์ชันตรวจ bias/drift
+
+
+
+

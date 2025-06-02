@@ -270,12 +270,25 @@ def sanitize_price_columns(df: pd.DataFrame) -> pd.DataFrame:
     """แปลงคอลัมน์ราคาให้เป็น float และเติมค่า 0 เมื่อแปลงไม่ได้"""
     for col in ["open", "high", "low", "close", "volume"]:
         if col in df.columns:
+
+            df[col] = pd.to_numeric(
+                df[col].astype(str).str.replace(",", ""),
+                errors="coerce",
+            ).fillna(0.0)
+
+
             df[col] = (
                 pd.to_numeric(
                     df[col].astype(str).str.replace(",", ""), errors="coerce"
                 )
                 .fillna(0.0)
             )
+
+            df[col] = pd.to_numeric(
+                df[col].astype(str).str.replace(",", ""), errors="coerce"
+            ).fillna(0.0)
+
+
     return df
 
 
