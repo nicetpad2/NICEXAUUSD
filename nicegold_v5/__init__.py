@@ -89,3 +89,5 @@ except Exception:  # pragma: no cover - torch may be missing
     LSTMClassifier = None
     load_dataset = None
     train_lstm = None
+
+from .gpu_strategy import run_gpu_backtest
