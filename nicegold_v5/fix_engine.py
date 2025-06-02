@@ -3,6 +3,7 @@
 import pandas as pd
 import numpy as np
 import logging
+import copy
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,10 @@ def run_self_diagnostic(trades_df: pd.DataFrame, df: pd.DataFrame) -> dict:
 def auto_fix_logic(summary: dict, config: dict, session: str = None) -> dict:
     """แก้ไข config อัตโนมัติ หากเจอ TP = 0 หรือ SL เยอะ"""
     new_config = config.copy()
+
+    # [Patch v32.1.0] เรียก override BUY/SELL safety ทุก config
+    from .config import ensure_order_side_enabled
+    new_config = ensure_order_side_enabled(new_config)
 
     if summary.get("exit_variety_insufficient", False):
         new_config["tp1_rr_ratio"] = 1.2
@@ -106,7 +111,7 @@ def simulate_and_autofix(df: pd.DataFrame, simulate_fn, config: dict, session: s
     return trades_df, equity_df, config_adapted
 
 
-# [Patch v12.3.7+] ✅ AutoFix WFV Fold
+# [Patch v32.1.0+] AutoFix per Fold (ผนวกใน WFV)
 def autofix_fold_run(df_fold: pd.DataFrame, simulate_fn, config: dict, fold_name: str):
     print(f"\n🔁 [Fold: {fold_name}] Running simulation with AutoFix...")
     trades_df, equity_df, config_used = simulate_and_autofix(df_fold, simulate_fn, config)
@@ -116,18 +121,10 @@ def autofix_fold_run(df_fold: pd.DataFrame, simulate_fn, config: dict, fold_name
     return trades_df, config_used
 
 
-# [Patch v12.3.7+] ✅ AutoRiskAdjust ฟังก์ชันสำหรับปรับ config ต่อเนื่อง WFV
+# [Patch v32.1.0] AutoRiskAdjust (เรียกต่อเนื่องใน WFV)
 def autorisk_adjust(prev_config: dict, prev_summary: dict) -> dict:
-    config = prev_config.copy()
+    config = copy.deepcopy(prev_config)
     if prev_summary.get("tp_rate", 0) < 0.2:
         config["tp1_rr_ratio"] = 1.2
-        print("[AutoRiskAdjust] ลด RR1 → 1.2 เนื่องจาก TP เกิดน้อย")
-    if prev_summary.get("sl_rate", 0) > 0.4:
-        config["atr_multiplier"] = 1.6
-        print("[AutoRiskAdjust] ขยาย SL → atr_multiplier 1.6")
-    if prev_summary.get("net_pnl", 0) <= 0:
-        config["enable_be"] = True
-        config["enable_trailing"] = True
-        config["use_dynamic_tsl"] = True
-        print("[AutoRiskAdjust] เปิด BE/TSL เนื่องจากกำไรสุทธิติดลบ")
+        print("[AutoRiskAdjust] ลด RR1 → 1.2")
     return config

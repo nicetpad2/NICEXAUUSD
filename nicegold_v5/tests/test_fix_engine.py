@@ -59,6 +59,21 @@ def test_auto_fix_logic_exit_variety():
     assert new_cfg['tp1_rr_ratio'] == 1.2
 
 
+def test_auto_fix_logic_enables_order_side():
+    summary = {
+        'tp1_count': 1,
+        'tp2_count': 1,
+        'sl_rate': 0.1,
+        'avg_mfe': 1.0,
+        'avg_duration': 3.0,
+        'net_pnl': 1.0,
+    }
+    config = {'disable_buy': True, 'disable_sell': True}
+    new_cfg = auto_fix_logic(summary, config)
+    assert new_cfg['disable_buy'] is False
+    assert new_cfg['disable_sell'] is False
+
+
 def test_simulate_and_autofix_basic():
     df = pd.DataFrame({'close': [1, 2]})
 
