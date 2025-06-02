@@ -215,5 +215,8 @@
 - **AGENTS.md:** Formalized Branch & Commit Naming convention and Unit Test requirements.
 - **CHANGELOG:** Documented “Hedge Fund Mode” (Patch v26.0.0–v26.0.1) and QA override improvements.
 
+### 2026-04-25
+- **CHANGELOG:** Added v33.0.0 notes about relaxed exit variety.
+
 ---
 

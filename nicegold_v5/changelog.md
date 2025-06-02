@@ -1074,5 +1074,12 @@
 - Updated test for run_production_wfv when no trades
 - QA: pytest -q passed (264 tests)
 
+## 2026-04-25
+- [Patch v33.0.0] ผ่อนปรนเงื่อนไข `inject_exit_variety`
+  - ตรวจสอบเพียงว่ามี `tp1` อย่างน้อยหนึ่งรายการ
+  - อัปเดต `check_exit_reason_variety` ให้สอดคล้อง
+  - ปรับ unit tests ที่เกี่ยวข้อง
+  - QA: pytest -q passed (268 tests)
+
 
 

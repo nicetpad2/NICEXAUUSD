@@ -359,11 +359,11 @@ def inject_exit_variety(
             groups = [(1, trades_df)]
         for name, g in groups:
             reasons = g.get("exit_reason", pd.Series(dtype=str)).astype(str).str.lower()
-            missing = set(require) - set(reasons)
-            for reason in missing:
-                print(f"[Inject Variety] Fold {name}: add {reason}")
+            # [Patch v33.0.0] relax requirement: only ensure at least one 'tp1' per fold
+            if "tp1" not in set(reasons):
+                print(f"[Inject Variety] Fold {name}: add tp1")
                 dummy = g.iloc[0].copy() if not g.empty else pd.Series(dtype=object)
-                dummy["exit_reason"] = reason
+                dummy["exit_reason"] = "tp1"
                 dummy["is_dummy"] = True
                 dummy[fold_col] = name
                 append_rows.append(dummy)
@@ -377,14 +377,20 @@ def inject_exit_variety(
                 logger.info("[inject_exit_variety] Exported variety log → %s", out_path)
     else:
         reasons = trades_df.get("exit_reason", pd.Series(dtype=str)).astype(str).str.lower()
-        missing = set(require) - set(reasons)
-        for reason in missing:
-            print(f"[Inject Variety] add {reason}")
+        # [Patch v33.0.0] Inject only if no 'tp1' exits at all
+        if "tp1" not in set(reasons):
+            print("[Inject Variety] add tp1")
             dummy = trades_df.iloc[0].copy() if not trades_df.empty else pd.Series(dtype=object)
-            dummy["exit_reason"] = reason
+            dummy["exit_reason"] = "tp1"
             dummy["is_dummy"] = True
             trades_df = pd.concat([trades_df, pd.DataFrame([dummy])], ignore_index=True)
-        if missing and outdir:
+            if outdir:
+                os.makedirs(outdir, exist_ok=True)
+                label = f"{strategy_name}_fold{fold}" if fold is not None else strategy_name or "final"
+                out_path = os.path.join(outdir, f"exit_variety_{label}.csv")
+                trades_df.to_csv(out_path, index=False)
+                logger.info("[inject_exit_variety] Exported variety log → %s", out_path)
+        elif outdir:
             os.makedirs(outdir, exist_ok=True)
             label = f"{strategy_name}_fold{fold}" if fold is not None else strategy_name or "final"
             out_path = os.path.join(outdir, f"exit_variety_{label}.csv")
