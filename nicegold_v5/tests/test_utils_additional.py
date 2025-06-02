@@ -1,5 +1,6 @@
 
 import importlib
+import pytest
 import sys
 import types
 import pandas as pd
@@ -62,6 +63,11 @@ def test_load_and_save_results(tmp_path):
     assert any('trades_' in f.name for f in files)
     assert any('equity_' in f.name for f in files)
     assert any('summary_' in f.name for f in files)
+
+
+def test_load_data_missing(tmp_path):
+    with pytest.raises(FileNotFoundError):
+        utils.load_data(tmp_path / 'missing.csv')
 
 
 def test_pass_filters():

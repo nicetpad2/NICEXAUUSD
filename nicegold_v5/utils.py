@@ -359,10 +359,10 @@ def get_resource_plan() -> dict:
 def load_data(path: str = M1_PATH) -> pd.DataFrame:
     """Load CSV and parse timestamp safely."""
     if not os.path.exists(path):
-        print(
+        logger.error(
             f"❌ File not found: {path}. โปรดตรวจสอบว่ามีไฟล์ `XAUUSD_M1.csv` ในโฟลเดอร์ `data/`"
         )
-        sys.exit(1)
+        raise FileNotFoundError(f"Missing file: {path}")
 
     df = pd.read_csv(path)
     if {"Date", "Timestamp"}.issubset(df.columns):
@@ -378,8 +378,10 @@ def load_data(path: str = M1_PATH) -> pd.DataFrame:
             format="%Y-%m-%d %H:%M:%S",
         )
     else:
-        print("❌ ไม่พบคอลัมน์ Date/Timestamp หรือ date/timestamp เพื่อแปลงเป็น datetime")
-        sys.exit(1)
+        logger.error(
+            "❌ ไม่พบคอลัมน์ Date/Timestamp หรือ date/timestamp เพื่อแปลงเป็น datetime"
+        )
+        raise RuntimeError("Missing timestamp columns")
 
     df = df.sort_values("timestamp")
     return df

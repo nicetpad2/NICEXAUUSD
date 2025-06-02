@@ -12,14 +12,19 @@ from .utils import setup_logger, QA_BASE_PATH
 
 logger = setup_logger("nicegold_v5.exit", os.path.join(QA_BASE_PATH, "exit.log"))
 
-# [Patch v12.2.x] Auto session detection by timestamp (no config required)
-def detect_session_auto(timestamp):
-    hour = pd.to_datetime(timestamp).hour
-    if 3 <= hour <= 7:
+# [Patch v32.0.7] Auto session detection by hour
+def detect_session_auto(trade_or_ts):
+    """ระบุเซสชันจากชั่วโมง (0-7=Asia, 8-14=London, 15-23=NY)"""
+    if isinstance(trade_or_ts, dict):
+        ts = trade_or_ts.get("timestamp")
+    else:
+        ts = trade_or_ts
+    hour = pd.to_datetime(ts).hour
+    if 0 <= hour <= 7:
         return "Asia"
     elif 8 <= hour <= 14:
         return "London"
-    elif 15 <= hour <= 23 or hour == 0:
+    elif 15 <= hour <= 23:
         return "NY"
     return "Unknown"
 
@@ -366,15 +371,13 @@ def simulate_partial_tp_safe(df: pd.DataFrame, percentile_threshold: float = 75)
     trades_df = pd.DataFrame(trades)
 
     if "tp2_price" not in trades_df.columns:
-        print("[Patch v32.0.0] QA Guard: ไม่มีคอลัมน์ tp2_price → skip simulate_partial_tp_safe")
+        logger.warning(
+            "[simulate_partial_tp_safe] ไม่มีคอลัมน์ tp2_price → skip"
+        )
         return trades_df
 
     # --- Patch v32.0.0: Inject Force TP2 for QA Mode ---
-    if (
-        percentile_threshold < 75
-        and "mfe" in trades_df.columns
-        and "tp2_price" in trades_df.columns
-    ):
+    if "mfe" in trades_df.columns and "tp2_price" in trades_df.columns:
         forced = 0
         for idx, row in trades_df.iterrows():
             exit_reason = row.get("exit_reason", "")

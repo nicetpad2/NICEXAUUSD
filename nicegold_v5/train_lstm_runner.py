@@ -38,9 +38,14 @@ import time
 
 def load_dataset(path="data/ml_dataset_m1.csv", seq_len=10):
     df = pd.read_csv(path)
-    features = ["gain_z", "ema_slope", "atr", "rsi", "volume", "entry_score", "pattern_label"]
+    required = ["tp2_hit"]
+    for col in required:
+        if col not in df.columns:
+            raise KeyError(f"ML dataset missing column: {col}")
+    label = "tp2_hit"
+    features = [c for c in df.columns if c not in ["timestamp", label]]
     data = df[features].values
-    labels = df["tp2_hit"].values
+    labels = df[label].astype(int).values
 
     X_seq, y_seq = [], []
     for i in range(len(data) - seq_len):
@@ -103,6 +108,7 @@ def train_lstm(
         model.train()
         total_loss = 0.0
         load_time = forward_time = backward_time = step_time = 0.0
+        epoch_true_labels, epoch_preds = [], []
         for batch_x, batch_y in loader:
             t0 = time.time()
             batch_x, batch_y = batch_x.to(device), batch_y.to(device)
@@ -111,6 +117,8 @@ def train_lstm(
             with autocast(enabled=use_amp):
                 preds = model(batch_x)
                 loss = criterion(preds, batch_y)
+            epoch_true_labels.append(batch_y.detach().cpu().numpy())
+            epoch_preds.append(preds.detach().cpu().numpy())
             t2 = time.time()
             scaler.scale(loss).backward()
             t3 = time.time()
