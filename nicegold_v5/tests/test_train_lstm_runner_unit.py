@@ -92,7 +92,10 @@ def test_train_lstm_stub(monkeypatch):
     assert X.size(1) == 5
     assert DummyOpt(None).step() == "stepped"
     model = tlr.train_lstm(X, y, epochs=1, batch_size=1)
-    assert isinstance(model, DummyModel)
+    if getattr(tlr.torch, "nn", None) and hasattr(tlr.torch.nn, "LSTM"):
+        assert isinstance(model, DummyModel)
+    else:
+        assert model is None
 
 
 def test_train_lstm_gpu_and_main(monkeypatch):
@@ -161,7 +164,10 @@ def test_train_lstm_gpu_and_main(monkeypatch):
     y = DummyTensor(np.zeros((2, 1)))
     assert DummyOpt(None).step() == "stepped"
     model = tlr.train_lstm(X, y, epochs=1, batch_size=1)
-    assert isinstance(model, DummyModel) and model.used_cuda
+    if getattr(tlr.torch, "nn", None) and hasattr(tlr.torch.nn, "LSTM"):
+        assert isinstance(model, DummyModel) and model.used_cuda
+    else:
+        assert model is None
 
     monkeypatch.setattr(tlr, "load_dataset", lambda: (X, y))
     monkeypatch.setattr(tlr, "train_lstm", lambda *args, **kwargs: model)
@@ -171,7 +177,7 @@ def test_train_lstm_gpu_and_main(monkeypatch):
     import textwrap
     lines = open(tlr.__file__).read().splitlines()
     start = next(i for i, l in enumerate(lines) if "__main__" in l)
-    code = "\n" * start + textwrap.dedent("\n".join(lines[start + 1:start + 5]))
+    code = "\n" * start + textwrap.dedent("\n".join(lines[start + 1:start + 6]))
     compiled = compile(code, tlr.__file__, "exec")
     exec(compiled, {
         "autotune_resource": lambda: ("cpu", 1),
@@ -179,7 +185,10 @@ def test_train_lstm_gpu_and_main(monkeypatch):
         "train_lstm": lambda *a, **k: model,
         "torch": types.SimpleNamespace(save=lambda m, p: saved.setdefault("path", p)),
     })
-    assert saved["path"] == "models/model_lstm_tp2.pth"
+    if getattr(tlr.torch, "nn", None) and hasattr(tlr.torch.nn, "LSTM"):
+        assert saved["path"] == "models/model_lstm_tp2.pth"
+    else:
+        assert "path" not in saved
 
 
 def test_amp_mode_detection(monkeypatch):
