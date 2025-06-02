@@ -1088,3 +1088,9 @@
 - [Patch v33.0.0] คลายเงื่อนไข SNIPER_CONFIG_Q3_TUNED ใน production.yaml
 - QA: pytest -q passed (268 tests)
 
+
+### 2026-05-01
+- [Patch v32.4.0] Ensure End-of-Fold Exit
+  - บังคับปิดสถานะที่ค้าง ณ ราคาปิดสุดท้ายด้วย exit_reason="eod_exit"
+  - เพิ่ม unit test สำหรับกรณี EOD Exit
+  - QA: pytest -q passed (269 tests)
