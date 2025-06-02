@@ -914,3 +914,8 @@
 - [Patch v32.0.7] ปรับปรุง detect_session_auto ให้รับ dict หรือ timestamp และปรับช่วงเวลาเป็น 0-7 Asia, 8-14 London, 15-23 NY
 - ปรับ simulate_partial_tp_safe ให้ใช้ logger.warning แทน print และบังคับ QA Inject TP2 ทุกกรณีเมื่อ MFE ถึงครึ่งทาง
 
+### 2026-04-03
+- [Patch v32.0.0] ปรับปรุง utils ให้มี shared logger, sanitize_price_columns รองรับคอลัมน์ขาดหาย
+- ปรับ parse_timestamp_safe ใช้ logger.warning เมื่อรูปแบบผิดและปรับ split_folds จัดการเศษข้อมูล
+- เพิ่มฟังก์ชัน merge_equity_curves รวมผล equity จากหลาย fold
+

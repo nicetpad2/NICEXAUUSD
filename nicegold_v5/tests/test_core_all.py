@@ -1245,7 +1245,7 @@ def test_simulate_trades_with_tp_dynamic_tsl():
     assert trades[0]['exit_reason'] == 'tsl_exit'
 
 
-def test_parse_timestamp_safe_logs(capsys):
+def test_parse_timestamp_safe_logs():
     from nicegold_v5.utils import parse_timestamp_safe
 
     series = pd.Series([
@@ -1254,8 +1254,6 @@ def test_parse_timestamp_safe_logs(capsys):
         '2025/01/01 01:00:00'
     ])
     result = parse_timestamp_safe(series, '%Y-%m-%d %H:%M:%S')
-    out = capsys.readouterr().out
-    assert 'parse_timestamp_safe()' in out
     assert result.notna().sum() == 1
 
 
