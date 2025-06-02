@@ -967,6 +967,9 @@
 ## 2026-04-05
 - แก้คำเตือน scikit-learn ใน `MetaClassifier.predict` ให้ไม่แสดง Warning
 
+## 2026-04-06
+- [Patch v32.1.0] เพิ่มฟังก์ชัน `ensure_order_side_enabled` ใน `config.py` เพื่อบังคับเปิด BUY/SELL ในทุกคอนฟิก
+
 
 
 

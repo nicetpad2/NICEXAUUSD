@@ -47,7 +47,7 @@ ATR_THRESH = _cfg["atr_thresh"]
 KILL_SWITCH_DD = _cfg["kill_switch_dd"]
 RECOVERY_SL_TRIGGER = _cfg["recovery_sl_trigger"]
 
-# --- PATCH v26.0.1: Ensure BUY/SELL always enabled ---
+# [Patch v32.1.0] เพิ่มฟังก์ชันบังคับเปิด BUY/SELL ทุก config เพื่อ Safety
 def ensure_order_side_enabled(cfg: dict) -> dict:
     """Force disable_buy/disable_sell to False for safety."""
     if "disable_buy" in cfg:
