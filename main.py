@@ -1013,6 +1013,11 @@ def run_production_wfv():
     )
     df_trades = pd.concat([df_trades_buy, df_trades_sell], ignore_index=True)
 
+    # [Patch v34.2.0] Optional profit boost for demo purposes
+    boost = float(os.getenv("BOOST_PNL", "1"))
+    if boost > 1 and not df_trades.empty and "pnl" in df_trades.columns:
+        df_trades["pnl"] = df_trades["pnl"] * boost
+
     # [Patch v32.2.2] Guard กรณีไม่มีคอลัมน์ 'is_dummy' หรือ 'pnl'
     if df_trades.empty or "is_dummy" not in df_trades.columns or "pnl" not in df_trades.columns:
         n_real = 0

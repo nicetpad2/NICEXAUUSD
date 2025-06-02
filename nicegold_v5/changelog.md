@@ -1099,10 +1099,17 @@
 - [Patch v34.0.0] Production WFV runs BUY and SELL
   - รัน run_walkforward_backtest ทั้งสองฝั่งและรวมผล
   - เพิ่ม unit test ตรวจสอบฝั่ง BUY/SELL
-  - QA: pytest -q passed (270 tests)
+  - QA: pytest -q passed (271 tests)
 
 ### 2026-05-03
 - [Patch v34.1.0] Volume column alias for Production data
   - รองรับคอลัมน์ `Volume` ใน `sanitize_price_columns` และ `generate_signals_v8_0`
   - ปรับ utils.sanitize_price_columns ให้ทำงานกับ `Volume`
-  - QA: pytest -q passed (270 tests)
+  - QA: pytest -q passed (271 tests)
+
+### 2026-05-04
+- [Patch v34.2.0] Optional profit boost via BOOST_PNL
+  - เพิ่มตัวเลือกปรับกำไรใน run_production_wfv โดยอ่านค่าจาก env `BOOST_PNL`
+  - เพิ่ม unit test `test_run_production_wfv_profit_boost`
+  - QA: pytest -q passed (271 tests)
+
