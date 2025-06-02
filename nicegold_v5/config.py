@@ -43,6 +43,19 @@ SESSION_CONFIG = _cfg["session_config"]
 SNIPER_CONFIG_Q3_TUNED = _cfg["sniper_config_q3_tuned"]
 RELAX_CONFIG_Q3 = _cfg["relax_config_q3"]
 ULTRA_OVERRIDE_QA = _cfg["ultra_override_qa"]
+
+# [Patch vConfig v1.1] Ultra Relax fallback config สำหรับ production
+ULTRA_RELAX_CONFIG = {
+    "gain_z_thresh": 0.0,
+    "atr_multiplier": 0.5,
+    "rsi_oversold": 45,
+    "rsi_overbought": 55,
+    "pattern_whitelist": [],
+    "volume_ratio": 0.5,
+    "tp_rr_ratio": 1.2,
+    "sl_distance": 5.0,
+    "dynamic_lot": False,
+}
 DEFAULT_RR1 = _cfg["default_rr1"]
 DEFAULT_RR2 = _cfg["default_rr2"]
 GAIN_Z_THRESH = _cfg["gain_z_thresh"]
@@ -308,6 +321,7 @@ for _cfg in [
     SNIPER_CONFIG_AUTO_GAIN,
     SNIPER_CONFIG_Q3_TUNED,
     RELAX_CONFIG_Q3,
+    ULTRA_RELAX_CONFIG,
     SNIPER_CONFIG_DIAGNOSTIC,
     SNIPER_CONFIG_RELAXED_AUTOGAIN,
     SNIPER_CONFIG_UNBLOCK,
