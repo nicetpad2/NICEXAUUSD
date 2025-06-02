@@ -8,9 +8,9 @@ from nicegold_v5.wfv import (
     session_label,
     merge_equity_curves,
     streak_summary,
-    apply_order_costs,
     COMMISSION_PER_LOT,
 )
+from nicegold_v5.utils import apply_order_costs
 
 
 def test_calculate_position_size_normal():

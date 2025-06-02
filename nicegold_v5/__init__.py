@@ -53,7 +53,7 @@ from .wfv import (
 )
 # [Patch QA-FIX v28.2.5] ensure_buy_sell must be accessible (for QA)
 def ensure_buy_sell(*args, **kwargs):
-    from nicegold_v5.wfv import ensure_buy_sell as orig
+    from nicegold_v5.utils import ensure_buy_sell as orig
     return orig(*args, **kwargs)
 
 def inject_exit_variety(*args, **kwargs):

@@ -961,6 +961,9 @@
 ## 2026-04-04
 - ปรับปรุง `qa.py` เพิ่ม logger และปรับฟังก์ชันตรวจ bias/drift
 
+## 2026-04-04
+- ย้าย `apply_order_costs` และ `ensure_buy_sell` ไปที่ utils และเพิ่ม wrapper ใน wfv
+
 
 
 

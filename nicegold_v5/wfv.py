@@ -28,6 +28,8 @@ from nicegold_v5.utils import (
     parse_timestamp_safe,
     QA_BASE_PATH,
     setup_logger,
+    apply_order_costs as util_apply_order_costs,
+    ensure_buy_sell as util_ensure_buy_sell,
 )
 from nicegold_v5.fix_engine import autofix_fold_run, autorisk_adjust, run_self_diagnostic
 
@@ -58,11 +60,18 @@ def split_by_session(df: pd.DataFrame, session_cfg: dict | None = None) -> dict:
 
 
 def apply_order_costs(entry, sl, tp1, tp2, lot, direction):
-    spread_half = SPREAD_VALUE / 2
-    slippage = np.random.uniform(-SLIPPAGE, SLIPPAGE)
-    entry_adj = entry + spread_half + slippage if direction == "buy" else entry - spread_half - slippage
-    commission = 2 * COMMISSION_PER_LOT * lot * 100
-    return entry_adj, sl, tp1, tp2, commission
+    """Wrapper สำหรับคำนวณต้นทุนคำสั่ง"""
+    return util_apply_order_costs(
+        entry,
+        sl,
+        tp1,
+        tp2,
+        lot,
+        direction,
+        SPREAD_VALUE,
+        SLIPPAGE,
+        COMMISSION_PER_LOT,
+    )
 
 
 def calculate_position_size(equity, sl_points, risk_pct=DEFAULT_RISK_PER_TRADE):
@@ -351,61 +360,8 @@ def ensure_buy_sell(
     fold: int | None = None,
     outdir: str | None = None,
 ) -> pd.DataFrame:
-    """Guarantee both BUY and SELL trades exist using fallback and force entry.
-
-    Parameters
-    ----------
-    fold : int | None
-        Fold number for QA export.
-    outdir : str | None
-        Directory to export zero-trade marker when BUY/SELL still missing.
-    """
-    sides = trades_df.get("side", trades_df.get("type", pd.Series(dtype=str))).str.lower()
-    has_buy = "buy" in sides.values
-    has_sell = "sell" in sides.values
-    if has_buy and has_sell:
-        return trades_df
-
-    logger.info("[ensure_buy_sell] Missing BUY/SELL in fold %s → inject", fold)
-    print("[Patch QA-FIX] ไม่มี BUY/SELL ครบ – ยิง ultra-relax config")
-    if "percentile_threshold" in inspect.signature(simulate_fn).parameters:
-        trades_df2 = simulate_fn(df, percentile_threshold=1)
-    else:
-        trades_df2 = simulate_fn(df)
-    sides2 = trades_df2.get("side", trades_df2.get("type", pd.Series(dtype=str))).str.lower()
-    has_buy2 = "buy" in sides2.values
-    has_sell2 = "sell" in sides2.values
-
-    if not has_buy2 or not has_sell2:
-        print("[Patch QA-FIX] ยิง ForceEntry buy/sell ใน row ที่ขาด")
-        dummy_row = {
-            "entry_time": df.index[0] if len(df.index) else 0,
-            "exit_time": df.index[0] if len(df.index) else 0,
-            "side": "buy",
-            "pnl": 0.0,
-            "fold": 1,
-        }
-        if not has_buy2:
-            trades_df2 = pd.concat([trades_df2, pd.DataFrame([dummy_row])], ignore_index=True)
-        if not has_sell2:
-            dummy_row["side"] = "sell"
-            trades_df2 = pd.concat([trades_df2, pd.DataFrame([dummy_row])], ignore_index=True)
-
-    sides3 = trades_df2.get("side", trades_df2.get("type", pd.Series(dtype=str))).str.lower()
-    has_buy3 = "buy" in sides3.values
-    has_sell3 = "sell" in sides3.values
-    if not (has_buy3 and has_sell3):
-        print("[Patch QA-FIX] ❌ ยังไม่ครบ BUY/SELL หลัง forceentry – QA export zero-trade")
-        if outdir:
-            os.makedirs(outdir, exist_ok=True)
-            label = f"fold_{fold}" if fold is not None else "final"
-            out_path = os.path.join(outdir, f"missing_side_{label}.csv")
-            pd.DataFrame().to_csv(out_path, index=False)
-            logger.info("[ensure_buy_sell] Exported zero-trade marker → %s", out_path)
-    else:
-        print("[Patch QA-FIX] ✅ BUY/SELL ครบหลัง forceentry")
-
-    return trades_df2
+    """Wrapper สำหรับบังคับให้มีทั้ง BUY และ SELL"""
+    return util_ensure_buy_sell(trades_df, df, simulate_fn, fold=fold, outdir=outdir)
 
 
 # [Patch v12.3.8] – รัน WFV แบบ AutoFix Multi-Fold

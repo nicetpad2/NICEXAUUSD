@@ -70,7 +70,8 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
     )
     from nicegold_v5.entry import generate_signals
     from nicegold_v5.exit import simulate_partial_tp_safe
-    from nicegold_v5.wfv import ensure_buy_sell, inject_exit_variety
+    from nicegold_v5.utils import ensure_buy_sell
+    from nicegold_v5.wfv import inject_exit_variety
     import inspect  # [Patch QA-FIX v28.2.7] dynamic fallback param check
 
     config_main = SNIPER_CONFIG_Q3_TUNED.copy()

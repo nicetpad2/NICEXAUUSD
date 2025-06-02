@@ -72,7 +72,7 @@ def test_generate_ml_dataset_prod_fallback(tmp_path, monkeypatch):
 
     monkeypatch.setattr('nicegold_v5.entry.generate_signals', fake_generate)
     monkeypatch.setattr('nicegold_v5.exit.simulate_partial_tp_safe', fake_simulate)
-    monkeypatch.setattr('nicegold_v5.wfv.ensure_buy_sell', lambda trades_df, df, fn: trades_df)
+    monkeypatch.setattr('nicegold_v5.utils.ensure_buy_sell', lambda trades_df, df, fn: trades_df)
     out_csv = tmp_path / 'out' / 'ml_dataset_m1.csv'
     generate_ml_dataset_m1(str(csv_path), str(out_csv), mode='qa')
     out_df = pd.read_csv(out_csv)
@@ -104,7 +104,7 @@ def test_generate_ml_dataset_force_near_tp2(tmp_path, monkeypatch):
         })
 
     monkeypatch.setattr('nicegold_v5.exit.simulate_partial_tp_safe', fake_simulate)
-    monkeypatch.setattr('nicegold_v5.wfv.ensure_buy_sell', lambda trades_df, df, fn: trades_df)
+    monkeypatch.setattr('nicegold_v5.utils.ensure_buy_sell', lambda trades_df, df, fn: trades_df)
     out_csv = tmp_path / 'force' / 'ml_dataset_m1.csv'
     generate_ml_dataset_m1(str(csv_path), str(out_csv), mode='qa')
     out_df = pd.read_csv(out_csv)
@@ -125,7 +125,7 @@ def test_generate_ml_dataset_entry_time_zero(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda d, config=None, **kw: d)
     monkeypatch.setattr('nicegold_v5.exit.simulate_partial_tp_safe', lambda d, percentile_threshold=75: pd.DataFrame({'entry_time': ['0'], 'exit_reason': ['tp2']}))
-    monkeypatch.setattr('nicegold_v5.wfv.ensure_buy_sell', lambda trades_df, df, fn: trades_df)
+    monkeypatch.setattr('nicegold_v5.utils.ensure_buy_sell', lambda trades_df, df, fn: trades_df)
     out_csv = tmp_path / 'out_zero' / 'ml_dataset_m1.csv'
     generate_ml_dataset_m1(str(csv_path), str(out_csv), mode='qa')
     out_df = pd.read_csv(out_csv)
@@ -154,7 +154,7 @@ def test_generate_ml_dataset_force_inject_tp2(tmp_path, monkeypatch):
         })
 
     monkeypatch.setattr('nicegold_v5.exit.simulate_partial_tp_safe', fake_simulate)
-    monkeypatch.setattr('nicegold_v5.wfv.ensure_buy_sell', lambda trades_df, df, fn: trades_df)
+    monkeypatch.setattr('nicegold_v5.utils.ensure_buy_sell', lambda trades_df, df, fn: trades_df)
     out_csv = tmp_path / 'force_inject' / 'ml_dataset_m1.csv'
     generate_ml_dataset_m1(str(csv_path), str(out_csv), mode='qa')
     out_df = pd.read_csv(out_csv)
@@ -179,7 +179,7 @@ def test_generate_ml_dataset_mock_tp2_when_no_trade(tmp_path, monkeypatch):
         return pd.DataFrame({'entry_time': [], 'exit_reason': []})
 
     monkeypatch.setattr('nicegold_v5.exit.simulate_partial_tp_safe', fake_simulate_empty)
-    monkeypatch.setattr('nicegold_v5.wfv.ensure_buy_sell', lambda trades_df, df, fn: trades_df)
+    monkeypatch.setattr('nicegold_v5.utils.ensure_buy_sell', lambda trades_df, df, fn: trades_df)
     out_csv = tmp_path / 'mock_tp2' / 'ml_dataset_m1.csv'
     generate_ml_dataset_m1(str(csv_path), str(out_csv), mode='qa')
     out_df = pd.read_csv(out_csv)
@@ -204,7 +204,7 @@ def test_inject_exit_variety_always_runs_in_production(tmp_path, monkeypatch):
         return pd.DataFrame({'entry_time': [d.index[0]], 'exit_reason': ['tp2']})
 
     monkeypatch.setattr('nicegold_v5.exit.simulate_partial_tp_safe', simulate_tp2_only)
-    monkeypatch.setattr('nicegold_v5.wfv.ensure_buy_sell', lambda trades_df, df, fn: trades_df)
+    monkeypatch.setattr('nicegold_v5.utils.ensure_buy_sell', lambda trades_df, df, fn: trades_df)
     out_csv = tmp_path / 'prod' / 'ml_dataset_m1.csv'
     generate_ml_dataset_m1(str(csv_path), str(out_csv), mode='production')
     trades = pd.read_csv(tmp_path / 'logs' / 'trades_v12_tp1tp2.csv')

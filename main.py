@@ -28,7 +28,8 @@ from nicegold_v5.wfv import (
     streak_summary,
 )
 # [Patch QA-FIX v28.2.5] Forward for QA
-from nicegold_v5.wfv import ensure_buy_sell, inject_exit_variety
+from nicegold_v5.utils import ensure_buy_sell
+from nicegold_v5.wfv import inject_exit_variety
 from nicegold_v5.utils import ensure_logs_dir
 from nicegold_v5.utils import M1_PATH, TRADE_DIR
 os.makedirs(TRADE_DIR, exist_ok=True)
@@ -905,7 +906,7 @@ def run_production_wfv():
             f"[Patch QA-FIX v28.2.4] ✅ Reloaded ML dataset – columns: {df.columns.tolist()}"
         )
     # [Patch QA-FIX v28.2.5] Ensure ensure_buy_sell available
-    from nicegold_v5.wfv import ensure_buy_sell
+    from nicegold_v5.utils import ensure_buy_sell
     # 2. Ensure 'Open' column exists
     if "Open" not in df.columns:
         if "open" in df.columns:
