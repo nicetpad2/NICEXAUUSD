@@ -909,4 +909,8 @@
 - [Patch v32.0.0] utils.load_data now raises FileNotFoundError and RuntimeError
 - [Patch v32.0.0] kill_switch logs warning when equity curve is empty
 
+## 2026-04-03
+- ปรับปรุง `load_wfv_training_data` ให้ข้ามไฟล์ว่างและคืน Dataset ว่างเมื่อไม่มีข้อมูล
+- เพิ่มการตรวจสอบ error ใน `predict_thresholds` สำหรับ model path และ state_dict
+
 
