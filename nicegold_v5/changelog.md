@@ -1113,3 +1113,8 @@
   - เพิ่ม unit test `test_run_production_wfv_profit_boost`
   - QA: pytest -q passed (271 tests)
 
+### 2026-05-05
+- [Patch v34.3.0] Handle missing timestamps in build_trade_log
+  - slice window with sorted dates and fallback if index missing
+  - added unit test `test_build_trade_log_missing_index`
+  - QA: pytest -q passed (272 tests)
