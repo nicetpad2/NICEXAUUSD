@@ -887,3 +887,7 @@
   - เพิ่ม Logging, Config via YAML, และ Unit/Integration Tests ครบถ้วน
   - ปรับระดับ Log Level, ลด log ยิบย่อย
   - รองรับ path สัมพัทธ์ (data/, logs/)
+
+## 2026-04-02
+- [Patch v32.0.7] Updated detect_session_auto to accept dict or timestamp and adjusted session ranges.
+- simulate_partial_tp_safe now logs warnings for missing columns and forces TP2 injection when MFE crosses 50%.
