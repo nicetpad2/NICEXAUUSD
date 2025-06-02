@@ -935,3 +935,8 @@
 ### 2026-04-02
 - ปรับ calc_lot รองรับ dict และป้องกัน sl_pips <=0 เพิ่ม qa_pnl_multiplier ใน run_backtest และลด kill_switch
 
+### 2026-04-03
+- [Patch v32.0.0] ปรับปรุง utils ให้มี shared logger, sanitize_price_columns รองรับคอลัมน์ขาดหาย
+- ปรับ parse_timestamp_safe ใช้ logger.warning เมื่อรูปแบบผิดและปรับ split_folds จัดการเศษข้อมูล
+- เพิ่มฟังก์ชัน merge_equity_curves รวมผล equity จากหลาย fold
+

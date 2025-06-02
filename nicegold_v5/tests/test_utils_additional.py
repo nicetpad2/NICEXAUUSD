@@ -37,12 +37,15 @@ from nicegold_v5.deep_model_m1 import LSTMClassifier
 
 
 def test_split_folds():
-    df = pd.DataFrame({'a': range(10)})
+    df = pd.DataFrame({
+        'timestamp': pd.date_range('2024-01-01', periods=11, freq='h'),
+        'a': range(11)
+    })
     folds = utils.split_folds(df, n_folds=2)
     assert len(folds) == 2
-    assert all(len(f) == 5 for f in folds)
-    assert folds[0].index[0] == 0
-    assert folds[1].index[0] == 0
+    assert len(folds[0]) == 5
+    assert len(folds[1]) == 6
+    assert folds[0]['timestamp'].iloc[-1] < folds[1]['timestamp'].iloc[0]
 
 
 def test_load_and_save_results(tmp_path):
@@ -377,3 +380,18 @@ def test_dynamic_batch_scaler_return_false(monkeypatch):
 
     bs = utils_mod.dynamic_batch_scaler(return_false, batch_start=64, min_batch=32, max_retry=1)
     assert bs is None
+
+
+def test_merge_equity_curves_utils():
+    df1 = pd.DataFrame({
+        'timestamp': pd.date_range('2024-01-01', periods=2, freq='h'),
+        'pnl_usd_net': [1.0, -0.5]
+    })
+    df2 = pd.DataFrame({
+        'timestamp': pd.date_range('2024-01-01 02:00', periods=2, freq='h'),
+        'pnl_usd_net': [0.5, 1.0]
+    })
+
+    merged = utils.merge_equity_curves([df1, df2], n_folds=2)
+    assert 'equity_total' in merged.columns
+    assert merged['equity_total'].iloc[-1] == pytest.approx(2.0)

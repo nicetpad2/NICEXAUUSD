@@ -261,14 +261,23 @@ def setup_logger(name: str, log_file: str, level: int = logging.INFO) -> logging
     return logger
 
 
-logger = setup_logger("nicegold_v5", os.path.join(QA_BASE_PATH, "core.log"))
+logger = setup_logger("nicegold_v5.utils", os.path.join(QA_BASE_PATH, "utils.log"))
 M1_PATH = "data/XAUUSD_M1.csv"
 M15_PATH = "data/XAUUSD_M15.csv"
 
 
-def sanitize_price_columns(df):  # lazy import wrapper
-    from .entry import sanitize_price_columns as _f
-    return _f(df)
+def sanitize_price_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """แปลงคอลัมน์ราคาให้เป็น float และเติมค่า 0 เมื่อแปลงไม่ได้"""
+    for col in ["open", "high", "low", "close", "volume"]:
+        if col in df.columns:
+            df[col] = (
+                df[col]
+                .astype(str)
+                .str.replace(",", "")
+                .astype(float, errors="coerce")
+                .fillna(0.0)
+            )
+    return df
 
 
 def validate_indicator_inputs(df, min_rows=100):
@@ -491,12 +500,20 @@ def auto_entry_config(fold_df: pd.DataFrame) -> dict:
 # ✅ Run Walk-Forward Validation
 
 def split_folds(df: pd.DataFrame, n_folds: int = 5) -> list[pd.DataFrame]:
-    """Split dataframe into equal sequential folds."""
-    fold_size = len(df) // n_folds
-    return [
-        df.iloc[i * fold_size:(i + 1) * fold_size].reset_index(drop=True)
-        for i in range(n_folds)
-    ]
+    """แบ่ง DataFrame ตามลำดับเวลาและรับมือกับแถวเศษส่วนใน fold สุดท้าย"""
+
+    df = df.sort_values("timestamp")
+    folds: list[pd.DataFrame] = []
+    N = len(df)
+    base = N // n_folds
+    for i in range(n_folds):
+        start = i * base
+        if i < n_folds - 1:
+            end = (i + 1) * base
+            folds.append(df.iloc[start:end])
+        else:
+            folds.append(df.iloc[start:])
+    return folds
 
 
 def run_auto_wfv(df: pd.DataFrame, outdir: str, n_folds: int = 5) -> pd.DataFrame:
@@ -579,6 +596,16 @@ def safe_calculate_net_change(trade_df: pd.DataFrame) -> float:
     return round(float(net_change), 4)
 
 
+def merge_equity_curves(equity_lists: list[pd.DataFrame], n_folds: int) -> pd.DataFrame:
+    """รวม equity curve จากหลาย fold และคำนวณยอดรวม"""
+
+    df_merged = pd.concat(equity_lists, ignore_index=True)
+    if "timestamp" in df_merged.columns:
+        df_merged = df_merged.sort_values("timestamp").reset_index(drop=True)
+    df_merged["equity_total"] = df_merged["pnl_usd_net"].cumsum()
+    return df_merged
+
+
 def convert_thai_datetime(df: pd.DataFrame) -> pd.DataFrame:
     """Convert Thai Date+Timestamp columns in Buddhist Era to ``timestamp``.
 
@@ -624,18 +651,18 @@ def convert_thai_datetime(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def parse_timestamp_safe(series: pd.Series, format: str = "%Y-%m-%d %H:%M:%S") -> pd.Series:
-    """Parse Series to datetime safely with logging."""
+def parse_timestamp_safe(ts_series: pd.Series, fmt: str = "%Y-%m-%d %H:%M:%S", **kwargs) -> pd.Series:
+    """แปลง Series เป็น datetime อย่างปลอดภัยและรองรับพารามิเตอร์ชื่อ ``format``"""
 
-    print("[Patch v11.9.20] 🧠 เริ่ม parse_timestamp_safe()")
-    if not pd.api.types.is_string_dtype(series):
-        series = series.astype(str)
-    parsed = pd.to_datetime(series, format=format, errors="coerce")
-    fail_count = parsed.isna().sum()
-    print(
-        f"[Patch v11.9.20] ✅ parse_timestamp_safe() เสร็จสิ้น – แปลงได้ {len(parsed) - fail_count} row | NaT {fail_count} row"
-    )
-    return parsed
+    if "format" in kwargs and not kwargs.get("fmt"):
+        fmt = kwargs["format"]
+
+    try:
+        ts = pd.to_datetime(ts_series, format=fmt, errors="coerce")
+    except ValueError as e:  # pragma: no cover - unexpected format
+        logger.warning(f"[parse_timestamp_safe] Invalid format {fmt}: {e}")
+        ts = pd.to_datetime(ts_series, errors="coerce")
+    return ts
 
 
 def simulate_tp_exit(
