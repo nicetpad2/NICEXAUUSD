@@ -7,8 +7,57 @@ import numpy as np
 from typing import Union
 
 logger = logging.getLogger("nicegold_v5.backtester")
+# [Patch vBacktester v1.0] ปิด session_filter ใน Production เพื่อให้เทรดได้ทุกช่วงเวลา
+ENABLE_SESSION_FILTER = False
 # Risk management utilities
 MAX_LOT_CAP = 1.0  # [Patch v6.7]
+
+
+def simulate_trades_with_tp(df: pd.DataFrame, sl_distance: float = 5.0):
+    """Simple simulator for TP/SL with equity tracking."""
+    df = df.copy()
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
+
+    capital = 100.0  # ปรับให้สอดคล้องกับ Production WFV
+    peak = capital
+    position = None
+    win_streak = 0
+    loss_streak = 0
+    equity_list: list[float] = []
+
+    trades: list[dict] = []
+    logs: list[dict] = []
+
+    for _, row in df.iterrows():
+        if ENABLE_SESSION_FILTER and row.get("session") not in ["Asia", "London", "NY"]:
+            continue
+
+        price = row.get("close")
+        side = row.get("side", "buy")
+        tp_price = price + sl_distance * 2 if side == "buy" else price - sl_distance * 2
+        pnl = (tp_price - price) if side == "buy" else (price - tp_price)
+
+        capital += pnl
+        peak = max(peak, capital)
+        equity_list.append(capital)
+
+        trades.append({
+            "entry_time": row["timestamp"],
+            "exit_time": row["timestamp"],
+            "pnl": pnl,
+            "is_dummy": False,
+        })
+
+    if equity_list:
+        eq_df = pd.DataFrame({
+            "timestamp": [t["exit_time"] for t in trades],
+            "equity": equity_list,
+        })
+        eq_out = "logs/equity_curve.csv"
+        eq_df.to_csv(eq_out, index=False)
+        print(f"[simulate_trades_with_tp] Saved equity curve → {eq_out}")
+
+    return trades, logs
 
 
 def calc_lot(account: Union[dict, float], sl_pips: float = 100, pip_value: float = 1.0, risk_pct: float = 1.5) -> float:

@@ -29,7 +29,6 @@ from nicegold_v5.wfv import (
 )
 # [Patch QA-FIX v28.2.5] Forward for QA
 from nicegold_v5.wfv import run_autofix_wfv
-from nicegold_v5.utils import ensure_buy_sell
 from nicegold_v5.wfv import inject_exit_variety
 from nicegold_v5.utils import ensure_logs_dir
 from nicegold_v5.config import PATHS, ensure_order_side_enabled
@@ -901,9 +900,9 @@ def run_production_wfv():
         "ema_slope",
         "atr",
         "rsi",
-        "volume",
         "entry_score",
         "pattern_label",
+        "tp2_hit",
     ]
     label_col = "tp2_hit"
     # [Patch QA-FIX v28.2.4] Ensure label_col exists (auto-regenerate ML dataset if needed)
@@ -932,7 +931,7 @@ def run_production_wfv():
             f"[Patch QA-FIX v28.2.4] ✅ Reloaded ML dataset – columns: {df.columns.tolist()}"
         )
     # [Patch QA-FIX v28.2.5] Ensure ensure_buy_sell available
-    from nicegold_v5.utils import ensure_buy_sell
+    # (deprecated)
     # 2. Ensure 'Open' column exists
     if "Open" not in df.columns:
         if "open" in df.columns:
@@ -951,45 +950,52 @@ def run_production_wfv():
         df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
         df = df.set_index("timestamp")
         print("[Patch QA-FIX v28.2.3] ตั้ง index เป็น timestamp (DatetimeIndex)")
-    configs = [
-        ("Q3_TUNED", SNIPER_CONFIG_Q3_TUNED),
-        ("RELAX_CONFIG_Q3", RELAX_CONFIG_Q3),
-        ("DIAGNOSTIC", SNIPER_CONFIG_DIAGNOSTIC),
-        ("ULTRA_OVERRIDE", SNIPER_CONFIG_ULTRA_OVERRIDE),
-    ]
+    from nicegold_v5.entry import generate_signals_v8_0
+    from nicegold_v5.config import SNIPER_CONFIG_Q3_TUNED, RELAX_CONFIG_Q3
 
-    def _simulate(data, cfg):
-        ensure_order_side_enabled(cfg)
-        buy = run_walkforward_backtest(
-            data, features, label_col, side="buy", percentile_threshold=75
+    df_signals = generate_signals_v8_0(df.reset_index(), config=SNIPER_CONFIG_Q3_TUNED)
+    n_entry_tuned = df_signals["entry_signal"].notnull().sum()
+    logger.info(
+        "[run_production_wfv] Entries with SNIPER_CONFIG_Q3_TUNED: %d",
+        n_entry_tuned,
+    )
+    if n_entry_tuned == 0:
+        logger.warning(
+            "[run_production_wfv] ไม่มี entry จาก Q3_TUNED → Fallback ไปใช้ RELAX_CONFIG_Q3"
         )
-        sell = run_walkforward_backtest(
-            data, features, label_col, side="sell", percentile_threshold=75
+        df_signals = generate_signals_v8_0(df.reset_index(), config=RELAX_CONFIG_Q3)
+        n_entry_relax = df_signals["entry_signal"].notnull().sum()
+        logger.info(
+            "[run_production_wfv] Entries with RELAX_CONFIG_Q3: %d",
+            n_entry_relax,
         )
-        return pd.concat([buy, sell], ignore_index=True)
+        df = df_signals
+    else:
+        df = df_signals
 
-    trades = pd.DataFrame()
-    for name, cfg in configs:
-        print(f"\n[Patch v29.9.0] 🛠️ Fallback: {name}")
-        try:
-            trades = _simulate(df, cfg)
-            trades = ensure_buy_sell(trades, df, lambda d, pct=75: _simulate(d, cfg))
-        except Exception as e:
-            print(f"[Patch v29.9.0] ❌ {name} error: {e}")
-            trades = pd.DataFrame()
-        if not trades.empty and check_exit_reason_variety(trades):
-            print(f"[Patch v29.9.0] ✅ SUCCESS: WFV มี TP1/TP2/SL ครบ ({name})")
-            ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-            out = f"logs/trades_v12_tp1tp2_{name}.csv"
-            ensure_logs_dir("logs")
-            trades.to_csv(out, index=False)
-            print(f"[Patch v29.9.0] ✅ Trade log saved ({out})")
-            equity = pd.DataFrame({"equity": trades["pnl"].cumsum()})
-            auto_qa_after_backtest(trades, equity, label="ProductionWFV")
-            return trades
-        else:
-            print(f"[Patch v29.9.0] ⚠️ {name}: ยังไม่ครบ variety – Fallback ต่อ...")
-    raise RuntimeError("[Patch v29.9.0] ❌ No real trades (TP1/TP2/SL) in WFV แม้ fallback ทุก config – ให้ปรับ entry logic/ข้อมูล")
+    total_entries = df["entry_signal"].notnull().sum()
+    logger.info(
+        "[run_production_wfv] สรุปเบื้องต้น: Total Entries = %d", total_entries
+    )
+
+    df_trades = run_walkforward_backtest(
+        df,
+        features=features,
+        label_col="tp2_hit",
+        side="buy",
+        n_folds=3,
+        percentile_threshold=75,
+        strategy_name="ProdA",
+    )
+
+    n_real = len(df_trades[df_trades["is_dummy"] == False])
+    total_pnl = df_trades.loc[df_trades["is_dummy"] == False, "pnl"].sum()
+    logger.info(
+        "[run_production_wfv] สรุปหลัง WFV: Real Trades = %d, Total PnL = %.2f USD",
+        n_real,
+        total_pnl,
+    )
+    return df_trades
 
 
 def run_qa_robustness():

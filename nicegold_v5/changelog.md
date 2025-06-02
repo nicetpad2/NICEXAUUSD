@@ -1028,3 +1028,7 @@
 - [Patch vUtils v1.0] sanitize_price_columns รองรับ Titlecase และ ensure_buy_sell เพิ่ม trade จริง
 - [Patch vML v1.0] ตรวจสอบฟีเจอร์สำคัญ drop NaN ก่อนบันทึกชุดข้อมูล
 - [Patch vWFV v1.0] สรุป equity ต่อ fold และบันทึกเป็นไฟล์ CSV
+
+## 2026-04-19
+- [Patch vMain v1.0] Fallback ใช้ RELAX_CONFIG_Q3 เมื่อไม่มี entry จาก Q3_TUNED
+- [Patch vBacktester v1.0] ปิด session_filter และบันทึก equity curve

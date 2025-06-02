@@ -1028,3 +1028,7 @@
 - [Patch vUtils v1.0] sanitize_price_columns รองรับ Titlecase, ensure_buy_sell เพิ่ม real trade
 - [Patch vML v1.0] ตรวจสอบฟีเจอร์สำคัญใน generate_ml_dataset_m1
 - [Patch vWFV v1.0] บันทึก equity summary ต่อ fold ใน run_walkforward_backtest
+
+### 2026-04-19
+- [Patch vMain v1.0] เลือกใช้ config RELAX หาก Q3_TUNED ไม่มีสัญญาณ และบันทึกผล WFV
+- [Patch vBacktester v1.0] ปิด session_filter, ตั้งทุนเริ่มต้น และบันทึก equity curve
