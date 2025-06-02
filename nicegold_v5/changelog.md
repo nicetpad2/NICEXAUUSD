@@ -874,3 +874,16 @@
 - [Patch v33.0.0] Added unified logging via `setup_logger` and YAML-based config
   loader with environment overrides. New tests ensure YAML config loads
   correctly.
+
+## 2026-04-01
+- v32.0.0 – Enterprise QA Remediation
+  - แก้ ImportError/NameError ใน main.py, entry.py, wfv.py
+  - ปรับ TP Logic (DEFAULT_RR1=1.2, DEFAULT_RR2=2.0) ให้ TP2 เอื้มถึงได้ใน M1
+  - Loosen Confirm-Zone Filters (gain_z_thresh=-0.10, ema_slope_min=0.005, atr_thresh=0.10)
+  - QA Inject TP2 เมื่อ MFE >50% ใน exit.py
+  - ปรับ sanitize_price_columns, parse_timestamp_safe, config management
+  - แก้ ML Pipeline (rename columns, skip if no torch)
+  - แก้ RL Pipeline (initialize full state-space, avoid KeyError)
+  - เพิ่ม Logging, Config via YAML, และ Unit/Integration Tests ครบถ้วน
+  - ปรับระดับ Log Level, ลด log ยิบย่อย
+  - รองรับ path สัมพัทธ์ (data/, logs/)
