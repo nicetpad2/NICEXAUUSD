@@ -280,8 +280,12 @@ def sanitize_price_columns(df: pd.DataFrame) -> pd.DataFrame:
             df[col] = (
                 pd.to_numeric(
                     df[col].astype(str).str.replace(",", ""), errors="coerce"
+
+                ).fillna(0.0)
+
                 )
                 .fillna(0.0)
+
             )
 
             df[col] = pd.to_numeric(

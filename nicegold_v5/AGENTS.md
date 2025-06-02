@@ -942,6 +942,10 @@
 
 ### 2026-04-04
 
+- [Patch v32.0.1] wfv.py imports `QA_BASE_PATH`, sorts timestamp in `split_by_session`,
+  logs missing BUY/SELL in `ensure_buy_sell`, and exports variety logs when injecting exits.
+=======
+
 - ปรับปรุง `meta_classifier` เพิ่มระบบ logging, fallback โมเดลไม่พร้อม และเมธอด `train_and_save`
 =======
 

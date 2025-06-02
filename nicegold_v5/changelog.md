@@ -940,6 +940,12 @@
 - เพิ่มพารามิเตอร์ qa_mode ใน run_backtest และลดค่า drawdown ใน kill_switch
 
 
+## 2026-04-04
+- [Patch v32.0.1] Updated wfv.py to import QA_BASE_PATH and pass outdir to `ensure_buy_sell`.
+- `split_by_session` now sorts by timestamp.
+- `inject_exit_variety` exports logs to QA directory.
+=======
+
 
 ## 2026-04-04
 - ปรับปรุง `meta_classifier` เพิ่ม logging และ fallback เมื่อโหลดโมเดลไม่ได้
