@@ -250,7 +250,9 @@ def run_walkforward_backtest(df, features, label_col, side='buy', n_folds=3, per
         print(f"[Strategy {strategy_name}] [Fold {fold+1} - {side.upper()}] Final Equity: {equity:.2f}")
 
     trades_df = pd.DataFrame(trades)
-    if not trades_df.empty:
+    if trades_df.empty:
+        trades_df["is_dummy"] = pd.Series(dtype=bool)
+    else:
         unique_reasons = set(trades_df.get("exit_reason", pd.Series(dtype=str)).str.lower().unique())
         expected = {"tp1", "tp2", "sl"}
         if not expected.issubset(unique_reasons):
