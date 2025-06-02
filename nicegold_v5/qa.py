@@ -125,7 +125,13 @@ def analyze_drawdown(equity_df: pd.DataFrame) -> dict:
 
 # --- Export & Auto QA ---
 
-def export_fold_qa(fold_name: str, stats: dict, bias_score: float, drawdown: dict, outdir: str = "logs"):
+def export_fold_qa(
+    fold_name: str,
+    stats: dict,
+    bias_score: float,
+    drawdown: dict,
+    outdir: str = "logs/qa",
+):
     """Export fold QA summary and related metrics as JSON."""
     os.makedirs(outdir, exist_ok=True)
     outpath = os.path.join(outdir, f"fold_qa_{fold_name.lower()}.json")
@@ -180,7 +186,7 @@ def auto_qa_after_backtest(trades: pd.DataFrame, equity: pd.DataFrame, label: st
         config={},
         metrics=stats | {"bias_score": bias} | dd,
         run_type="QA",
-        version="v28.2.0",
+        version="v32.1.0",
         fold=None,
         outdir=QA_BASE_PATH,
     )

@@ -990,3 +990,8 @@
   - sanitize_price_columns แปลงเป็น float พร้อมรายงาน NaN และเติม volume
   - convert_thai_datetime รองรับ Series และชื่อคอลัมน์ตัวพิมพ์เล็ก
 
+## 2026-04-11
+- [Patch v32.1.5] ปรับปรุง qa.py
+  - export_fold_qa บันทึกลงโฟลเดอร์ logs/qa โดยตรง
+  - auto_qa_after_backtest ใช้เวอร์ชัน v32.1.0 ใน audit report
+
