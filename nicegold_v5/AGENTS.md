@@ -940,3 +940,9 @@
 - ปรับ parse_timestamp_safe ใช้ logger.warning เมื่อรูปแบบผิดและปรับ split_folds จัดการเศษข้อมูล
 - เพิ่มฟังก์ชัน merge_equity_curves รวมผล equity จากหลาย fold
 
+### 2026-04-04
+- ปรับปรุง `qa.py` เพิ่ม logger โมดูล
+- แก้ `detect_overfit_bias` ให้คืนค่าเริ่มต้นเมื่อไม่มี trade และคำนวณ winrate จาก `tp2`
+- เพิ่มคำเตือนใน `summarize_fold` เมื่อขาดคอลัมน์ `exit_reason`
+- ปรับ `detect_fold_drift` ให้รับ DataFrame และคำนวณสัดส่วน std ต่อ mean
+
