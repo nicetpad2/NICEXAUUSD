@@ -1053,3 +1053,8 @@
 - [Patch v32.3.2] Ensure `is_dummy` column exists when no trades
 - Prevent KeyError in `run_production_wfv`
 - QA: pytest -q passed (264 tests)
+
+## 2026-04-24
+- [Patch v32.2.4] Refine ML dataset fallback logic
+- Updated fallback loop to reduce `tp_rr_ratio` gradually
+- QA: pytest -q passed (264 tests)

@@ -4,6 +4,9 @@ import os
 import importlib
 from nicegold_v5.utils import ensure_logs_dir, logger, sanitize_price_columns
 
+# จำนวนขั้นต่ำของ TP2 ที่ต้องมีในชุดข้อมูล ML
+MIN_TP2 = 10
+
 
 def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mode="production"):
     """สร้างชุดข้อมูล ML จากไฟล์ M1 โดยดึงพาธจาก main.M1_PATH หากไม่ได้ระบุ"""
@@ -75,8 +78,10 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
     import inspect  # [Patch QA-FIX v28.2.7] dynamic fallback param check
 
     config_main = SNIPER_CONFIG_Q3_TUNED.copy()
+    initial_tp_rr_list = [1.7, 1.5, 1.3]
+    tp_rr_ratio = None
     tp2_count = 0
-    for tp_rr in [1.7, 1.5, 1.3]:
+    for tp_rr in initial_tp_rr_list:
         config_main["tp_rr_ratio"] = tp_rr
         df_signals = generate_signals(df.copy(), config=config_main)
 
@@ -98,68 +103,56 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
         trade_df = simulate_partial_tp_safe(df_signals)
         real_trades = trade_df[trade_df.get("exit_reason").isin(["tp1", "tp2", "sl"])]
         tp2_count = (trade_df.get("exit_reason") == "tp2").sum()
-        if tp2_count >= 10:
+        if tp2_count >= MIN_TP2:
             print(f"[Patch v28.3.2] ✅ TP2 Hit found {tp2_count} @ tp_rr_ratio={tp_rr}")
+            tp_rr_ratio = tp_rr
             break
 
-    if tp2_count < 10:
-        print("[Patch v28.3.2] ⚡️ Fallback: force TP2 hit on near-miss trades (MFE > 90% TP2)")
-        top_mfe = trade_df.copy()
-        top_mfe = top_mfe[(top_mfe["exit_reason"] != "tp2") & (top_mfe.get("mfe", 0) > 0)]
-        if not top_mfe.empty and "tp2_price" in top_mfe.columns and "entry_price" in top_mfe.columns:
-            top_mfe["tp2_dist"] = abs(top_mfe["tp2_price"] - top_mfe["entry_price"])
-            top_mfe["mfe_ratio"] = abs(top_mfe["mfe"]) / (top_mfe["tp2_dist"] + 1e-9)
-            near_tp2 = top_mfe[top_mfe["mfe_ratio"] > 0.9]
-            n_force = max(10 - tp2_count, 0)
-            force_tp2_idx = near_tp2.sort_values("mfe_ratio", ascending=False).head(n_force).index
-            trade_df.loc[force_tp2_idx, "exit_reason"] = "tp2"
-            print(f"[Patch v28.3.2] 🚀 Forced {len(force_tp2_idx)} near-miss as TP2")
-        tp2_count = (trade_df.get("exit_reason") == "tp2").sum()
+    # หาก TP2 Hit ยังไม่ถึงขั้นต่ำ → ลองลด tp_rr_ratio ทีละ 0.2 เพื่อหาค่าที่เหมาะสม
+    if tp2_count < MIN_TP2:
+        logger.info(
+            "[Patch v32.2.4] TP2 hits (=%d) ยังไม่ถึงขั้นต่ำ (%d) → ทดลองปรับ threshold อัตโนมัติ",
+            tp2_count,
+            MIN_TP2,
+        )
+        new_tp_rr = initial_tp_rr_list[-1] - 0.2
+        while new_tp_rr >= 1.1 and (tp_rr_ratio is None or tp2_count < MIN_TP2):
+            config_main["tp_rr_ratio"] = new_tp_rr
+            df_signals = generate_signals(df.copy(), config=config_main)
+            required_features = [
+                "gain_z",
+                "ema_slope",
+                "atr",
+                "rsi",
+                "entry_score",
+                "pattern_label",
+                "tp2_hit",
+            ]
+            cols_exist = [c for c in required_features if c in df_signals.columns]
+            if cols_exist:
+                df_signals = df_signals.dropna(subset=cols_exist)
+            if df_signals.empty:
+                df_signals = df.tail(1).copy()
+            fallback_trade_df = simulate_partial_tp_safe(df_signals)
+            tp2_count = (fallback_trade_df.get("exit_reason") == "tp2").sum()
+            if tp2_count >= MIN_TP2:
+                tp_rr_ratio = new_tp_rr
+                trade_df = fallback_trade_df
+                logger.info(
+                    "[Patch v32.2.4] ทดลอง tp_rr_ratio=%.2f → TP2 hits=%d",
+                    new_tp_rr,
+                    tp2_count,
+                )
+                break
+            new_tp_rr -= 0.2
 
-    if tp2_count < 10:
-        print("[Patch v28.3.1] Fallback to RELAX_CONFIG_Q3 for entry signals.")
-        df_signals = generate_signals(df.copy(), config=RELAX_CONFIG_Q3)
-        trade_df = simulate_partial_tp_safe(df_signals)
-        real_trades = trade_df[trade_df.get("exit_reason").isin(["tp1", "tp2", "sl"])]
-        tp2_count = (trade_df.get("exit_reason") == "tp2").sum()
-    if tp2_count < 10:
-        print("[Patch v28.3.1] Fallback to SNIPER_CONFIG_DIAGNOSTIC for entry signals.")
-        df_signals = generate_signals(df.copy(), config=SNIPER_CONFIG_DIAGNOSTIC)
-        trade_df = simulate_partial_tp_safe(df_signals)
-        real_trades = trade_df[trade_df.get("exit_reason").isin(["tp1", "tp2", "sl"])]
-        tp2_count = (trade_df.get("exit_reason") == "tp2").sum()
-    if tp2_count < 10:
-        print("[Patch v28.3.1] Fallback to SNIPER_CONFIG_PROFIT for entry signals.")
-        df_signals = generate_signals(df.copy(), config=SNIPER_CONFIG_PROFIT)
-        trade_df = simulate_partial_tp_safe(df_signals)
-        real_trades = trade_df[trade_df.get("exit_reason").isin(["tp1", "tp2", "sl"])]
-        tp2_count = (trade_df.get("exit_reason") == "tp2").sum()
-    # [Patch v29.8.1] Ultra Override QA – inject signal/exit variety ทันที
-    if tp2_count < 10:
-        print("[Patch v29.8.1] 🚨 UltraOverride QA: Inject signal/exit variety ครบทุกกรณี")
-        ultra_config = SNIPER_CONFIG_ULTRA_OVERRIDE_QA.copy()
-        ultra_config["force_entry"] = True
-        ultra_config["force_entry_ratio"] = 1.0
-        ultra_config["force_entry_min_orders"] = 1000
-        df_signals = generate_signals(df.copy(), config=ultra_config, test_mode=True)
-        trade_df = simulate_partial_tp_safe(df_signals)
-        print("[Patch v29.8.1] ✅ UltraOverride QA applied.")
-        # Inject exit_reason variety ถ้ายังไม่ครบ
-        reason_list = list(trade_df.get("exit_reason", []))
-        need_tp2 = max(10 - reason_list.count("tp2"), 0)
-        need_tp1 = max(10 - reason_list.count("tp1"), 0)
-        need_sl = max(10 - reason_list.count("sl"), 0)
-        for label, need in zip(["tp2", "tp1", "sl"], [need_tp2, need_tp1, need_sl]):
-            if need > 0:
-                candidates = trade_df[trade_df["exit_reason"] != label]
-                if not candidates.empty:
-                    replace = len(candidates) < need
-                    idx = candidates.sample(n=min(len(candidates), need), replace=replace, random_state=42).index
-                    trade_df.loc[idx, "exit_reason"] = label
-                    print(f"[Patch v29.8.1] ✅ Force-injected {len(idx)} trades as {label} (QA)")
-        tp2_count = (trade_df.get("exit_reason") == "tp2").sum()
-        # [Patch v29.8.1] Check: show exit_reason distribution (QA Debug)
-        print("[Patch v29.8.1] exit_reason variety:", dict(trade_df["exit_reason"].value_counts()))
+        if tp_rr_ratio is None or tp2_count < MIN_TP2:
+            logger.error(
+                "[Patch v32.2.4] ยังไม่พบ TP2 Hit เกิน %d หลัง fallback ทุก Config → Skip ML dataset",
+                MIN_TP2,
+            )
+            if mode == "production":
+                return pd.DataFrame()
     if mode == "qa":
         from nicegold_v5.config import SNIPER_CONFIG_ULTRA_OVERRIDE
         df_signals = generate_signals(df.copy(), config=SNIPER_CONFIG_ULTRA_OVERRIDE)
