@@ -1032,3 +1032,7 @@
 ### 2026-04-19
 - [Patch vMain v1.0] เลือกใช้ config RELAX หาก Q3_TUNED ไม่มีสัญญาณ และบันทึกผล WFV
 - [Patch vBacktester v1.0] ปิด session_filter, ตั้งทุนเริ่มต้น และบันทึก equity curve
+
+### 2026-04-20
+- [Patch vConfig v1.1] เติม pattern_whitelist และค่า volume_ratio/tp_rr_ratio ใน
+  SNIPER_CONFIG_Q3_TUNED เพื่อให้สอดคล้องกับ RELAX_CONFIG_Q3
