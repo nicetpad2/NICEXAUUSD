@@ -942,6 +942,9 @@
 
 ### 2026-04-04
 
+- ปรับปรุง `meta_classifier` เพิ่มระบบ logging, fallback โมเดลไม่พร้อม และเมธอด `train_and_save`
+=======
+
 - ปรับปรุง deep_model_m1.LSTMClassifier เพิ่ม dropout และ type hints
 
 
@@ -952,6 +955,7 @@
 - แก้ `detect_overfit_bias` ให้คืนค่าเริ่มต้นเมื่อไม่มี trade และคำนวณ winrate จาก `tp2`
 - เพิ่มคำเตือนใน `summarize_fold` เมื่อขาดคอลัมน์ `exit_reason`
 - ปรับ `detect_fold_drift` ให้รับ DataFrame และคำนวณสัดส่วน std ต่อ mean
+
 
 
 
