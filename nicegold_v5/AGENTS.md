@@ -914,3 +914,6 @@
 - [Patch v32.0.7] ปรับปรุง detect_session_auto ให้รับ dict หรือ timestamp และปรับช่วงเวลาเป็น 0-7 Asia, 8-14 London, 15-23 NY
 - ปรับ simulate_partial_tp_safe ให้ใช้ logger.warning แทน print และบังคับ QA Inject TP2 ทุกกรณีเมื่อ MFE ถึงครึ่งทาง
 
+### 2026-04-03
+- [Patch v32.0.8] ปรับ RLScalper ให้กำหนด state-space ตาม indicators แบบ sorted และเพิ่มฟังก์ชัน save/load Q-table
+
