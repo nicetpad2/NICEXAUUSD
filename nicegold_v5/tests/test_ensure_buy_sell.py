@@ -1,5 +1,5 @@
 import pandas as pd
-from nicegold_v5.wfv import ensure_buy_sell
+from nicegold_v5.utils import ensure_buy_sell
 
 
 def test_ensure_buy_sell_skip():

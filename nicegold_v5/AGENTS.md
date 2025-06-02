@@ -898,6 +898,7 @@
   - Loosen Confirm-Zone Filters (gain_z_thresh=-0.10, ema_slope_min=0.005, atr_thresh=0.10)
   - QA Inject TP2 เมื่อ MFE >50% ใน exit.py
   - ปรับ sanitize_price_columns, parse_timestamp_safe, config management
+  - ย้าย `apply_order_costs` และ `ensure_buy_sell` ไปที่ utils พร้อมเพิ่ม wrapper ใน wfv
   - แก้ ML Pipeline (rename columns, skip if no torch)
   - แก้ RL Pipeline (initialize full state-space, avoid KeyError)
   - เพิ่ม Logging, Config via YAML, และ Unit/Integration Tests ครบถ้วน

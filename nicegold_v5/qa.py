@@ -6,7 +6,7 @@ import numpy as np
 import logging
 from nicegold_v5.utils import export_audit_report
 from nicegold_v5.entry import validate_indicator_inputs, simulate_partial_tp_safe
-from nicegold_v5.wfv import ensure_buy_sell  # [Patch QA-FIX v28.2.5] Forward for QA
+from nicegold_v5.utils import ensure_buy_sell  # [Patch QA-FIX v28.2.5] Forward for QA
 
 # module logger
 logger = logging.getLogger("nicegold_v5.qa")
