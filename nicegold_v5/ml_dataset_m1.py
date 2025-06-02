@@ -79,6 +79,22 @@ def generate_ml_dataset_m1(csv_path=None, out_path="data/ml_dataset_m1.csv", mod
     for tp_rr in [1.7, 1.5, 1.3]:
         config_main["tp_rr_ratio"] = tp_rr
         df_signals = generate_signals(df.copy(), config=config_main)
+
+        # [Patch vML v1.0] ตรวจสอบให้แน่ชัดว่า ฟีเจอร์สำคัญไม่มี NaN
+        required_features = [
+            "gain_z", "ema_slope", "atr", "rsi", "entry_score", "pattern_label", "tp2_hit"
+        ]
+        cols_exist = [c for c in required_features if c in df_signals.columns]
+        missing_count = df_signals[cols_exist].isna().any(axis=1).sum() if cols_exist else 0
+        if missing_count > 0:
+            logger.warning(
+                "[generate_ml_dataset_m1] ลบแถวที่มี NaN ในฟีเจอร์สำคัญ: %d แถว",
+                missing_count,
+            )
+        if cols_exist:
+            df_signals = df_signals.dropna(subset=cols_exist)
+        if df_signals.empty:
+            df_signals = df.tail(1).copy()
         trade_df = simulate_partial_tp_safe(df_signals)
         real_trades = trade_df[trade_df.get("exit_reason").isin(["tp1", "tp2", "sl"])]
         tp2_count = (trade_df.get("exit_reason") == "tp2").sum()

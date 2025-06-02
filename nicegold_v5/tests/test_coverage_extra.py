@@ -27,7 +27,13 @@ def test_generate_ml_dataset_alt_path(monkeypatch, tmp_path):
     alt_path = Path(mod_file).parent / 'does_not_exist.csv'
     make_sample_csv(alt_path)
     monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df, config=None, **kw: df)
-    monkeypatch.setattr('nicegold_v5.exit.simulate_partial_tp_safe', lambda df, percentile_threshold=75: pd.DataFrame({'entry_time': df.index[:2], 'exit_reason': ['tp2', 'sl']}))
+    monkeypatch.setattr(
+        'nicegold_v5.exit.simulate_partial_tp_safe',
+        lambda df, percentile_threshold=75: pd.DataFrame({
+            'entry_time': df.index[:2],
+            'exit_reason': ['tp2'] * len(df.index[:2])
+        })
+    )
     out_csv = tmp_path / 'out.csv'
     generate_ml_dataset_m1('does_not_exist.csv', str(out_csv), mode="qa")
     assert out_csv.exists()

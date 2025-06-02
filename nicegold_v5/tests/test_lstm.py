@@ -124,6 +124,7 @@ def test_dummy_model_forward():
 def sample_m1_data(rows=30):
     return pd.DataFrame({
         'timestamp': pd.date_range('2024-01-01', periods=rows, freq='min'),
+        'open': np.linspace(0.9, rows - 0.1, rows),
         'high': np.linspace(1, rows, rows),
         'low': np.linspace(0.5, rows - 0.5, rows),
         'close': np.linspace(0.8, rows - 0.2, rows),
@@ -142,7 +143,13 @@ def test_generate_ml_dataset_m1(tmp_path, monkeypatch):
     monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df, config=None, **kw: df)
     monkeypatch.setattr(
         'nicegold_v5.exit.simulate_partial_tp_safe',
-        lambda df, percentile_threshold=75: pd.DataFrame({'entry_time': df.index[[10, 20]].astype(str).tolist(), 'exit_reason': ['tp2', 'sl']})
+        lambda df, percentile_threshold=75: (
+            lambda idx=[i for i in [10, 20] if i < len(df.index)]:
+                pd.DataFrame({
+                    'entry_time': df.index[idx].astype(str).tolist(),
+                    'exit_reason': ['tp2'] * len(idx)
+                })
+        )()
     )
     generate_ml_dataset_m1(str(csv_path), str(out_csv), mode="qa")
     assert out_csv.exists()
@@ -180,7 +187,13 @@ def test_train_lstm(tmp_path, monkeypatch):
     monkeypatch.setattr('nicegold_v5.entry.generate_signals', lambda df, config=None, **kw: df)
     monkeypatch.setattr(
         'nicegold_v5.exit.simulate_partial_tp_safe',
-        lambda df, percentile_threshold=75: pd.DataFrame({'entry_time': df.index[[10, 20]].astype(str).tolist(), 'exit_reason': ['tp2', 'sl']})
+        lambda df, percentile_threshold=75: (
+            lambda idx=[i for i in [10, 20] if i < len(df.index)]:
+                pd.DataFrame({
+                    'entry_time': df.index[idx].astype(str).tolist(),
+                    'exit_reason': ['tp2'] * len(idx)
+                })
+        )()
     )
     generate_ml_dataset_m1(str(csv_path), str(out_csv), mode="qa")
     X, y = load_dataset(str(out_csv), seq_len=5)
