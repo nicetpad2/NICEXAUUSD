@@ -92,7 +92,7 @@ def exceeded_order_duration(entry_time, current_time):
 
 def pass_filters(row):
     slope_ok = row.get("EMA_50_slope", 0) > 0
-    # [Patch v32.2.1] แก้ไขให้ใช้คอลัมน์ 'timestamp' แทน row.name ซึ่งเป็น int
+    # [Patch v32.2.2] ใช้ timestamp แทน row.name และตรวจค่าว่างก่อนแปลง
     ts = row.get("timestamp", pd.NaT)
     if pd.isna(ts):
         hour = -1
@@ -249,7 +249,18 @@ def run_walkforward_backtest(df, features, label_col, side='buy', n_folds=3, per
 
         print(f"[Strategy {strategy_name}] [Fold {fold+1} - {side.upper()}] Final Equity: {equity:.2f}")
 
-    trades_df = pd.DataFrame(trades)
+    # [Patch v32.2.2] คืน DataFrame เปล่าที่มี schema สำคัญเมื่อไม่มีเทรดจริง
+    if len(trades) == 0:
+        columns_template = [
+            "entry_time", "exit_time", "side", "entry_price", "exit_price",
+            "sl_price", "tp1_price", "tp2_price", "lot", "pnl", "planned_risk",
+            "r_multiple", "pnl_pct", "commission", "slippage", "duration_min",
+            "break_even_min", "mfe", "exit_reason", "session", "fold",
+            "is_dummy",
+        ]
+        trades_df = pd.DataFrame(columns=columns_template)
+    else:
+        trades_df = pd.DataFrame(trades)
     if trades_df.empty:
         trades_df["is_dummy"] = pd.Series(dtype=bool)
     else:

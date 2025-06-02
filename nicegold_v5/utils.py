@@ -11,6 +11,7 @@ from datetime import datetime
 import time
 from types import SimpleNamespace
 from typing import List
+from nicegold_v5.config import DEFAULT_RR1, DEFAULT_RR2
 
 # [Patch v29.1.0] AI Resource AutoTune & Monitor แบบเทพ
 try:  # pragma: no cover - optional torch dependency
@@ -372,19 +373,56 @@ def ensure_buy_sell(
     has_sell2 = "sell" in sides2.values
 
     if not has_buy2 or not has_sell2:
-        dummy_row = {
-            "entry_time": df.index[0] if len(df.index) else 0,
-            "exit_time": df.index[0] if len(df.index) else 0,
-            "side": "buy",
-            "pnl": 0.0,
-            "fold": 1,
-            "is_dummy": False,
+        from nicegold_v5.exit import TP2_HOLD_MIN, detect_session_auto
+        # [Patch v32.2.3] สร้าง dummy trade ให้ครบ schema และกำหนด pnl จาก ATR
+        last_ts = df["timestamp"].iloc[-1]
+        if "close" in df.columns:
+            price_col = "close"
+        elif "Close" in df.columns:
+            price_col = "Close"
+        elif "Open" in df.columns:
+            price_col = "Open"
+        elif "open" in df.columns:
+            price_col = "open"
+        else:
+            price_col = df.columns[0]
+        last_close = df[price_col].iloc[-1]
+        last_atr = df.get("ATR_14", pd.Series([0.1])).iloc[-1] or 0.1
+        default_lot = 0.1
+        point_value = 0.1
+        tp2_RR = DEFAULT_RR2
+        sl_price = last_close + last_atr * 1.0
+        tp2_price = last_close - last_atr * tp2_RR
+        pnl = (last_close - tp2_price) * point_value * default_lot
+
+        dummy_common = {
+            "entry_time": last_ts,
+            "exit_time": last_ts + pd.Timedelta(minutes=TP2_HOLD_MIN),
+            "entry_price": last_close,
+            "sl_price": sl_price,
+            "tp1_price": last_close - last_atr * DEFAULT_RR1,
+            "tp2_price": tp2_price,
+            "lot": default_lot,
+            "pnl": pnl,
+            "planned_risk": last_atr * default_lot,
+            "r_multiple": tp2_RR,
+            "pnl_pct": pnl / 10000 * 100,
+            "commission": 0.0,
+            "slippage": 0.0,
+            "duration_min": TP2_HOLD_MIN,
+            "break_even_min": 0,
+            "mfe": last_atr * default_lot,
+            "exit_reason": "inject_side",
+            "session": detect_session_auto(last_ts),
+            "fold": fold,
+            "is_dummy": True,
         }
         if not has_buy2:
-            trades_df2 = pd.concat([trades_df2, pd.DataFrame([dummy_row])], ignore_index=True)
+            dummy_buy = {**dummy_common, "side": "buy"}
+            trades_df2 = pd.concat([trades_df2, pd.DataFrame([dummy_buy])], ignore_index=True)
         if not has_sell2:
-            dummy_row["side"] = "sell"
-            trades_df2 = pd.concat([trades_df2, pd.DataFrame([dummy_row])], ignore_index=True)
+            dummy_sell = {**dummy_common, "side": "sell"}
+            trades_df2 = pd.concat([trades_df2, pd.DataFrame([dummy_sell])], ignore_index=True)
 
     sides3 = trades_df2.get("side", trades_df2.get("type", pd.Series(dtype=str))).str.lower()
     has_buy3 = "buy" in sides3.values
