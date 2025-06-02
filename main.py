@@ -28,6 +28,7 @@ from nicegold_v5.wfv import (
     streak_summary,
 )
 # [Patch QA-FIX v28.2.5] Forward for QA
+from nicegold_v5.wfv import run_autofix_wfv
 from nicegold_v5.utils import ensure_buy_sell
 from nicegold_v5.wfv import inject_exit_variety
 from nicegold_v5.utils import ensure_logs_dir
@@ -76,6 +77,16 @@ from nicegold_v5.fix_engine import simulate_and_autofix  # [Patch v12.3.9] Added
 # --- Advanced Risk Management (Patch C) ---
 # ค่า DD Limit อัปเกรดจาก config (Patch HEDGEFUND-NEXT)
 MAX_LOT_CAP = 1.0  # [Patch v6.7] จำกัดขนาดลอตสูงสุดต่อไม้
+
+# [Patch v24.1.0] ตรวจสอบ dtype ก่อน merge การใช้งาน LSTM + Feature Merge
+# (Patch v25.1.0) ตรวจ dtype ก่อน merge: df.timestamp กับ df_feat.timestamp
+def _ensure_datetime_columns(df, df_feat):
+    if df["timestamp"].dtype != "datetime64[ns]":
+        df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
+        print("[Patch v25.1.0] → df['timestamp'] แปลงเป็น datetime64[ns]")
+    if df_feat["timestamp"].dtype != "datetime64[ns]":
+        df_feat["timestamp"] = pd.to_datetime(df_feat["timestamp"], errors="coerce")
+        print("[Patch v25.1.0] → df_feat['timestamp'] แปลงเป็น datetime64[ns]")
 
 
 def kill_switch(equity_curve):
@@ -373,9 +384,10 @@ def run_wfv_with_progress(df, features, label_col):
     for name, sess_df in session_folds.items():
         fold_pbar = tqdm(total=1, desc=f"🔁 {name}", unit="step")
         try:
-            trades = run_walkforward_backtest(sess_df, features, label_col, strategy_name=name)
-            if not trades.empty:
+            trades = run_autofix_wfv(sess_df, simulate_partial_tp_safe, SNIPER_CONFIG_Q3_TUNED)
+            if "fold" not in trades.columns:
                 trades["fold"] = name
+            if not trades.empty:
                 start_time = trades["time"].min() if "time" in trades.columns else "N/A"
                 end_time = trades["time"].max() if "time" in trades.columns else "N/A"
                 duration_days = (pd.to_datetime(end_time) - pd.to_datetime(start_time)).days if start_time != "N/A" else "-"
@@ -393,13 +405,22 @@ def run_wfv_with_progress(df, features, label_col):
                 print(f"    ▸ Total PnL  : {total_pnl:.2f} USD")
                 print(f"    ▸ Duration   : {duration_days} days")
                 print(f"    ▸ Max Drawdown: {max_dd:.2%}" if max_dd is not None else "")
-            all_trades.append(trades)
-            fold_pbar.update(1)
-            maximize_ram()
         except Exception as e:
             print(f"❌ Error in {name}: {e}")
+            trades = pd.DataFrame(columns=["fold"])
+            trades["fold"] = []
+        fold_pbar.update(1)
+        maximize_ram()
+        all_trades.append(trades)
     logging.info("[TIME] run_wfv_with_progress(): Done")
-    return pd.concat(all_trades, ignore_index=True) if all_trades else pd.DataFrame()
+    return pd.concat(all_trades, ignore_index=True) if all_trades else pd.DataFrame(columns=["fold"])
+
+# [Patch v32.1.0] ตรวจสอบ dtype หลังใช้ _ensure_datetime_columns
+def run_clean_backtest_with_lstm(df, df_feat, config):
+    _ensure_datetime_columns(df, df_feat)
+    df = sanitize_price_columns(df)
+    df_feat = sanitize_price_columns(df_feat)
+    return df.merge(df_feat, on="timestamp", how="left")
 
 def show_progress_bar(task_desc, steps=5):
     for _ in trange(steps, desc=task_desc, unit="step"):
@@ -577,13 +598,13 @@ def autopipeline(mode="default", train_epochs=1):
         device2 = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # [Patch v25.1.0] Fix: Ensure 'timestamp' dtype matches before merge (datetime64[ns])
-        print("[Patch v25.1.0] ตรวจสอบ dtype ก่อน merge: df.timestamp =", df["timestamp"].dtype, "df_feat.timestamp =", df_feat["timestamp"].dtype)
-        if df["timestamp"].dtype != "datetime64[ns]":
-            df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
-            print("[Patch v25.1.0] → df['timestamp'] แปลงเป็น datetime64[ns]")
-        if df_feat["timestamp"].dtype != "datetime64[ns]":
-            df_feat["timestamp"] = pd.to_datetime(df_feat["timestamp"], errors="coerce")
-            print("[Patch v25.1.0] → df_feat['timestamp'] แปลงเป็น datetime64[ns]")
+        print(
+            "[Patch v25.1.0] ตรวจสอบ dtype ก่อน merge: df.timestamp =",
+            df["timestamp"].dtype,
+            "df_feat.timestamp =",
+            df_feat["timestamp"].dtype,
+        )
+        _ensure_datetime_columns(df, df_feat)
 
         # [Patch v25.0.0] Batch inference LSTM ป้องกัน OOM
         def predict_lstm_in_batches(model, X_data, batch_size=1024, device=None):

@@ -997,3 +997,7 @@
 
 ## 2026-04-12
 - [Patch v32.1.6] ปรับปรุง kill_switch และล้าง sl_streak เมื่อไม่ได้ SL
+
+## 2026-04-13
+- [Patch v32.1.7] main.py เพิ่ม `_ensure_datetime_columns` และ `run_clean_backtest_with_lstm`
+- ปรับ `run_wfv_with_progress` ให้ใช้ `run_autofix_wfv`
