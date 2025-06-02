@@ -1032,3 +1032,7 @@
 ## 2026-04-19
 - [Patch vMain v1.0] Fallback ใช้ RELAX_CONFIG_Q3 เมื่อไม่มี entry จาก Q3_TUNED
 - [Patch vBacktester v1.0] ปิด session_filter และบันทึก equity curve
+
+## 2026-04-20
+- [Patch vConfig v1.1] ปรับ sniper_config_q3_tuned เพิ่ม pattern_whitelist และ
+  พารามิเตอร์ volume_ratio/tp_rr_ratio เพื่อใช้ fallback อย่างผ่อนปรน
