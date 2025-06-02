@@ -273,7 +273,13 @@ def sanitize_price_columns(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
     # [Patch vUtils v1.0] รองรับ Titlecase → lowercase ด้วย
-    for tc, lc in [("Open", "open"), ("High", "high"), ("Low", "low"), ("Close", "close")]:
+    for tc, lc in [
+        ("Open", "open"),
+        ("High", "high"),
+        ("Low", "low"),
+        ("Close", "close"),
+        ("Volume", "volume"),  # [Patch] handle Volume column
+    ]:
         if tc in df.columns and lc not in df.columns:
             df[lc] = df[tc]
 
