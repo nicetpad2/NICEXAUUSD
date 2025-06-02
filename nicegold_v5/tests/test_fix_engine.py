@@ -19,6 +19,13 @@ def test_run_self_diagnostic_basic():
     assert summary['sl_rate'] == pytest.approx(0.5)
 
 
+def test_run_self_diagnostic_exit_variety():
+    trades = pd.DataFrame({'exit_reason': ['tp1']})
+    df = pd.DataFrame({'close': [1]})
+    summary = run_self_diagnostic(trades, df)
+    assert summary['exit_variety_insufficient']
+
+
 def test_auto_fix_logic_multiple_rules():
     summary = {
         'tp1_count': 0,
@@ -35,6 +42,21 @@ def test_auto_fix_logic_multiple_rules():
     assert new_cfg['atr_multiplier'] == 1.8
     assert new_cfg['min_hold_minutes'] == 10
     assert new_cfg['use_dynamic_tsl']
+
+
+def test_auto_fix_logic_exit_variety():
+    summary = {
+        'exit_variety_insufficient': True,
+        'tp1_count': 1,
+        'tp2_count': 1,
+        'sl_rate': 0.0,
+        'avg_mfe': 0.0,
+        'avg_duration': 0.0,
+        'net_pnl': 1.0,
+    }
+    config = {'tp1_rr_ratio': 1.5}
+    new_cfg = auto_fix_logic(summary, config)
+    assert new_cfg['tp1_rr_ratio'] == 1.2
 
 
 def test_simulate_and_autofix_basic():
