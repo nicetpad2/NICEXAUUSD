@@ -23,18 +23,18 @@ INITIAL_CAPITAL = 10000.0
 from nicegold_v5.entry import generate_signals_v12_0 as generate_signals
 from nicegold_v5.exit import simulate_partial_tp_safe
 from nicegold_v5.utils import (
-    sanitize_price_columns,
     convert_thai_datetime,
     parse_timestamp_safe,
     QA_BASE_PATH,
+    setup_logger,
 )
+from nicegold_v5.entry import sanitize_price_columns
 from nicegold_v5.fix_engine import autofix_fold_run, autorisk_adjust, run_self_diagnostic
 
 
 TRADE_DIR = "logs/trades"  # [Patch v12.3.9] Define log dir
 os.makedirs(TRADE_DIR, exist_ok=True)  # [Patch v12.3.9] Ensure log dir exists
-logger = logging.getLogger("nicegold_v5.wfv")
-logger.setLevel(logging.INFO)
+logger = setup_logger("nicegold_v5.wfv", os.path.join(QA_BASE_PATH, "wfv.log"))
 
 
 def auto_entry_config(fold_df: pd.DataFrame) -> dict:

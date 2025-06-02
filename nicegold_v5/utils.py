@@ -20,12 +20,11 @@ try:  # pragma: no cover - optional dependency
     import psutil
 except Exception:  # pragma: no cover - handle missing psutil
     psutil = None
-from nicegold_v5.entry import (
-    generate_signals,
-    sanitize_price_columns,
-    validate_indicator_inputs,
-)
-from nicegold_v5.backtester import run_backtest
+
+def _import_backtest_tools():
+    from nicegold_v5.entry import generate_signals
+    from nicegold_v5.backtester import run_backtest
+    return generate_signals, run_backtest
 
 
 def run_autofix_wfv(*args, **kwargs):  # re-export for CLI (Patch v21.2.1)
@@ -242,16 +241,39 @@ def print_qa_summary(trades: pd.DataFrame, equity: pd.DataFrame) -> dict:
 
 # ✅ Fixed Paths for Colab
 TRADE_DIR = "logs/trades"
-logger = logging.getLogger("nicegold_v5")
-handler = logging.StreamHandler()
-formatter = logging.Formatter("[%(asctime)s] %(levelname)s: %(message)s")
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-logger.setLevel(logging.INFO)
+QA_BASE_PATH = "logs/qa"
+os.makedirs(TRADE_DIR, exist_ok=True)
+os.makedirs(QA_BASE_PATH, exist_ok=True)
+
+
+def setup_logger(name: str, log_file: str, level: int = logging.INFO) -> logging.Logger:
+    """สร้าง logger และตั้งค่า handler ทั้ง stream/file"""
+    formatter = logging.Formatter("[%(asctime)s] %(levelname)s: %(message)s")
+    handler_stream = logging.StreamHandler()
+    handler_stream.setFormatter(formatter)
+    handler_file = logging.FileHandler(log_file, mode="a")
+    handler_file.setFormatter(formatter)
+
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    logger.addHandler(handler_stream)
+    logger.addHandler(handler_file)
+    return logger
+
+
+logger = setup_logger("nicegold_v5", os.path.join(QA_BASE_PATH, "core.log"))
 M1_PATH = "data/XAUUSD_M1.csv"
 M15_PATH = "data/XAUUSD_M15.csv"
-QA_BASE_PATH = "logs/qa"
-os.makedirs(QA_BASE_PATH, exist_ok=True)
+
+
+def sanitize_price_columns(df):  # lazy import wrapper
+    from .entry import sanitize_price_columns as _f
+    return _f(df)
+
+
+def validate_indicator_inputs(df, min_rows=100):
+    from .entry import validate_indicator_inputs as _f
+    return _f(df, min_rows=min_rows)
 
 def ensure_logs_dir(path: str = "logs") -> None:
     """สร้างไดเรกทอรี logs หากยังไม่มี หรือลบไฟล์ที่ชื่อชนกัน"""
@@ -479,6 +501,7 @@ def run_auto_wfv(df: pd.DataFrame, outdir: str, n_folds: int = 5) -> pd.DataFram
     """Run simple walk-forward validation."""
     folds = split_folds(df, n_folds=n_folds)
     summary = []
+    generate_signals, run_backtest = _import_backtest_tools()
 
     for i, fold_df in enumerate(folds):
         fold_id = i + 1
@@ -677,6 +700,7 @@ def prepare_csv_auto(path: str, datetime_format: str = "%Y-%m-%d %H:%M:%S") -> p
 
     main = importlib.import_module("main")
     df = main.load_csv_safe(path)
+    from nicegold_v5.entry import sanitize_price_columns, validate_indicator_inputs
     df = convert_thai_datetime(df)
     if "timestamp" in df.columns:
         df["timestamp"] = parse_timestamp_safe(df["timestamp"], datetime_format)

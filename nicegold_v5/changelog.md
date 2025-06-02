@@ -869,3 +869,8 @@
 
 ## 2026-03-30
 - Added integration tests for WFV and ML/RL pipelines
+
+## 2026-03-31
+- [Patch v33.0.0] Added unified logging via `setup_logger` and YAML-based config
+  loader with environment overrides. New tests ensure YAML config loads
+  correctly.

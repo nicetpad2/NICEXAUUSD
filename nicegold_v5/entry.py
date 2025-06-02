@@ -1,8 +1,13 @@
 import pandas as pd
 import numpy as np
+import logging
+import os
 from typing import Dict
 from tqdm import tqdm
 from .config import SESSION_CONFIG, HEDGEFUND_ENTRY_CONFIG, THRESHOLD_MODEL_PATH
+from .utils import setup_logger, QA_BASE_PATH
+
+logger = setup_logger("nicegold_v5.entry", os.path.join(QA_BASE_PATH, "entry.log"))
 
 # [Patch v32.0.0] ✨ เพิ่ม alias ฟังก์ชัน generate_signals_v8_0, generate_signals_v12_0
 def generate_signals_v8_0(df: pd.DataFrame, config: Dict | None = None) -> pd.DataFrame:
