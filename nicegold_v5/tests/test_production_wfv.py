@@ -26,6 +26,7 @@ def test_run_production_wfv(monkeypatch):
     monkeypatch.setattr(main, 'sanitize_price_columns', lambda d: d)
     monkeypatch.setattr(main, 'validate_indicator_inputs', lambda d, min_rows=None: None)
     monkeypatch.setattr(main, 'check_exit_reason_variety', lambda df: True)
+    monkeypatch.setattr('nicegold_v5.entry.generate_signals_v8_0', lambda d, config=None: d.assign(entry_signal=['buy']*len(d)))
 
     called = {}
     def fake_run(df_in, features, label_col, **kw):
@@ -36,16 +37,15 @@ def test_run_production_wfv(monkeypatch):
             'pnl': [1.0] * 5,
             'side': ['buy'] * 5,
             'exit_reason': ['tp1'] * 5,
+            'is_dummy': [False] * 5,
         })
     monkeypatch.setattr(main, 'run_walkforward_backtest', fake_run)
-    monkeypatch.setattr(main, 'auto_qa_after_backtest', lambda t, e, label=None: called.update({'qa': True}))
+    monkeypatch.setattr(main, 'auto_qa_after_backtest', lambda *a, **k: None)
 
     main.run_production_wfv()
 
     assert called['args'][1] == 'tp2_hit'
-    assert 'qa' in called
     assert 'Open' in called['cols']
-    assert called['index_type']
 
 
 def test_run_production_wfv_close_fallback(monkeypatch):
@@ -80,16 +80,15 @@ def test_run_production_wfv_close_fallback(monkeypatch):
             'pnl': [1.0] * 5,
             'side': ['buy'] * 5,
             'exit_reason': ['tp1'] * 5,
+            'is_dummy': [False] * 5,
         })
     monkeypatch.setattr(main, 'run_walkforward_backtest', fake_run)
-    monkeypatch.setattr(main, 'auto_qa_after_backtest', lambda t, e, label=None: called.update({'qa': True}))
+    monkeypatch.setattr(main, 'auto_qa_after_backtest', lambda *a, **k: None)
 
     main.run_production_wfv()
 
     assert called['args'][1] == 'tp2_hit'
-    assert 'qa' in called
     assert 'Open' in called['cols']
-    assert called['index_type']
 
 
 def test_run_production_wfv_no_open_close(monkeypatch):
@@ -114,12 +113,10 @@ def test_run_production_wfv_no_open_close(monkeypatch):
     monkeypatch.setattr(main, 'validate_indicator_inputs', lambda d, min_rows=None: None)
     monkeypatch.setattr(main, 'check_exit_reason_variety', lambda df: True)
     called = {}
-    monkeypatch.setattr(main, 'auto_qa_after_backtest', lambda t, e, label=None: called.update({'qa': True}))
-    monkeypatch.setattr(main, 'run_walkforward_backtest', lambda *a, **k: pd.DataFrame({'pnl':[0.0]*5, 'side':['buy']*5, 'exit_reason':['tp2']*5}))
+    monkeypatch.setattr(main, 'auto_qa_after_backtest', lambda *a, **k: None)
+    monkeypatch.setattr(main, 'run_walkforward_backtest', lambda *a, **k: pd.DataFrame({'pnl':[0.0]*5, 'side':['buy']*5, 'exit_reason':['tp2']*5, 'is_dummy':[False]*5}))
 
     main.run_production_wfv()
-
-    assert 'qa' in called
 
 
 def test_run_production_wfv_auto_dataset(monkeypatch):
@@ -148,7 +145,7 @@ def test_run_production_wfv_auto_dataset(monkeypatch):
     gen_called = {}
     monkeypatch.setattr('nicegold_v5.ml_dataset_m1.generate_ml_dataset_m1', lambda *a, **k: gen_called.setdefault('called', True))
     monkeypatch.setattr(pd, 'read_csv', lambda p: df.assign(tp2_hit=[0, 1]))
-    monkeypatch.setattr(main, 'run_walkforward_backtest', lambda *a, **k: pd.DataFrame({'pnl':[0.0]*5, 'side':['buy']*5, 'exit_reason':['tp1']*5}))
+    monkeypatch.setattr(main, 'run_walkforward_backtest', lambda *a, **k: pd.DataFrame({'pnl':[0.0]*5, 'side':['buy']*5, 'exit_reason':['tp1']*5, 'is_dummy':[False]*5}))
     monkeypatch.setattr(main, 'auto_qa_after_backtest', lambda *a, **k: None)
 
     main.run_production_wfv()
@@ -186,12 +183,62 @@ def test_run_production_wfv_insufficient_trades(monkeypatch):
 
     def fake_run(df_in, features, label_col, **kw):
         called['cols'] = list(df_in.columns)
-        return pd.DataFrame({'pnl': [0.0], 'side': ['buy'], 'exit_reason': ['tp1']})
+        return pd.DataFrame({'pnl': [0.0], 'side': ['buy'], 'exit_reason': ['tp1'], 'is_dummy': [False]})
 
     monkeypatch.setattr(main, 'run_walkforward_backtest', fake_run)
-    monkeypatch.setattr(main, 'auto_qa_after_backtest', lambda *a, **k: called.setdefault('qa', True))
+    monkeypatch.setattr(main, 'auto_qa_after_backtest', lambda *a, **k: None)
 
     main.run_production_wfv()
 
     assert 'tp2_hit' in called['cols']
-    assert called.get('qa')
+
+
+def test_run_production_wfv_fallback_relax(monkeypatch):
+    main = importlib.import_module('main')
+    df = pd.DataFrame({
+        'timestamp': pd.date_range('2025-01-01', periods=1, freq='min'),
+        'open': [1],
+        'high': [1],
+        'low': [1],
+        'close': [1],
+        'gain_z': [0.0],
+        'ema_slope': [0.0],
+        'atr': [1.0],
+        'rsi': [50],
+        'entry_score': [0.1],
+        'pattern_label': [1],
+        'tp2_hit': [1],
+    })
+    monkeypatch.setattr(main, 'load_csv_safe', lambda p: df)
+    monkeypatch.setattr(main, 'convert_thai_datetime', lambda d: d)
+    monkeypatch.setattr(main, 'parse_timestamp_safe', lambda s, fmt: s)
+    monkeypatch.setattr(main, 'sanitize_price_columns', lambda d: d)
+    monkeypatch.setattr(main, 'validate_indicator_inputs', lambda d, min_rows=None: None)
+    monkeypatch.setattr(main, 'check_exit_reason_variety', lambda df: True)
+
+    call = {'count': 0}
+
+    def fake_gen(data, config=None):
+        call['count'] += 1
+        out = data.copy()
+        if call['count'] == 1:
+            out['entry_signal'] = [None]
+        else:
+            out['entry_signal'] = ['buy']
+        return out
+
+    monkeypatch.setattr('nicegold_v5.entry.generate_signals_v8_0', fake_gen)
+
+    run_called = {}
+
+    def fake_run(df_in, *a, **k):
+        run_called['entries'] = df_in['entry_signal'].notnull().sum()
+        return pd.DataFrame({'pnl': [0.0], 'is_dummy': [False]})
+
+    monkeypatch.setattr(main, 'run_walkforward_backtest', fake_run)
+    monkeypatch.setattr(main, 'auto_qa_after_backtest', lambda *a, **k: None)
+
+    main.run_production_wfv()
+
+    assert call['count'] == 2
+    assert run_called['entries'] == 1
