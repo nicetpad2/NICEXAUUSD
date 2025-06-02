@@ -1,2 +1,10 @@
+sniper_config_q3_tuned:
+  gain_z_thresh: 0.15          # [Patch v33.0.0] ลด threshold gain_z เพื่อจับโอกาสเข้าสัญญาณบ่อยขึ้น
+  ema_slope_min: 0.008         # [Patch v33.0.0] ลดค่า EMA slope min เล็กน้อย เพื่อไม่บล็อกสัญญาณมากเกินไป
+  atr_thresh: 0.25             # [Patch v33.0.0] ลด ATR threshold เล็กน้อย เพื่อให้เปิดตำแหน่งบ่อยขึ้น
+  sniper_risk_score_min: 2.5   # [Patch v33.0.0] ปรับ risk_score_min ลง เพื่อผ่อนปรน criteria
+  tp_rr_ratio: 1.4             # [Patch v33.0.0] ลด RR ratio จาก 1.7 → 1.4 เพื่อให้ exit by TP2 เกิดจริงได้บ่อยขึ้น
+  volume_ratio: 0.4            # [Patch v33.0.0] ลด ratio volume เผื่อไดเวอร์ซิตี้ของ volume low/high
+
 ultra_override_qa:
   force_entry: false

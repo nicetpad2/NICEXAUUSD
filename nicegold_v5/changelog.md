@@ -1076,3 +1076,8 @@
 
 
 
+
+## 2026-04-25
+- [Patch v33.0.0] คลายเงื่อนไข SNIPER_CONFIG_Q3_TUNED ใน production.yaml
+- QA: pytest -q passed (268 tests)
+
