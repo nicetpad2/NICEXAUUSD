@@ -993,3 +993,9 @@
 
 ### 2026-04-12
 - [Patch v32.1.6] ปรับ kill_switch และรีเซต sl_streak ใน backtester
+
+### 2026-04-13
+- [Patch v32.1.7] ปรับ main.py
+  - เพิ่มฟังก์ชัน `_ensure_datetime_columns` ตรวจสอบและแปลง dtype `timestamp`
+  - ใช้ `run_autofix_wfv` ใน `run_wfv_with_progress`
+  - เพิ่ม `run_clean_backtest_with_lstm` สำหรับรวมฟีเจอร์ LSTM
