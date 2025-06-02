@@ -1048,3 +1048,8 @@
 - [Patch v32.2.1] Fix pass_filters timestamp handling
 - Updated unit tests for wfv
 - QA: pytest -q passed (264 tests)
+
+## 2026-04-23
+- [Patch v32.3.2] Ensure `is_dummy` column exists when no trades
+- Prevent KeyError in `run_production_wfv`
+- QA: pytest -q passed (264 tests)
