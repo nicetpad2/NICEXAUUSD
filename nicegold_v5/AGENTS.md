@@ -903,3 +903,6 @@
   - เพิ่ม Logging, Config via YAML, และ Unit/Integration Tests ครบถ้วน
   - ปรับระดับ Log Level, ลด log ยิบย่อย
   - รองรับ path สัมพัทธ์ (data/, logs/)
+### 2026-04-02
+- ปรับ train_lstm_runner ตรวจสอบคอลัมน์ tp2_hit และบันทึกค่าพยากรณ์แต่ละ epoch
+
