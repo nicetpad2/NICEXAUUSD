@@ -1013,3 +1013,7 @@
 ## 2026-04-15
 - [Patch v32.2.1] แก้ default `PATHS['m1_csv']` ชี้ไปที่ `nicegold_v5/XAUUSD_M1.csv`
 - ป้องกัน RuntimeError ไม่พบไฟล์ CSV เมื่อติดตั้งผ่านโฟลเดอร์
+
+## 2026-04-16
+- [Patch v32.2.1] รองรับคอลัมน์ราคา Titlecase ใน generate_signals_v8_0
+- คัดลอกคอลัมน์ Open/High/Low/Close เป็นตัวพิมพ์เล็กเพื่อหลีกเลี่ยง KeyError
