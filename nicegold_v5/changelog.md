@@ -939,6 +939,12 @@
 - อัพเดต calc_lot ให้รับ dict และป้องกัน sl_pips ผิดค่า
 - เพิ่มพารามิเตอร์ qa_mode ใน run_backtest และลดค่า drawdown ใน kill_switch
 
+
+## 2026-04-04
+- [Patch v32.0.9] entry.generate_signals logs force_entry via module logger
+- [Patch v32.0.9] generate_signals_v12_0 now wraps generate_signals for new main.py
+=======
 ## 2026-04-04
 - ปรับปรุง `qa.py` เพิ่ม logger และปรับฟังก์ชันตรวจ bias/drift
+
 

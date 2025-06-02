@@ -799,7 +799,7 @@ def generate_signals(
     config["disable_buy"] = False
     config["disable_sell"] = False
     if config.get("force_entry", False):
-        print("[Patch v29.8.1] UltraOverride QA: force_entry active (inject signal ทุก bar)")
+        logger.info("[generate_signals] QA UltraOverride: force_entry=True")
     df = generate_signals_v8_0(df, config=config)
 
     # [Patch v28.1.0] QA ForceEntry System (with full config guard)
