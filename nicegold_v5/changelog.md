@@ -974,3 +974,6 @@
 
 
 
+## 2026-04-07
+- [Patch v32.1.1] ปรับ fallback force_entry และตรวจพารามิเตอร์ใน predict_thresholds ด้วย inspect
+

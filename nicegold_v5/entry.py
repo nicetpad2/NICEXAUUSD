@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import logging
 import os
+import inspect  # [Patch QA-FIX v28.2.7] dynamic fallback param check
 from typing import Dict
 from tqdm import tqdm
 from .config import SESSION_CONFIG, HEDGEFUND_ENTRY_CONFIG, THRESHOLD_MODEL_PATH
@@ -21,7 +22,7 @@ ENABLE_TP1_TP2 = True
 ENABLE_SESSION_FILTER = False
 ENABLE_SIGNAL_LOG = True
 
-# [Patch v32.0.2] 💥 Loosen TP Logic: ลด rr1, rr2 เพื่อให้ TP2 เอื้อมถึงได้ง่ายขึ้น
+# [Patch v32.1.0] ค่า Default RR1/RR2 ปรับให้ TP ง่ายขึ้น
 DEFAULT_RR1 = 1.2    # จากเดิม 1.5–2.0
 DEFAULT_RR2 = 2.0    # จากเดิม 3.0–5.0
 
@@ -253,7 +254,20 @@ def generate_signals_v8_0_adaptive(df: pd.DataFrame, config: dict | None = None)
     seq_recent = load_recent_indicators(df, seq_len=60)
     prev_perf = load_previous_performance()
     model_path = config.get("model_path", THRESHOLD_MODEL_PATH) if config else THRESHOLD_MODEL_PATH
-    thresholds = predict_thresholds(seq_recent=seq_recent, feedback_scalar=prev_perf, model_path=model_path)
+    pt_sig = inspect.signature(predict_thresholds)
+    if "device" in pt_sig.parameters:
+        thresholds = predict_thresholds(
+            seq_recent=seq_recent,
+            feedback_scalar=prev_perf,
+            model_path=model_path,
+            device=config.get("device", "cpu"),
+        )
+    else:
+        thresholds = predict_thresholds(
+            seq_recent=seq_recent,
+            feedback_scalar=prev_perf,
+            model_path=model_path,
+        )
     print(
         f"[Patch vA.1.0] \ud83d\udd25 DeepAI Thresholds \u2192 gain_z: {thresholds['gain_z_thresh']:.4f}, ema_slope: {thresholds['ema_slope_min']:.4f}, atr: {thresholds['atr_thresh']:.4f}"
     )
@@ -381,6 +395,7 @@ def _generate_signals_v8_0_core(df: pd.DataFrame, config: dict | None = None) ->
         & (df["entry_tier"] == "B")
     )  # [Patch v8.0]
 
+
     buy_cond = (
         sniper_zone
         & breakout_up
@@ -399,14 +414,17 @@ def _generate_signals_v8_0_core(df: pd.DataFrame, config: dict | None = None) ->
     )
 
     df["entry_signal"] = np.where(buy_cond, "buy", np.where(sell_cond, "sell", None))
+    # [Patch v24.3.3] Force entry_signal ทุกๆ 500 row (DEV/ML only)
     if config and config.get("gain_z_thresh", 0) <= -9.0:
-        # [Patch v24.3.3] Force entry_signal ทุกๆ 500 row (DEV/ML only)
-        force_every = 500
-        indices = list(range(0, len(df), force_every))
-        for i in indices:
-            if pd.isna(df.at[i, "entry_signal"]):
-                df.at[i, "entry_signal"] = "buy"
-        print(f"[Patch v24.3.3] ⚡️ Ultra Fallback: force entry_signal 'buy' {len(indices)} spots")
+        if (df["entry_signal"].isnull().mean() >= 1.0):
+            force_every = 500
+            indices = list(range(0, len(df), force_every))
+            for i in indices:
+                if pd.isna(df.at[i, "entry_signal"]):
+                    df.at[i, "entry_signal"] = "buy"
+            print(
+                f"[Patch v24.3.3] ⚡️ Ultra Fallback: force entry_signal 'buy' {len(indices)} spots"
+            )
 
     # --- Logging QA Reason ---
     # [Patch v7.2] Restore entry_blocked_reason logic
