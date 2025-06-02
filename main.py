@@ -713,7 +713,7 @@ def autopipeline(mode="default", train_epochs=1):
 
         from nicegold_v5.utils import run_autofix_wfv
         ensure_order_side_enabled(SNIPER_CONFIG_Q3_TUNED)
-        trades_df = run_autofix_wfv(df, simulate_partial_tp_safe, SNIPER_CONFIG_Q3_TUNED, n_folds=5)
+        trades_df = run_autofix_wfv(df, simulate_partial_tp_safe, SNIPER_CONFIG_Q3_TUNED)
         out_path = os.path.join(TRADE_DIR, "trades_fusion_ai_" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".csv")
         trades_df.to_csv(out_path, index=False)
         print(f"📦 Exported FusionAI trades → {out_path}")
@@ -813,7 +813,7 @@ def autopipeline(mode="default", train_epochs=1):
         print(f"\n[Patch v29.9.0] 🛠️ Fallback: {name}")
         ensure_order_side_enabled(cfg)
         df_s = generate_signals(df.copy(), config=cfg, test_mode=True)
-        trades_df = run_autofix_wfv(df_s, simulate_partial_tp_safe, cfg, n_folds=n_folds)
+        trades_df = run_autofix_wfv(df_s, simulate_partial_tp_safe, cfg)
         if not trades_df.empty and check_exit_reason_variety(trades_df):
             print(f"[Patch v29.9.0] ✅ SUCCESS: AutoPipeline WFV {name}")
             break

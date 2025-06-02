@@ -403,13 +403,14 @@ def test_run_autofix_wfv(tmp_path):
             "exit_reason": ["sl"] * len(df),
             "mfe": [1.0] * len(df),
             "duration_min": [1.0] * len(df),
+            "pnl": [0.0] * len(df),
         })
         return trades, pd.DataFrame()
 
     df = sample_wfv_df()
-    result = run_autofix_wfv(df, fake_sim, {"tp1_rr_ratio": 1.5}, n_folds=2)
+    result = run_autofix_wfv(df, fake_sim, {"tp1_rr_ratio": 1.5})
     assert isinstance(result, pd.DataFrame)
-    assert set(result["fold"]) == {1, 2}
+    assert set(result["fold"].unique()) <= {"Asia", "London", "NY"}
 
 
 def test_run_walkforward_backtest():

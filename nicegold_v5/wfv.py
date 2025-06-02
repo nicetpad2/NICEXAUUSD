@@ -32,6 +32,8 @@ from nicegold_v5.utils import (
     ensure_buy_sell as util_ensure_buy_sell,
 )
 from nicegold_v5.fix_engine import autofix_fold_run, autorisk_adjust, run_self_diagnostic
+from nicegold_v5.config import ensure_order_side_enabled
+from nicegold_v5.qa import run_qa_guard
 
 
 TRADE_DIR = "logs/trades"  # [Patch v12.3.9] Define log dir
@@ -248,14 +250,18 @@ def run_walkforward_backtest(df, features, label_col, side='buy', n_folds=3, per
     if not trades_df.empty:
         unique_reasons = set(trades_df.get("exit_reason", pd.Series(dtype=str)).str.lower().unique())
         expected = {"tp1", "tp2", "sl"}
-        if unique_reasons != expected:
+        # [Patch v32.1.3] เรียก inject_exit_variety ทุกครั้งก่อน return
+        if not expected.issubset(unique_reasons):
             trades_df = inject_exit_variety(
                 trades_df,
+                require=("tp1", "tp2", "sl"),
+                fold_col="fold",
                 strategy_name=strategy_name,
-                fold=None,
+                fold=fold + 1,
                 outdir=QA_BASE_PATH,
             )
-        trades_df = ensure_buy_sell(trades_df, df, lambda d, percentile_threshold=75: trades_df, fold=None, outdir=QA_BASE_PATH)
+        # QA: บังคับให้มี BUY/SELL ครบ หากยังขาด
+        trades_df = ensure_buy_sell(trades_df, df, lambda d: trades_df, fold=fold + 1, outdir=QA_BASE_PATH)
     return trades_df
 
 
@@ -364,37 +370,30 @@ def ensure_buy_sell(
     return util_ensure_buy_sell(trades_df, df, simulate_fn, fold=fold, outdir=outdir)
 
 
-# [Patch v12.3.8] – รัน WFV แบบ AutoFix Multi-Fold
-# -------------------------------------------------------------
-# ✅ ใช้ autofix_fold_run() สำหรับแต่ละ fold
-# ✅ ใช้ autorisk_adjust() ปรับ config ต่อเนื่องระหว่าง fold
+def run_autofix_wfv(df: pd.DataFrame, simulate_fn, config: dict) -> pd.DataFrame:
+    """Run Walk-Forward with AutoFix and AutoRiskAdjust per Fold"""
+    if "timestamp" not in df.columns:
+        df = df.reset_index().rename(columns={"index": "timestamp"})
+    session_folds = split_by_session(df)
+    all_trades: list[pd.DataFrame] = []
+    prev_config = config.copy()
+    prev_summary: dict = {}
 
-def run_autofix_wfv(df: pd.DataFrame, simulate_fn, base_config: dict, n_folds: int = 5) -> pd.DataFrame:
-    """Run walk-forward validation แบบ AutoFix Adaptive ต่อเนื่อง"""
-    from nicegold_v5.utils import export_audit_report
-    fold_size = len(df) // n_folds
-    all_trades = []
-    config = base_config.copy()
-    ts = datetime.now().strftime("%Y%m%d_%H%M%S")  # [Patch v12.3.9] Use one timestamp for the run
-
-    for fold in range(n_folds):
-        fold_df = df.iloc[fold * fold_size : (fold + 1) * fold_size].reset_index(drop=True)
-        fold_name = f"Fold{fold+1}"
-        trades_df, config = autofix_fold_run(fold_df, simulate_fn, config, fold_name=fold_name)
-        config = autorisk_adjust(config, run_self_diagnostic(trades_df, fold_df))
-        trades_df["fold"] = fold + 1
-        out_path = os.path.join(TRADE_DIR, f"trades_autofix_{fold_name}_{ts}.csv")
-        trades_df.to_csv(out_path, index=False)
-        print(f"📤 Exported {len(trades_df):,} trades → {out_path}")
-        metrics = {"trades": len(trades_df), "profit": trades_df.get("pnl", pd.Series(dtype=float)).sum()}
-        export_audit_report(
-            config=config,
-            metrics=metrics,
-            run_type="WFV",
-            version="v28.2.0",
-            fold=fold + 1,
-            outdir=TRADE_DIR,
-        )
+    for name, sess_df in session_folds.items():
+        # บังคับเปิด BUY/SELL
+        prev_config = ensure_order_side_enabled(prev_config)
+        print(f"\n▶️ [Fold: {name}] เริ่มทำ WFV + AutoFix...")
+        trades_df, updated_config = autofix_fold_run(sess_df, simulate_fn, prev_config, fold_name=name)
+        # สรุปผล QA หลังแต่ละ Fold
+        summary = run_self_diagnostic(trades_df, sess_df)
+        # ปรับความเสี่ยงต่อเนื่อง
+        prev_config = autorisk_adjust(updated_config, summary)
+        trades_df["fold"] = name
         all_trades.append(trades_df)
 
-    return pd.concat(all_trades, ignore_index=True)
+    if not all_trades:
+        return pd.DataFrame()
+    final_df = pd.concat(all_trades, ignore_index=True)
+    # QA guard ราย Fold
+    run_qa_guard(final_df, df)
+    return final_df

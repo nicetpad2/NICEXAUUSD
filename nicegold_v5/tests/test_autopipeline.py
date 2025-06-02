@@ -132,7 +132,7 @@ def test_autopipeline(monkeypatch, tmp_path, capsys):
 
     monkeypatch.setattr('nicegold_v5.train_lstm_runner.train_lstm', lambda *a, **k: DummyModel())
     monkeypatch.setattr('torch.save', lambda *a, **k: None)
-    monkeypatch.setattr('nicegold_v5.utils.run_autofix_wfv', lambda df, sim, cfg, n_folds=5: pd.DataFrame({'pnl':[0.0]}))
+    monkeypatch.setattr('nicegold_v5.utils.run_autofix_wfv', lambda df, sim, cfg: pd.DataFrame({'pnl':[0.0]}))
     plan = {
         'device': 'cpu',
         'gpu': 'CPU',
@@ -193,7 +193,7 @@ def test_ai_master_pipeline(monkeypatch, tmp_path, capsys):
 
     monkeypatch.setattr('nicegold_v5.train_lstm_runner.train_lstm', lambda *a, **k: DummyModel())
     monkeypatch.setattr('torch.save', lambda *a, **k: None)
-    monkeypatch.setattr('nicegold_v5.utils.run_autofix_wfv', lambda df, sim, cfg, n_folds=5: pd.DataFrame({'pnl':[0.0]}))
+    monkeypatch.setattr('nicegold_v5.utils.run_autofix_wfv', lambda df, sim, cfg: pd.DataFrame({'pnl':[0.0]}))
 
     import types, sys, numpy as np
     class DummyExplainer:
@@ -263,7 +263,7 @@ def test_fusion_ai_pipeline(monkeypatch, tmp_path, capsys):
             return {}
     monkeypatch.setattr('nicegold_v5.train_lstm_runner.train_lstm', lambda *a, **k: DummyModel())
     monkeypatch.setattr('torch.save', lambda *a, **k: None)
-    monkeypatch.setattr('nicegold_v5.utils.run_autofix_wfv', lambda df, sim, cfg, n_folds=5: pd.DataFrame({'pnl':[0.0]}))
+    monkeypatch.setattr('nicegold_v5.utils.run_autofix_wfv', lambda df, sim, cfg: pd.DataFrame({'pnl':[0.0]}))
     import types, sys, numpy as np
     class DummyExplainer:
         def __init__(self, model, data):  # pragma: no cover - not executed
