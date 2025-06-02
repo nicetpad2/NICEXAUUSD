@@ -15,6 +15,10 @@ sniper_config_q3_tuned:
   force_entry: false
   tp1_pct: 0.7
   tp2_pct: 0.3
+  gain_z_thresh: 0.5  # ยังคงเดิม (Phase Q3 initial)
+  atr_multiplier: 1.0
+  rsi_oversold: 30
+  rsi_overbought: 70
 
 relax_config_q3:
   disable_buy: false
@@ -22,6 +26,20 @@ relax_config_q3:
   force_entry: false
   tp1_pct: 0.6
   tp2_pct: 0.4
+  gain_z_thresh: 0.3
+  atr_multiplier: 0.8
+  rsi_oversold: 35
+  rsi_overbought: 65
+  pattern_whitelist:
+    - inside_bar
+    - bullish_engulfing
+    - bearish_engulfing
+    - hammer
+    - engulfing
+  volume_ratio: 0.8
+  tp_rr_ratio: 1.5
+  sl_distance: 5.0
+  dynamic_lot: false
 
 ultra_override_qa:
   disable_buy: false
