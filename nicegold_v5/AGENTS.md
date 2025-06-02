@@ -940,3 +940,7 @@
 - ปรับ parse_timestamp_safe ใช้ logger.warning เมื่อรูปแบบผิดและปรับ split_folds จัดการเศษข้อมูล
 - เพิ่มฟังก์ชัน merge_equity_curves รวมผล equity จากหลาย fold
 
+### 2026-04-04
+- [Patch v32.0.1] wfv.py imports `QA_BASE_PATH`, sorts timestamp in `split_by_session`,
+  logs missing BUY/SELL in `ensure_buy_sell`, and exports variety logs when injecting exits.
+

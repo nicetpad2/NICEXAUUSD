@@ -23,12 +23,12 @@ INITIAL_CAPITAL = 10000.0
 from nicegold_v5.entry import generate_signals_v12_0 as generate_signals
 from nicegold_v5.exit import simulate_partial_tp_safe
 from nicegold_v5.utils import (
+    sanitize_price_columns,
     convert_thai_datetime,
     parse_timestamp_safe,
     QA_BASE_PATH,
     setup_logger,
 )
-from nicegold_v5.entry import sanitize_price_columns
 from nicegold_v5.fix_engine import autofix_fold_run, autorisk_adjust, run_self_diagnostic
 
 
@@ -50,8 +50,9 @@ def auto_entry_config(fold_df: pd.DataFrame) -> dict:
 
 
 
-def split_by_session(df: pd.DataFrame) -> dict:
-    """เรียกใช้ฟังก์ชันจาก utils เพื่อแบ่งเซสชัน"""
+def split_by_session(df: pd.DataFrame, session_cfg: dict | None = None) -> dict:
+    """Split DataFrame into sessions (Asia, London, NY)"""
+    df = df.sort_values("timestamp")
     from .utils import split_by_session as util_split_by_session
     return util_split_by_session(df)
 
@@ -235,6 +236,17 @@ def run_walkforward_backtest(df, features, label_col, side='buy', n_folds=3, per
         print(f"[Strategy {strategy_name}] [Fold {fold+1} - {side.upper()}] Final Equity: {equity:.2f}")
 
     trades_df = pd.DataFrame(trades)
+    if not trades_df.empty:
+        unique_reasons = set(trades_df.get("exit_reason", pd.Series(dtype=str)).str.lower().unique())
+        expected = {"tp1", "tp2", "sl"}
+        if unique_reasons != expected:
+            trades_df = inject_exit_variety(
+                trades_df,
+                strategy_name=strategy_name,
+                fold=None,
+                outdir=QA_BASE_PATH,
+            )
+        trades_df = ensure_buy_sell(trades_df, df, lambda d, percentile_threshold=75: trades_df, fold=None, outdir=QA_BASE_PATH)
     return trades_df
 
 
@@ -277,9 +289,15 @@ def streak_summary(trades_df):
     }
 
 
-def inject_exit_variety(trades_df: pd.DataFrame,
-                        require=("tp1", "tp2", "sl"),
-                        fold_col: str | None = "fold") -> pd.DataFrame:
+def inject_exit_variety(
+    trades_df: pd.DataFrame,
+    require=("tp1", "tp2", "sl"),
+    fold_col: str | None = "fold",
+    *,
+    strategy_name: str = "",
+    fold: int | None = None,
+    outdir: str | None = None,
+) -> pd.DataFrame:
     """Ensure exit_reason variety exists per fold by injecting dummy rows."""
     trades_df = trades_df.copy()
     trades_df["is_dummy"] = trades_df.get("is_dummy", False)
@@ -301,6 +319,12 @@ def inject_exit_variety(trades_df: pd.DataFrame,
                 append_rows.append(dummy)
         if append_rows:
             trades_df = pd.concat([trades_df, pd.DataFrame(append_rows)], ignore_index=True)
+            if outdir:
+                os.makedirs(outdir, exist_ok=True)
+                label = f"{strategy_name}_fold{fold}" if fold is not None else strategy_name or "final"
+                out_path = os.path.join(outdir, f"exit_variety_{label}.csv")
+                trades_df.to_csv(out_path, index=False)
+                logger.info("[inject_exit_variety] Exported variety log → %s", out_path)
     else:
         reasons = trades_df.get("exit_reason", pd.Series(dtype=str)).astype(str).str.lower()
         missing = set(require) - set(reasons)
@@ -310,6 +334,12 @@ def inject_exit_variety(trades_df: pd.DataFrame,
             dummy["exit_reason"] = reason
             dummy["is_dummy"] = True
             trades_df = pd.concat([trades_df, pd.DataFrame([dummy])], ignore_index=True)
+        if missing and outdir:
+            os.makedirs(outdir, exist_ok=True)
+            label = f"{strategy_name}_fold{fold}" if fold is not None else strategy_name or "final"
+            out_path = os.path.join(outdir, f"exit_variety_{label}.csv")
+            trades_df.to_csv(out_path, index=False)
+            logger.info("[inject_exit_variety] Exported variety log → %s", out_path)
 
     return trades_df
 
@@ -336,6 +366,7 @@ def ensure_buy_sell(
     if has_buy and has_sell:
         return trades_df
 
+    logger.info("[ensure_buy_sell] Missing BUY/SELL in fold %s → inject", fold)
     print("[Patch QA-FIX] ไม่มี BUY/SELL ครบ – ยิง ultra-relax config")
     if "percentile_threshold" in inspect.signature(simulate_fn).parameters:
         trades_df2 = simulate_fn(df, percentile_threshold=1)

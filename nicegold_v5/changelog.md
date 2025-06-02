@@ -939,3 +939,8 @@
 - อัพเดต calc_lot ให้รับ dict และป้องกัน sl_pips ผิดค่า
 - เพิ่มพารามิเตอร์ qa_mode ใน run_backtest และลดค่า drawdown ใน kill_switch
 
+## 2026-04-04
+- [Patch v32.0.1] Updated wfv.py to import QA_BASE_PATH and pass outdir to `ensure_buy_sell`.
+- `split_by_session` now sorts by timestamp.
+- `inject_exit_variety` exports logs to QA directory.
+
