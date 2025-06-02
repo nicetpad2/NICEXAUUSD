@@ -1,6 +1,7 @@
 import importlib
 import pandas as pd
 import numpy as np
+import pytest
 
 import nicegold_v5.utils as utils
 import nicegold_v5.wfv as wfv
@@ -60,7 +61,7 @@ def test_prepare_csv_auto_validate_error(monkeypatch):
         'open': ['1'], 'high': ['1'], 'low': ['1'], 'close': ['1'], 'volume': ['1']
     })
     monkeypatch.setattr(main, 'load_csv_safe', lambda p: df)
-    monkeypatch.setattr(main, 'convert_thai_datetime', lambda d: d)
+    monkeypatch.setattr('nicegold_v5.utils.convert_thai_datetime', lambda d: d)
     monkeypatch.setattr(main, 'parse_timestamp_safe', lambda s, fmt: pd.to_datetime(s))
     monkeypatch.setattr(main, 'sanitize_price_columns', lambda d: d)
     calls = {'n': 0}
@@ -81,10 +82,8 @@ def test_safe_calculate_net_change_default():
     assert utils.safe_calculate_net_change(df) == 0.0
 
 
-def test_convert_thai_datetime_error(monkeypatch, capsys):
+def test_convert_thai_datetime_error(monkeypatch):
     df = pd.DataFrame({'Date': ['25660416'], 'Timestamp': ['22:00:00']})
     monkeypatch.setattr(pd, 'to_datetime', lambda *a, **k: (_ for _ in ()).throw(ValueError('bad')))
-    result = utils.convert_thai_datetime(df)
-    out = capsys.readouterr().out
-    assert '❌' in out
-    assert 'timestamp' not in result
+    with pytest.raises(ValueError):
+        utils.convert_thai_datetime(df)
