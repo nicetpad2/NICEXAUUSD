@@ -1094,3 +1094,9 @@
   - บังคับปิดสถานะที่ค้าง ณ ราคาปิดสุดท้ายด้วย exit_reason="eod_exit"
   - เพิ่ม unit test สำหรับกรณี EOD Exit
   - QA: pytest -q passed (269 tests)
+
+### 2026-05-02
+- [Patch v34.0.0] Production WFV runs BUY and SELL
+  - รัน run_walkforward_backtest ทั้งสองฝั่งและรวมผล
+  - เพิ่ม unit test ตรวจสอบฝั่ง BUY/SELL
+  - QA: pytest -q passed (270 tests)
