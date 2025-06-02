@@ -995,3 +995,5 @@
   - export_fold_qa บันทึกลงโฟลเดอร์ logs/qa โดยตรง
   - auto_qa_after_backtest ใช้เวอร์ชัน v32.1.0 ใน audit report
 
+## 2026-04-12
+- [Patch v32.1.6] ปรับปรุง kill_switch และล้าง sl_streak เมื่อไม่ได้ SL

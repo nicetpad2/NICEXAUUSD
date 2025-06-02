@@ -991,3 +991,5 @@
 - [Patch v32.1.5] ปรับปรุง `qa.py` ให้ export_fold_qa เขียนไฟล์ใน `logs/qa`
   และปรับเวอร์ชัน `auto_qa_after_backtest` เป็น `v32.1.0`
 
+### 2026-04-12
+- [Patch v32.1.6] ปรับ kill_switch และรีเซต sl_streak ใน backtester
